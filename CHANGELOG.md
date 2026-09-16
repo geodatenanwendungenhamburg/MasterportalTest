@@ -8,6 +8,7 @@
 ### __Breaking Changes__
 
 ### Added
+- Draw: Added new draw module to replace draw_old (type="draw").
 
 ### Changed
 
@@ -16,6 +17,7 @@
 ### Removed
 
 ### Fixed
+- Draw: Fixed an error when editing imported multi geometries (e.g. from KML files), which prevented the measurement tooltip from being positioned.
 
 ---
 
