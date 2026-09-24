@@ -27,7 +27,29 @@ build_examples_zip:
     - apt-get update && apt-get install -y zip
     - zip -r examples.zip dist/
   rules:
-    - if: '$CI_COMMIT_TAG && $CI_COMMIT_TAG !~ /^(lts|latest)$/'
+    - if: '$CI_COMMIT_TAG && $CI_COMMIT_TAG !~ /^(lts|latest)$/'  
+
+build_examples_zip_manual:
+  stage: build
+  cache:
+    paths:
+      - node_modules/
+  artifacts:
+    paths:
+      - examples.zip
+  script:
+    - git fetch --all
+    - git checkout $BRANCH_NAME
+    - export NODE_OPTIONS=--openssl-legacy-provider
+    - npm install
+    - npm run buildExamples
+    - apt-get update && apt-get install -y zip
+    - zip -r examples.zip dist/
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "web"'
+      when: manual
+  variables:
+    BRANCH_NAME: "main"
 
 deploy_examples_zip:
   stage: deploy
@@ -236,30 +258,25 @@ build_and_upload_examples_to_release:
     expire_in: 7 days
   script:
     - git fetch --all
-    - git checkout $BRANCH_NAME
+    - git checkout $DEPLOY_TAG
     - npm install
     - npm run buildExamples
     - apt-get update && apt-get install -y curl zip
     - zip -r examples.zip dist/
-    - echo "Examples built for branch ${BRANCH_NAME}"
+    - echo "Examples built for tag ${DEPLOY_TAG}"
     - echo "Uploading examples.zip to GitLab Release Assets"
     - |
       curl --request POST \
         --header "PRIVATE-TOKEN: $CI_JOB_TOKEN" \
-        --form "name=examples_${BRANCH_NAME}.zip" \
+        --form "name=examples_${DEPLOY_TAG}.zip" \
         --form "url=file://examples.zip" \
         "https://gitlab.opencode.de/api/v4/projects/$CI_PROJECT_ID/releases/$DEPLOY_TAG/assets/links"
     - echo "Examples successfully uploaded to Release Assets"
   rules:
     - if: '$CI_PIPELINE_SOURCE == "web"'
       when: manual
-  input:
-    BRANCH_NAME:
-      description: "Enter branch name (e.g., dev, main, feature/xyz)"
-      default: "main"
-    DEPLOY_TAG:
-      description: "Enter tag name for Release Assets (e.g., v3.1.0)"
-      default: "latest"
+  variables:
+    DEPLOY_TAG: ""
 
 # deploy_tag_and_branch_same_name_to_opencode:
 #   stage: deploy
