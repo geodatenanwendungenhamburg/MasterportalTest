@@ -54,7 +54,7 @@ deploy_examples_zip:
     - echo "Uploading examples.zip to Release Assets (permanent)..."
     - |
       curl --request POST \
-        --header "PRIVATE-TOKEN: $CI_JOB_TOKEN" \
+        --header "JOB-TOKEN: $CI_JOB_TOKEN" \
         --form "name=examples.zip" \
         --form "url=file://examples.zip" \
         "https://gitlab.opencode.de/api/v4/projects/$PROJECT_API_PATH/releases/$CI_COMMIT_TAG/assets/links"
@@ -231,7 +231,7 @@ upload_docs_to_release_assets:
     - echo "Uploading documentation to GitLab Release Assets for tag ${DEPLOY_TAG}"
     - |
       curl --request POST \
-        --header "PRIVATE-TOKEN: $CI_JOB_TOKEN" \
+        --header "JOB-TOKEN: $CI_JOB_TOKEN" \
         --form "name=Documentation ${DEPLOY_TAG}" \
         --form "url=file://masterportal_docs_${DEPLOY_TAG}.zip" \
         "https://gitlab.opencode.de/api/v4/projects/$PROJECT_API_PATH/releases/$DEPLOY_TAG/assets/links"
@@ -267,12 +267,12 @@ build_and_upload_examples_to_release:
     - echo "Creating release if it doesn't exist..."
     - |
       RELEASE_EXISTS=$(curl -s -o /dev/null -w "%{http_code}" \
-        --header "PRIVATE-TOKEN: $CI_JOB_TOKEN" \
+        --header "JOB-TOKEN: $CI_JOB_TOKEN" \
         "https://gitlab.opencode.de/api/v4/projects/$PROJECT_API_PATH/releases/$DEPLOY_TAG")
       if [ "$RELEASE_EXISTS" != "200" ]; then
         echo "Release $DEPLOY_TAG not found, creating..."
         curl --request POST \
-          --header "PRIVATE-TOKEN: $CI_JOB_TOKEN" \
+          --header "JOB-TOKEN: $CI_JOB_TOKEN" \
           --header "Content-Type: application/json" \
           --data "{\"tag_name\":\"$DEPLOY_TAG\",\"name\":\"Release $DEPLOY_TAG\",\"description\":\"Automated release\"}" \
           "https://gitlab.opencode.de/api/v4/projects/$PROJECT_API_PATH/releases"
@@ -282,7 +282,7 @@ build_and_upload_examples_to_release:
     - echo "Uploading examples.zip to GitLab Release Assets"
     - |
       curl --request POST \
-        --header "PRIVATE-TOKEN: $CI_JOB_TOKEN" \
+        --header "JOB-TOKEN: $CI_JOB_TOKEN" \
         --form "name=examples.zip" \
         --form "url=file://examples.zip" \
         "https://gitlab.opencode.de/api/v4/projects/$PROJECT_API_PATH/releases/$DEPLOY_TAG/assets/links"
