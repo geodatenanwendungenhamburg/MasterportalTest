@@ -43,27 +43,15 @@ create_release:
     tag_name: $CI_COMMIT_TAG
     name: "Release $CI_COMMIT_TAG"
     description: "Automated release"
+    assets:
+      links:
+        - name: examples.zip
+          url: "$CI_PROJECT_URL/-/jobs/artifacts/$CI_COMMIT_TAG/raw/examples.zip?job=build_examples_zip"
+          link_type: other
   rules:
-    - if: '$CI_COMMIT_TAG && $CI_COMMIT_TAG !~ /^(lts|latest)$/'
+    - if: '$CI_COMMIT_TAG && $CI_COMMIT_TAG !~ /^(lts|latest)$/'  
 
-deploy_examples_zip:
-  stage: deploy
-  script:
-    - export PROJECT_API_PATH=$(node -e "console.log(encodeURIComponent('$CI_PROJECT_PATH'))")
-    - apt-get update && apt-get install -y curl
-    - echo "Uploading examples.zip to Release Assets (permanent)..."
-    - |
-      curl --request POST \
-        --header "JOB-TOKEN: $CI_JOB_TOKEN" \
-        --form "name=examples.zip" \
-        --form "url=file://examples.zip" \
-        "https://gitlab.opencode.de/api/v4/projects/$PROJECT_API_PATH/releases/$CI_COMMIT_TAG/assets/links"
-  rules:
-    - if: '$CI_COMMIT_TAG && $CI_COMMIT_TAG !~ /^(lts|latest)$/'
-  needs:
-    - job: build_examples_zip
-      artifacts: true
-    - job: create_release
+
 
 create_mkdocs_release:
   stage: docs
