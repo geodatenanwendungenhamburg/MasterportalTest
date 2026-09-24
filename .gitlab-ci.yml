@@ -28,29 +28,6 @@ build_examples_zip:
   rules:
     - if: '$CI_COMMIT_TAG && $CI_COMMIT_TAG !~ /^(lts|latest)$/'
 
-build_examples_zip_manual:
-  stage: build
-  cache:
-    paths:
-      - node_modules/
-  artifacts:
-    paths:
-      - dist/**
-  script:
-    - apt-get update
-    - git fetch --all
-    - git checkout $BRANCH_NAME
-    - export NODE_OPTIONS=--openssl-legacy-provider
-    - npm install
-    - npm run buildExamples
-  rules:
-    - if: '$CI_PIPELINE_SOURCE == "web"'
-      when: manual
-  input:
-    BRANCH_NAME:
-      description: "Enter branch name (e.g., dev, main, feature/xyz)"
-      default: "dev"
-
 deploy_examples_zip:
   stage: deploy
   cache:
