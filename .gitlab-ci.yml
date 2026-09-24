@@ -15,7 +15,8 @@ variables:
 build_examples_zip:
   stage: build
   cache:
-    - node
+    paths:
+      - node_modules/
   artifacts:
     paths:
       - dist/**
@@ -30,7 +31,8 @@ build_examples_zip:
 deploy_examples_zip:
   stage: deploy
   cache:
-    - node
+    paths:
+      - node_modules/
   script:
     - apt-get install -y curl
     # find all zip folders in dist folder, loop through the results and post the zips to Release Assets
@@ -53,7 +55,8 @@ create_mkdocs_release:
   stage: docs
   image: python:3.8
   cache:
-    - pip
+    paths:
+      - .cache/pip/
   artifacts:
     paths:
       - site
@@ -81,7 +84,8 @@ deploy_mkdocs_to_masterportal_org:
 npm_audit_security:
   stage: security
   cache:
-    - node
+    paths:
+      - node_modules/
   script:
     - npm install
     - npm audit --json
@@ -92,7 +96,8 @@ npm_audit_security:
 osv_scan_security:
   stage: security
   cache:
-    - node
+    paths:
+      - node_modules/
   artifacts:
     paths:
       - osv-result.json
@@ -138,7 +143,8 @@ mkdocs_version_to_masterportal_org:
   stage: docs
   image: python:3.8
   cache:
-    - pip
+    paths:
+      - .cache/pip/
   script:
     - apt-get update && apt-get install -y zip curl wput jq
     - pip install -r devtools/docsValidation/python-dependencies.txt
@@ -159,7 +165,8 @@ mkdocs_latest_to_masterportal_org:
   stage: docs
   image: python:3.8
   cache:
-    - pip
+    paths:
+      - .cache/pip/
   script:
     - apt-get update && apt-get install -y zip curl wput jq
     - pip install -r devtools/docsValidation/python-dependencies.txt
@@ -180,7 +187,8 @@ validate_mkdocs:
   stage: docs
   image: python:3.8
   cache:
-    - pip
+    paths:
+      - .cache/pip/
   script:
     - python -m venv .venv
     - source .venv/bin/activate
@@ -194,7 +202,8 @@ upload_docs_to_release_assets:
   stage: docs
   image: python:3.8
   cache:
-    - pip
+    paths:
+      - .cache/pip/
   script:
     - apt-get update && apt-get install -y zip curl
     - pip install -r devtools/docsValidation/python-dependencies.txt
@@ -225,7 +234,8 @@ upload_docs_to_release_assets:
 build_and_upload_examples_to_release:
   stage: build
   cache:
-    - node
+    paths:
+      - node_modules/
   artifacts:
     paths:
       - dist/**
