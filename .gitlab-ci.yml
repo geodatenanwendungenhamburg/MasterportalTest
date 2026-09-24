@@ -13,26 +13,6 @@ variables:
 
 # 1. Tagged releases (v3.*.*)
 
-create_release:
-  stage: build
-  image: registry.gitlab.com/gitlab-org/cli:latest
-  script:
-    - echo "Creating release $CI_COMMIT_TAG with examples"
-  release:
-    tag_name: $CI_COMMIT_TAG
-    name: Release $CI_COMMIT_TAG
-    description: "Automated release"
-    assets:
-      links:
-        - name: examples.zip
-          url: "${CI_PROJECT_URL}/-/jobs/artifacts/${CI_COMMIT_TAG}/raw/examples.zip?job=build_examples_zip"
-          filepath: "/examples.zip"
-  rules:
-    - if: '$CI_COMMIT_TAG && $CI_COMMIT_TAG !~ /^(lts|latest)$/'
-  needs:
-    - job: build_examples_zip
-      artifacts: true
-
 build_examples_zip:
   stage: build
   cache:
@@ -46,49 +26,33 @@ build_examples_zip:
     - npm install
     - npm run buildExamples
     - apt-get update && apt-get install -y zip
-    - cd dist && zip -r ../examples.zip .
-  rules:
-    - if: '$CI_COMMIT_TAG && $CI_COMMIT_TAG !~ /^(lts|latest)$/'  
-
-build_examples:
-  stage: build
-  cache:
-    paths:
-      - node_modules/
-  artifacts:
-    paths:
-      - examples.zip
-  script:
-    - git fetch --all
-    - git checkout $BRANCH_NAME
-    - export NODE_OPTIONS=--openssl-legacy-provider
-    - npm install
-    - npm run buildExamples
-    - apt-get update && apt-get install -y zip
-    - cd dist && zip -r ../examples.zip .
-  rules:
-    - if: '$CI_PIPELINE_SOURCE == "web"'
-      when: manual
-  variables:
-    BRANCH_NAME: "main"
-
-deploy_examples_zip:
-  stage: deploy
-  script:
-    - export PROJECT_API_PATH=$(node -e "console.log(encodeURIComponent('$CI_PROJECT_PATH'))")
-    - apt-get update && apt-get install -y curl
-    - echo "Uploading examples.zip to Release Assets..."
-    - |
-      curl --request POST \
-        --header "PRIVATE-TOKEN: $CI_JOB_TOKEN" \
-        --form "name=examples.zip" \
-        --form "url=file://examples.zip" \
-        "https://gitlab.opencode.de/api/v4/projects/$PROJECT_API_PATH/releases/$CI_COMMIT_TAG/assets/links"
+    - cd dist
+    - zip -r ../examples.zip .
   rules:
     - if: '$CI_COMMIT_TAG && $CI_COMMIT_TAG !~ /^(lts|latest)$/'
-  dependencies:
-    - build_examples_zip
-    - create_release
+
+create_release:
+  stage: deploy
+  image: registry.gitlab.com/gitlab-org/cli:latest
+  needs:
+    - job: build_examples_zip
+      artifacts: true
+
+  script:
+    - echo "Creating release $CI_COMMIT_TAG"
+
+  release:
+    tag_name: $CI_COMMIT_TAG
+    name: "Release $CI_COMMIT_TAG"
+    description: "Automated release"
+    assets:
+      links:
+        - name: "Examples"
+          url: "${CI_PROJECT_URL}/-/jobs/artifacts/${CI_COMMIT_TAG}/raw/examples.zip?job=build_examples_zip"
+          filepath: "/examples-${CI_COMMIT_TAG}.zip"
+
+  rules:
+    - if: '$CI_COMMIT_TAG && $CI_COMMIT_TAG !~ /^(lts|latest)$/'
 
 create_mkdocs_release:
   stage: docs
