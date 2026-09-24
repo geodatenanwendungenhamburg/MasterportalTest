@@ -17,13 +17,21 @@ create_release:
   stage: build
   image: registry.gitlab.com/gitlab-org/cli:latest
   script:
-    - echo "Creating release $CI_COMMIT_TAG"
+    - echo "Creating release $CI_COMMIT_TAG with examples"
   release:
     tag_name: $CI_COMMIT_TAG
     name: Release $CI_COMMIT_TAG
     description: "Automated release"
+    assets:
+      links:
+        - name: examples.zip
+          url: "${CI_PROJECT_URL}/-/jobs/artifacts/${CI_COMMIT_TAG}/raw/examples.zip?job=build_examples_zip"
+          filepath: "/examples.zip"
   rules:
     - if: '$CI_COMMIT_TAG && $CI_COMMIT_TAG !~ /^(lts|latest)$/'
+  needs:
+    - job: build_examples_zip
+      artifacts: true
 
 build_examples_zip:
   stage: build
@@ -42,7 +50,7 @@ build_examples_zip:
   rules:
     - if: '$CI_COMMIT_TAG && $CI_COMMIT_TAG !~ /^(lts|latest)$/'  
 
-build_examples_zip_manual:
+build_examples:
   stage: build
   cache:
     paths:
