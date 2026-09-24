@@ -64,6 +64,8 @@ deploy_examples_zip:
     - job: build_examples_zip
       artifacts: true
     - job: create_release
+
+create_mkdocs_release:
   stage: docs
   image: python:3.8
   cache:
