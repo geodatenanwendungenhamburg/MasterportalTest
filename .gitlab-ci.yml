@@ -12,6 +12,31 @@ variables:
 # ===== Automatic Pipelines =====
 
 # 1. Tagged releases (v3.*.*)
+
+create_release:
+  stage: build
+  script:
+    - export PROJECT_API_PATH=$(node -e "console.log(encodeURIComponent('$CI_PROJECT_PATH'))")
+    - apt-get update && apt-get install -y curl
+    - echo "Checking/creating release for tag ${CI_COMMIT_TAG}..."
+    - |
+      RELEASE_EXISTS=$(curl -s -o /dev/null -w "%{http_code}" \
+        --header "PRIVATE-TOKEN: $CI_JOB_TOKEN" \
+        "https://gitlab.opencode.de/api/v4/projects/$PROJECT_API_PATH/releases/$CI_COMMIT_TAG")
+      if [ "$RELEASE_EXISTS" != "200" ]; then
+        echo "Release $CI_COMMIT_TAG not found, creating..."
+        curl --request POST \
+          --header "PRIVATE-TOKEN: $CI_JOB_TOKEN" \
+          --header "Content-Type: application/json" \
+          --data "{\"tag_name\":\"$CI_COMMIT_TAG\",\"name\":\"Release $CI_COMMIT_TAG\",\"description\":\"Automated release\"}" \
+          "https://gitlab.opencode.de/api/v4/projects/$PROJECT_API_PATH/releases"
+        sleep 2
+      else
+        echo "Release $CI_COMMIT_TAG already exists"
+      fi
+  rules:
+    - if: '$CI_COMMIT_TAG && $CI_COMMIT_TAG !~ /^(lts|latest)$/'
+
 build_examples_zip:
   stage: build
   cache:
@@ -54,34 +79,20 @@ build_examples_zip_manual:
 deploy_examples_zip:
   stage: deploy
   script:
+    - export PROJECT_API_PATH=$(node -e "console.log(encodeURIComponent('$CI_PROJECT_PATH'))")
     - apt-get update && apt-get install -y curl
-    - echo "Checking/creating release for tag ${CI_COMMIT_TAG}..."
-    - |
-      RELEASE_EXISTS=$(curl -s -o /dev/null -w "%{http_code}" \
-        --header "PRIVATE-TOKEN: $CI_JOB_TOKEN" \
-        "https://gitlab.opencode.de/api/v4/projects/$CI_PROJECT_ID/releases/$CI_COMMIT_TAG")
-      if [ "$RELEASE_EXISTS" != "200" ]; then
-        echo "Release $CI_COMMIT_TAG not found, creating..."
-        curl --request POST \
-          --header "PRIVATE-TOKEN: $CI_JOB_TOKEN" \
-          --header "Content-Type: application/json" \
-          --data "{\"tag_name\":\"$CI_COMMIT_TAG\",\"name\":\"Release $CI_COMMIT_TAG\",\"description\":\"Automated release\"}" \
-          "https://gitlab.opencode.de/api/v4/projects/$CI_PROJECT_ID/releases"
-        sleep 2
-      else
-        echo "Release $CI_COMMIT_TAG already exists"
-      fi
     - echo "Uploading examples.zip to Release Assets..."
     - |
       curl --request POST \
         --header "PRIVATE-TOKEN: $CI_JOB_TOKEN" \
         --form "name=examples.zip" \
         --form "url=file://examples.zip" \
-        "https://gitlab.opencode.de/api/v4/projects/$CI_PROJECT_ID/releases/$CI_COMMIT_TAG/assets/links"
+        "https://gitlab.opencode.de/api/v4/projects/$PROJECT_API_PATH/releases/$CI_COMMIT_TAG/assets/links"
   rules:
     - if: '$CI_COMMIT_TAG && $CI_COMMIT_TAG !~ /^(lts|latest)$/'
   dependencies:
     - build_examples_zip
+    - create_release
 
 create_mkdocs_release:
   stage: docs
@@ -237,6 +248,7 @@ upload_docs_to_release_assets:
     paths:
       - .cache/pip/
   script:
+    - export PROJECT_API_PATH=$(node -e "console.log(encodeURIComponent('$CI_PROJECT_PATH'))" 2>/dev/null || python3 -c "import urllib.parse; print(urllib.parse.quote('$CI_PROJECT_PATH'))")
     - apt-get update && apt-get install -y zip curl
     - pip install -r devtools/docsValidation/python-dependencies.txt
     - git fetch --all --tags
@@ -245,29 +257,13 @@ upload_docs_to_release_assets:
     - printf '# Welcome to the Masterportal Documentation (%s)\n' "$DEPLOY_TAG" > docs/_snippets/index_title.md
     - mike deploy $DEPLOY_TAG
     - zip -r masterportal_docs_${DEPLOY_TAG}.zip $CI_PROJECT_DIR/site
-    - echo "Checking/creating release for tag ${DEPLOY_TAG}..."
-    - |
-      RELEASE_EXISTS=$(curl -s -o /dev/null -w "%{http_code}" \
-        --header "PRIVATE-TOKEN: $CI_JOB_TOKEN" \
-        "https://gitlab.opencode.de/api/v4/projects/$CI_PROJECT_ID/releases/$DEPLOY_TAG")
-      if [ "$RELEASE_EXISTS" != "200" ]; then
-        echo "Release $DEPLOY_TAG not found, creating..."
-        curl --request POST \
-          --header "PRIVATE-TOKEN: $CI_JOB_TOKEN" \
-          --header "Content-Type: application/json" \
-          --data "{\"tag_name\":\"$DEPLOY_TAG\",\"name\":\"Release $DEPLOY_TAG\",\"description\":\"Automated release\"}" \
-          "https://gitlab.opencode.de/api/v4/projects/$CI_PROJECT_ID/releases"
-        sleep 2
-      else
-        echo "Release $DEPLOY_TAG already exists"
-      fi
     - echo "Uploading documentation to GitLab Release Assets for tag ${DEPLOY_TAG}"
     - |
       curl --request POST \
         --header "PRIVATE-TOKEN: $CI_JOB_TOKEN" \
         --form "name=Documentation ${DEPLOY_TAG}" \
         --form "url=file://masterportal_docs_${DEPLOY_TAG}.zip" \
-        "https://gitlab.opencode.de/api/v4/projects/$CI_PROJECT_ID/releases/$DEPLOY_TAG/assets/links"
+        "https://gitlab.opencode.de/api/v4/projects/$PROJECT_API_PATH/releases/$DEPLOY_TAG/assets/links"
     - echo "Documentation successfully uploaded to Release Assets"
   rules:
     - if: '$CI_PIPELINE_SOURCE == "web"'
@@ -289,6 +285,7 @@ build_and_upload_examples_to_release:
       - examples.zip
     expire_in: 7 days
   script:
+    - export PROJECT_API_PATH=$(node -e "console.log(encodeURIComponent('$CI_PROJECT_PATH'))" 2>/dev/null || python3 -c "import urllib.parse; print(urllib.parse.quote('$CI_PROJECT_PATH'))")
     - git fetch --all --tags
     - git checkout $DEPLOY_TAG
     - npm install
@@ -300,14 +297,14 @@ build_and_upload_examples_to_release:
     - |
       RELEASE_EXISTS=$(curl -s -o /dev/null -w "%{http_code}" \
         --header "PRIVATE-TOKEN: $CI_JOB_TOKEN" \
-        "https://gitlab.opencode.de/api/v4/projects/$CI_PROJECT_ID/releases/$DEPLOY_TAG")
+        "https://gitlab.opencode.de/api/v4/projects/$PROJECT_API_PATH/releases/$DEPLOY_TAG")
       if [ "$RELEASE_EXISTS" != "200" ]; then
         echo "Release $DEPLOY_TAG not found, creating..."
         curl --request POST \
           --header "PRIVATE-TOKEN: $CI_JOB_TOKEN" \
           --header "Content-Type: application/json" \
-          --data "{\"tag_name\":\"$DEPLOY_TAG\",\"name\":\"Release $DEPLOY_TAG\",\"description\":\"Release created by pipeline\"}" \
-          "https://gitlab.opencode.de/api/v4/projects/$CI_PROJECT_ID/releases"
+          --data "{\"tag_name\":\"$DEPLOY_TAG\",\"name\":\"Release $DEPLOY_TAG\",\"description\":\"Automated release\"}" \
+          "https://gitlab.opencode.de/api/v4/projects/$PROJECT_API_PATH/releases"
       else
         echo "Release $DEPLOY_TAG already exists"
       fi
@@ -317,7 +314,7 @@ build_and_upload_examples_to_release:
         --header "PRIVATE-TOKEN: $CI_JOB_TOKEN" \
         --form "name=examples.zip" \
         --form "url=file://examples.zip" \
-        "https://gitlab.opencode.de/api/v4/projects/$CI_PROJECT_ID/releases/$DEPLOY_TAG/assets/links"
+        "https://gitlab.opencode.de/api/v4/projects/$PROJECT_API_PATH/releases/$DEPLOY_TAG/assets/links"
     - echo "Examples successfully uploaded to Release Assets"
   rules:
     - if: '$CI_PIPELINE_SOURCE == "web"'
