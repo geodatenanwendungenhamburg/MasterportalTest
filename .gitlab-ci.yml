@@ -70,7 +70,7 @@ create_mkdocs_release:
     - if: '$CI_COMMIT_TAG && $CI_COMMIT_TAG !~ /^(lts|latest)$/'
 
 deploy_mkdocs_to_masterportal_org:
-  stage: deploy
+  stage: docs
   image: python:3.8
   script:
     - echo "Deploy mkdocs to masterportal.org - configure FTP credentials in CI/CD variables"
