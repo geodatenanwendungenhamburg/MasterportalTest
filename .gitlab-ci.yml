@@ -34,7 +34,8 @@ deploy_examples_zip:
   script:
     - apt-get install -y curl
     - echo "Uploading examples.zip to Release Assets..."
-    - curl --request POST \
+    - |
+      curl --request POST \
         --header "PRIVATE-TOKEN: $CI_JOB_TOKEN" \
         --form "name=examples.zip" \
         --form "url=file://examples.zip" \
@@ -242,7 +243,8 @@ build_and_upload_examples_to_release:
     - zip -r examples.zip dist/
     - echo "Examples built for branch ${BRANCH_NAME}"
     - echo "Uploading examples.zip to GitLab Release Assets"
-    - curl --request POST \
+    - |
+      curl --request POST \
         --header "PRIVATE-TOKEN: $CI_JOB_TOKEN" \
         --form "name=examples_${BRANCH_NAME}.zip" \
         --form "url=file://examples.zip" \
