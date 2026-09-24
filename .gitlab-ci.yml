@@ -19,33 +19,26 @@ build_examples_zip:
       - node_modules/
   artifacts:
     paths:
-      - dist/**
+      - examples.zip
   script:
     - export NODE_OPTIONS=--openssl-legacy-provider
     - npm install
     - npm run buildExamples
-    - apt-get update
+    - apt-get update && apt-get install -y zip
+    - zip -r examples.zip dist/
   rules:
     - if: '$CI_COMMIT_TAG && $CI_COMMIT_TAG !~ /^(lts|latest)$/'
 
 deploy_examples_zip:
   stage: deploy
-  cache:
-    paths:
-      - node_modules/
   script:
     - apt-get install -y curl
-    # find all zip folders in dist folder, loop through the results and post the zips to Release Assets
-    - |
-      for zipFilePath in $(find dist -name \*.zip); do
-        fileName=$(basename "$zipFilePath")
-        echo "Uploading $fileName to Release Assets..."
-        curl --request POST \
-          --header "PRIVATE-TOKEN: $CI_JOB_TOKEN" \
-          --form "name=$fileName" \
-          --form "url=file://$zipFilePath" \
-          "https://gitlab.opencode.de/api/v4/projects/$CI_PROJECT_ID/releases/$CI_COMMIT_TAG/assets/links"
-      done
+    - echo "Uploading examples.zip to Release Assets..."
+    - curl --request POST \
+        --header "PRIVATE-TOKEN: $CI_JOB_TOKEN" \
+        --form "name=examples.zip" \
+        --form "url=file://examples.zip" \
+        "https://gitlab.opencode.de/api/v4/projects/$CI_PROJECT_ID/releases/$CI_COMMIT_TAG/assets/links"
   rules:
     - if: '$CI_COMMIT_TAG && $CI_COMMIT_TAG !~ /^(lts|latest)$/'
   dependencies:
@@ -238,32 +231,33 @@ build_and_upload_examples_to_release:
       - node_modules/
   artifacts:
     paths:
-      - dist/**
+      - examples.zip
     expire_in: 7 days
   script:
-    - git fetch --all --tags
-    - git checkout tags/$DEPLOY_TAG
+    - git fetch --all
+    - git checkout $BRANCH_NAME
     - npm install
     - npm run buildExamples
-    - apt-get update && apt-get install -y curl
-    - echo "Examples built for tag ${DEPLOY_TAG}"
-    - echo "Uploading examples to GitLab Release Assets"
-    - |
-      for zipFilePath in $(find dist -name \*.zip); do
-        fileName=$(basename "$zipFilePath")
-        echo "Uploading $fileName to Release Assets..."
-        curl --request POST \
-          --header "PRIVATE-TOKEN: $CI_JOB_TOKEN" \
-          --form "name=$fileName" \
-          --form "url=file://$zipFilePath" \
-          "https://gitlab.opencode.de/api/v4/projects/$CI_PROJECT_ID/releases/$DEPLOY_TAG/assets/links"
-      done
+    - apt-get update && apt-get install -y curl zip
+    - zip -r examples.zip dist/
+    - echo "Examples built for branch ${BRANCH_NAME}"
+    - echo "Uploading examples.zip to GitLab Release Assets"
+    - curl --request POST \
+        --header "PRIVATE-TOKEN: $CI_JOB_TOKEN" \
+        --form "name=examples_${BRANCH_NAME}.zip" \
+        --form "url=file://examples.zip" \
+        "https://gitlab.opencode.de/api/v4/projects/$CI_PROJECT_ID/releases/$DEPLOY_TAG/assets/links"
     - echo "Examples successfully uploaded to Release Assets"
   rules:
     - if: '$CI_PIPELINE_SOURCE == "web"'
       when: manual
-  variables:
-    DEPLOY_TAG: ""
+  input:
+    BRANCH_NAME:
+      description: "Enter branch name (e.g., dev, main, feature/xyz)"
+      default: "main"
+    DEPLOY_TAG:
+      description: "Enter tag name for Release Assets (e.g., v3.1.0)"
+      default: "latest"
 
 # deploy_tag_and_branch_same_name_to_opencode:
 #   stage: deploy
