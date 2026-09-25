@@ -63,18 +63,17 @@ create_mkdocs_release:
     paths:
       - site
   script:
-    - git config --global user.email "ci@example.com"
-    - git config --global user.name "CI Bot"
     - apt-get update && apt-get install -y zip curl wput jq
     - pip install -r devtools/docsValidation/python-dependencies.txt
     - mkdir -p docs/_snippets
     - RELEASE_VERSION="${CI_COMMIT_TAG#v}" && if grep -q "^## .* v${RELEASE_VERSION}.*LTS.*$" CHANGELOG.md 2>/dev/null; then printf '# Welcome to the Masterportal Documentation (%s (lts))\n' "$RELEASE_VERSION" > docs/_snippets/index_title.md; else printf '# Welcome to the Masterportal Documentation (%s)\n' "$CI_COMMIT_TAG" > docs/_snippets/index_title.md; fi
     - mike deploy $CI_COMMIT_TAG
     - mv $CI_PROJECT_DIR/site $CI_PROJECT_DIR/$CI_COMMIT_TAG
-    - |
-      if [ -n "$MKDOCS_FTP_NAME" ] && [ -n "$MKDOCS_FTP_PW" ] && [ -n "$MKDOCS_FTP_SERVER" ]; then
-        wput -u $MKDOCS_FTP_NAME -p $MKDOCS_FTP_PW -w ftp://$MKDOCS_FTP_SERVER/$CI_COMMIT_TAG $CI_PROJECT_DIR/$CI_COMMIT_TAG/*
-      fi
+    - echo "deployment"
+    # - |
+    #   if [ -n "$MKDOCS_FTP_NAME" ] && [ -n "$MKDOCS_FTP_PW" ] && [ -n "$MKDOCS_FTP_SERVER" ]; then
+    #     wput -u $MKDOCS_FTP_NAME -p $MKDOCS_FTP_PW -w ftp://$MKDOCS_FTP_SERVER/$CI_COMMIT_TAG $CI_PROJECT_DIR/$CI_COMMIT_TAG/*
+    #   fi
     - RELEASE_VERSION="${CI_COMMIT_TAG#v}"
     - CHANGELOG_RELEASE_HEADER="$(grep -m1 -E "^## .* v${RELEASE_VERSION}( \(LTS\))?$" CHANGELOG.md || true)"
     - if [ -z "$CHANGELOG_RELEASE_HEADER" ]; then echo "Could not find release headline for $CI_COMMIT_TAG in CHANGELOG.md." && exit 1; fi
@@ -85,22 +84,23 @@ create_mkdocs_release:
     - if [ "$IS_RELEASE_LTS" = "true" ] && [ "$RELEASE_PATCH" != "0" ]; then IS_LTS_HOTFIX="true"; fi
     - if [ "$IS_LTS_HOTFIX" = "true" ]; then echo "LTS hotfix detected for $CI_COMMIT_TAG - skip Latest docs upload." && exit 0; fi
     - mv $CI_PROJECT_DIR/$CI_COMMIT_TAG $CI_PROJECT_DIR/Latest
-    - |
-      if [ -n "$MKDOCS_FTP_NAME" ] && [ -n "$MKDOCS_FTP_PW" ] && [ -n "$MKDOCS_FTP_SERVER" ]; then
-        wput -u $MKDOCS_FTP_NAME -p $MKDOCS_FTP_PW -w ftp://$MKDOCS_FTP_SERVER/Latest $CI_PROJECT_DIR/Latest/*
-      fi
+    - echo "deployment"
+    # - |
+    #   if [ -n "$MKDOCS_FTP_NAME" ] && [ -n "$MKDOCS_FTP_PW" ] && [ -n "$MKDOCS_FTP_SERVER" ]; then
+    #     wput -u $MKDOCS_FTP_NAME -p $MKDOCS_FTP_PW -w ftp://$MKDOCS_FTP_SERVER/Latest $CI_PROJECT_DIR/Latest/*
+    #   fi
   rules:
     - if: '$CI_COMMIT_TAG && $CI_COMMIT_TAG !~ /^(lts|latest)$/'
 
-deploy_mkdocs_to_masterportal_org:
-  stage: docs
-  image: python:3.8
-  script:
-    - echo "Deploy mkdocs to masterportal.org - configure FTP credentials in CI/CD variables"
-  rules:
-    - if: '$CI_COMMIT_TAG && $CI_COMMIT_TAG !~ /^(lts|latest)$/'
-  dependencies:
-    - create_mkdocs_release
+# deploy_mkdocs_to_masterportal_org:
+#   stage: docs
+#   image: python:3.8
+#   script:
+#     - echo "Deploy mkdocs to masterportal.org - configure FTP credentials in CI/CD variables"
+#   rules:
+#     - if: '$CI_COMMIT_TAG && $CI_COMMIT_TAG !~ /^(lts|latest)$/'
+#   dependencies:
+#     - create_mkdocs_release
 
 # ===== Manual Pipelines (triggered manually) =====
 

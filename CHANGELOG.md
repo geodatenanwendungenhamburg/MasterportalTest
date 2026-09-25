@@ -4,7 +4,7 @@
 
 [Semantic versioning](https://semver.org/spec/v2.0.0.html) is used.
 
-## Unreleased - in development
+## 2026-09-11 v3.139.0
 ### __Breaking Changes__
 
 ### Added
