@@ -53,7 +53,7 @@ create_release:
 
 
 
-create_mkdocs_release:
+create_mkdocs:
   stage: docs
   image: python:3.8
   cache:
@@ -135,7 +135,7 @@ create_mkdocs_release:
 #   dependencies:
 #     - create_mkdocs_release
 
-# ===== Manual Pipelines (triggered manually) =====
+# ===== Custom Pipelines (triggered manually) =====
 
 npm_audit_security:
   stage: security
@@ -163,45 +163,19 @@ osv_scan_security:
     - chmod +x /usr/local/bin/osv-scanner
     - /usr/local/bin/osv-scanner scan -r . --format json > osv-result.json || true
     - node -e "const r=require('./osv-result.json'); console.log('OSV scan finished'); console.log('Results:', r.results?.length || 0);"
-    - export JIRA_PROJECT_KEY="BG"
-    - export JIRA_BASE_URL="https://lgv-hamburg.atlassian.net"
-    - export JIRA_ISSUE_TYPE="Task"
-    - export JIRA_USER_EMAIL="geodatenanwendungen@gv.hamburg.de"
-    - echo 'JIRA_PROJECT_KEY='$JIRA_PROJECT_KEY
-    - echo 'JIRA_BASE_URL='$JIRA_BASE_URL
-    - echo 'JIRA_ISSUE_TYPE='$JIRA_ISSUE_TYPE
-    - echo 'JIRA_USER_EMAIL='$JIRA_USER_EMAIL
-    - node devtools/security/createJiraTicketFromOsv.mjs
   rules:
     - if: '$CI_PIPELINE_SOURCE == "web"'
       when: manual
 
-# deploy_tag_on_opencode:
-#   stage: deploy
-#   script:
-#     - export ENCODED_USER=$(node -e "console.log(encodeURIComponent(process.env.OpenCode_User))")
-#     - export ENCODED_PASSWORD=$(node -e "console.log(encodeURIComponent(process.env.OpenCode_Password))")
-#     - apt-get update && apt-get install -y curl wput jq
-#     - git fetch --all --tags
-#     - echo "deploy to new opencode:${DEPLOY_TAG}"
-#     - git checkout tags/$DEPLOY_TAG
-#     - git push https://$ENCODED_USER:$ENCODED_PASSWORD@gitlab.opencode.de/lgvhh/urban-data-solutions/masterportal.git $DEPLOY_TAG
-#     - git clone --single-branch --branch dev https://geowerkstatt@bitbucket.org/geowerkstatt-hamburg/masterportal.git
-#     - cd masterportal
-#     - git push https://$ENCODED_USER:$ENCODED_PASSWORD@gitlab.opencode.de/lgvhh/urban-data-solutions/masterportal.git -f
-#   rules:
-#     - if: '$CI_PIPELINE_SOURCE == "web"'
-#       when: manual
-#   variables:
-#     DEPLOY_TAG: ""
-
-mkdocs_version_to_masterportal_org:
+mkdocs_version:
   stage: docs
   image: python:3.8
   cache:
     paths:
       - .cache/pip/
   script:
+    - git config --global user.email "$GIT_USER_EMAIL"
+    - git config --global user.name "$GIT_USER_NAME"
     - apt-get update && apt-get install -y zip curl wput jq
     - pip install -r devtools/docsValidation/python-dependencies.txt
     - git fetch --all --tags
@@ -217,13 +191,15 @@ mkdocs_version_to_masterportal_org:
   variables:
     DEPLOY_TAG: ""
 
-mkdocs_latest_to_masterportal_org:
+mkdocs_latest:
   stage: docs
   image: python:3.8
   cache:
     paths:
       - .cache/pip/
   script:
+    - git config --global user.email "$GIT_USER_EMAIL"
+    - git config --global user.name "$GIT_USER_NAME"
     - apt-get update && apt-get install -y zip curl wput jq
     - pip install -r devtools/docsValidation/python-dependencies.txt
     - git fetch --all --tags
@@ -239,7 +215,7 @@ mkdocs_latest_to_masterportal_org:
   variables:
     DEPLOY_TAG: ""
 
-validate_mkdocs:
+validate_mkdocs_manual:
   stage: docs
   image: python:3.8
   cache:
@@ -254,172 +230,23 @@ validate_mkdocs:
     - if: '$CI_PIPELINE_SOURCE == "web"'
       when: manual
 
-upload_docs_to_release_assets:
-  stage: docs
-  image: python:3.8
-  cache:
-    paths:
-      - .cache/pip/
-  script:
-    - export PROJECT_API_PATH=$(node -e "console.log(encodeURIComponent('$CI_PROJECT_PATH'))" 2>/dev/null || python3 -c "import urllib.parse; print(urllib.parse.quote('$CI_PROJECT_PATH'))")
-    - apt-get update && apt-get install -y zip curl
-    - pip install -r devtools/docsValidation/python-dependencies.txt
-    - git fetch --all --tags
-    - git checkout tags/$DEPLOY_TAG
-    - mkdir -p docs/_snippets
-    - printf '# Welcome to the Masterportal Documentation (%s)\n' "$DEPLOY_TAG" > docs/_snippets/index_title.md
-    - mike deploy $DEPLOY_TAG
-    - zip -r masterportal_docs_${DEPLOY_TAG}.zip $CI_PROJECT_DIR/site
-    - echo "Uploading documentation to GitLab Release Assets for tag ${DEPLOY_TAG}"
-    - |
-      curl --request POST \
-        --header "JOB-TOKEN: $CI_JOB_TOKEN" \
-        --form "name=Documentation ${DEPLOY_TAG}" \
-        --form "url=file://masterportal_docs_${DEPLOY_TAG}.zip" \
-        "https://gitlab.opencode.de/api/v4/projects/$PROJECT_API_PATH/releases/$DEPLOY_TAG/assets/links"
-    - echo "Documentation successfully uploaded to Release Assets"
-  rules:
-    - if: '$CI_PIPELINE_SOURCE == "web"'
-      when: manual
-  variables:
-    DEPLOY_TAG: ""
-  artifacts:
-    paths:
-      - masterportal_docs_*.zip
-    expire_in: 7 days
-
-build_and_upload_examples_to_release:
+build_examples_manual:
   stage: build
   cache:
     paths:
       - node_modules/
   artifacts:
     paths:
-      - examples.zip
+      - dist/**
     expire_in: 7 days
   script:
-    - export PROJECT_API_PATH=$(node -e "console.log(encodeURIComponent('$CI_PROJECT_PATH'))" 2>/dev/null || python3 -c "import urllib.parse; print(urllib.parse.quote('$CI_PROJECT_PATH'))")
     - git fetch --all --tags
-    - git checkout $DEPLOY_TAG
+    - git checkout tags/$DEPLOY_TAG
     - npm install
     - npm run buildExamples
-    - apt-get update && apt-get install -y curl zip
-    - cd dist && zip -r ../examples.zip .
-    - echo "Examples built for tag ${DEPLOY_TAG}"
-    - echo "Creating release if it doesn't exist..."
-    - |
-      RELEASE_EXISTS=$(curl -s -o /dev/null -w "%{http_code}" \
-        --header "JOB-TOKEN: $CI_JOB_TOKEN" \
-        "https://gitlab.opencode.de/api/v4/projects/$PROJECT_API_PATH/releases/$DEPLOY_TAG")
-      if [ "$RELEASE_EXISTS" != "200" ]; then
-        echo "Release $DEPLOY_TAG not found, creating..."
-        curl --request POST \
-          --header "JOB-TOKEN: $CI_JOB_TOKEN" \
-          --header "Content-Type: application/json" \
-          --data "{\"tag_name\":\"$DEPLOY_TAG\",\"name\":\"Release $DEPLOY_TAG\",\"description\":\"Automated release\"}" \
-          "https://gitlab.opencode.de/api/v4/projects/$PROJECT_API_PATH/releases"
-      else
-        echo "Release $DEPLOY_TAG already exists"
-      fi
-    - echo "Uploading examples.zip to GitLab Release Assets"
-    - |
-      curl --request POST \
-        --header "JOB-TOKEN: $CI_JOB_TOKEN" \
-        --form "name=examples.zip" \
-        --form "url=file://examples.zip" \
-        "https://gitlab.opencode.de/api/v4/projects/$PROJECT_API_PATH/releases/$DEPLOY_TAG/assets/links"
-    - echo "Examples successfully uploaded to Release Assets"
+    - apt-get update && apt-get install -y curl
   rules:
     - if: '$CI_PIPELINE_SOURCE == "web"'
       when: manual
   variables:
     DEPLOY_TAG: ""
-
-# deploy_tag_and_branch_same_name_to_opencode:
-#   stage: deploy
-#   script:
-#     - export ENCODED_USER=$(node -e "console.log(encodeURIComponent(process.env.OpenCode_User))")
-#     - export ENCODED_PASSWORD=$(node -e "console.log(encodeURIComponent(process.env.OpenCode_Password))")
-#     - echo "deploy tag to new openCode:${DEPLOY_TAG}"
-#     - git fetch --all --tags
-#     - git checkout tags/$DEPLOY_TAG
-#     - git push https://$ENCODED_USER:$ENCODED_PASSWORD@gitlab.opencode.de/lgvhh/urban-data-solutions/masterportal.git refs/tags/$DEPLOY_TAG
-#     - git clone --single-branch --branch lts https://geowerkstatt@bitbucket.org/geowerkstatt-hamburg/masterportal.git
-#     - cd masterportal
-#     - git push https://$ENCODED_USER:$ENCODED_PASSWORD@gitlab.opencode.de/lgvhh/urban-data-solutions/masterportal.git HEAD:refs/heads/$DEPLOY_TAG -f
-#   rules:
-#     - if: '$CI_PIPELINE_SOURCE == "web"'
-#       when: manual
-#   variables:
-#     DEPLOY_TAG: ""
-
-# deploy_lts_tag_and_branch_to_opencode:
-#   stage: deploy
-#   script:
-#     - export ENCODED_USER=$(node -e "console.log(encodeURIComponent(process.env.OpenCode_User))")
-#     - export ENCODED_PASSWORD=$(node -e "console.log(encodeURIComponent(process.env.OpenCode_Password))")
-#     - echo 'deploy lts tag to new openCode'
-#     - git fetch --all --tags
-#     - git checkout tags/lts
-#     - git push https://$ENCODED_USER:$ENCODED_PASSWORD@gitlab.opencode.de/lgvhh/urban-data-solutions/masterportal.git refs/tags/lts
-#     - git clone --single-branch --branch lts https://geowerkstatt@bitbucket.org/geowerkstatt-hamburg/masterportal.git
-#     - cd masterportal
-#     - git push https://$ENCODED_USER:$ENCODED_PASSWORD@gitlab.opencode.de/lgvhh/urban-data-solutions/masterportal.git HEAD:refs/heads/lts -f
-#   rules:
-#     - if: '$CI_PIPELINE_SOURCE == "web"'
-#       when: manual
-
-# remove_tag_in_opencode:
-#   stage: deploy
-#   script:
-#     - export ENCODED_USER=$(node -e "console.log(encodeURIComponent(process.env.OpenCode_User))")
-#     - export ENCODED_PASSWORD=$(node -e "console.log(encodeURIComponent(process.env.OpenCode_Password))")
-#     - echo "remove tag in new openCode:${DEPLOY_TAG}"
-#     - git fetch --all --tags
-#     - git checkout tags/$DEPLOY_TAG
-#     - git push https://$ENCODED_USER:$ENCODED_PASSWORD@gitlab.opencode.de/lgvhh/urban-data-solutions/masterportal.git :refs/tags/$DEPLOY_TAG
-#   rules:
-#     - if: '$CI_PIPELINE_SOURCE == "web"'
-#       when: manual
-#   variables:
-#     DEPLOY_TAG: ""
-
-# delete_branch_in_opencode:
-#   stage: deploy
-#   script:
-#     - export ENCODED_USER=$(node -e "console.log(encodeURIComponent(process.env.OpenCode_User))")
-#     - export ENCODED_PASSWORD=$(node -e "console.log(encodeURIComponent(process.env.OpenCode_Password))")
-#     - echo "delete branch in openCode:${BRANCH_NAME}"
-#     - git push https://$ENCODED_USER:$ENCODED_PASSWORD@gitlab.opencode.de/lgvhh/urban-data-solutions/masterportal.git --delete refs/heads/$BRANCH_NAME
-#   rules:
-#     - if: '$CI_PIPELINE_SOURCE == "web"'
-#       when: manual
-#   variables:
-#     BRANCH_NAME: ""
-
-# deploy_on_new_opencode_also_latest_tag:
-#   stage: deploy
-#   script:
-#     - export ENCODED_USER=$(node -e "console.log(encodeURIComponent(process.env.OpenCode_User))")
-#     - export ENCODED_PASSWORD=$(node -e "console.log(encodeURIComponent(process.env.OpenCode_Password))")
-#     - echo "deploy to opencode:${DEPLOY_TAG}"
-#     - git fetch --all --tags
-#     - git checkout tags/$DEPLOY_TAG
-#     - git push https://$ENCODED_USER:$ENCODED_PASSWORD@gitlab.opencode.de/lgvhh/urban-data-solutions/masterportal.git $DEPLOY_TAG
-#     - git clone --single-branch --branch dev https://geowerkstatt@bitbucket.org/geowerkstatt-hamburg/masterportal.git
-#     - cd masterportal
-#     - git push https://$ENCODED_USER:$ENCODED_PASSWORD@gitlab.opencode.de/lgvhh/urban-data-solutions/masterportal.git -f
-
-#     - echo 'deploy latest tag to openCode'
-#     - git fetch --all --tags
-#     - git checkout tags/latest
-#     - git push --delete https://$ENCODED_USER:$ENCODED_PASSWORD@gitlab.opencode.de/lgvhh/urban-data-solutions/masterportal.git latest || true
-#     - git push https://$ENCODED_USER:$ENCODED_PASSWORD@gitlab.opencode.de/lgvhh/urban-data-solutions/masterportal.git latest
-#     - git clone --single-branch --branch dev https://geowerkstatt@bitbucket.org/geowerkstatt-hamburg/masterportal.git
-#     - cd masterportal
-#     - git push https://$ENCODED_USER:$ENCODED_PASSWORD@gitlab.opencode.de/lgvhh/urban-data-solutions/masterportal.git -f
-#   rules:
-#     - if: '$CI_PIPELINE_SOURCE == "web"'
-#       when: manual
-#   variables:
-#     DEPLOY_TAG: ""
