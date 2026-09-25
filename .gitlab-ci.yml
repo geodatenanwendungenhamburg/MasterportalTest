@@ -94,7 +94,6 @@ create_mkdocs_release:
     - CHANGELOG_RELEASE_HEADER="$(grep -m1 -E "^## .* v${RELEASE_VERSION}( \(LTS\))?$" CHANGELOG.md || true)"
     - |
       echo "Processing tag: $CI_COMMIT_TAG (version: v${RELEASE_VERSION})"
-    - |
       echo "Changelog header found: $CHANGELOG_RELEASE_HEADER"
     - |
       if [ -z "$CHANGELOG_RELEASE_HEADER" ]; then
@@ -103,12 +102,11 @@ create_mkdocs_release:
       fi
     - IS_RELEASE_LTS="false"
     - if echo "$CHANGELOG_RELEASE_HEADER" | grep -q ' (LTS)$'; then IS_RELEASE_LTS="true"; fi
-    - |
-      echo "Release type: $IS_RELEASE_LTS (LTS=true, Standard=false)"
     - RELEASE_PATCH="${RELEASE_VERSION##*.}"
     - IS_LTS_HOTFIX="false"
     - if [ "$IS_RELEASE_LTS" = "true" ] && [ "$RELEASE_PATCH" != "0" ]; then IS_LTS_HOTFIX="true"; fi
     - |
+      echo "Release type: $IS_RELEASE_LTS (LTS=true, Standard=false)"
       echo "Is LTS hotfix: $IS_LTS_HOTFIX"
     - |
       if [ "$IS_LTS_HOTFIX" = "true" ]; then
