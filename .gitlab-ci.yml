@@ -63,6 +63,8 @@ create_mkdocs_release:
     paths:
       - site
   script:
+    - git config --global user.email "$GIT_USER_EMAIL"
+    - git config --global user.name "$GIT_USER_NAME"
     - apt-get update && apt-get install -y zip curl wput jq
     - pip install -r devtools/docsValidation/python-dependencies.txt
     - mkdir -p docs/_snippets
