@@ -1,3 +1,23 @@
+spec:
+  inputs:
+    pipeline_action:
+      description: "Select the custom pipeline to execute"
+      type: string
+      options:
+        - npm_audit
+        - osv_scan
+        - mkdocs_version
+        - mkdocs_latest
+        - validate_mkdocs
+        - build_examples
+      default: npm_audit
+    
+    deploy_tag:
+      description: "Tag to deploy (e.g., v3.1.0) - required for mkdocs_version, mkdocs_latest, build_examples"
+      type: string
+      default: ""
+
+---
 image: node:24.15.0
 
 stages:
@@ -142,12 +162,11 @@ npm_audit_security:
   cache:
     paths:
       - node_modules/
+  rules:
+    - if: '$[[ inputs.pipeline_action ]] == "npm_audit"'
   script:
     - npm install
     - npm audit --json
-  rules:
-    - if: '$CI_PIPELINE_SOURCE == "web"'
-      when: manual
 
 osv_scan_security:
   stage: security
@@ -157,15 +176,14 @@ osv_scan_security:
   artifacts:
     paths:
       - osv-result.json
+  rules:
+    - if: '$[[ inputs.pipeline_action ]] == "osv_scan"'
   script:
     - npm install
     - curl -sSL -o /usr/local/bin/osv-scanner https://github.com/google/osv-scanner/releases/latest/download/osv-scanner_linux_amd64
     - chmod +x /usr/local/bin/osv-scanner
     - /usr/local/bin/osv-scanner scan -r . --format json > osv-result.json || true
     - node -e "const r=require('./osv-result.json'); console.log('OSV scan finished'); console.log('Results:', r.results?.length || 0);"
-  rules:
-    - if: '$CI_PIPELINE_SOURCE == "web"'
-      when: manual
 
 mkdocs_version:
   stage: docs
@@ -173,23 +191,20 @@ mkdocs_version:
   cache:
     paths:
       - .cache/pip/
+  rules:
+    - if: '$[[ inputs.pipeline_action ]] == "mkdocs_version"'
   script:
     - git config --global user.email "$GIT_USER_EMAIL"
     - git config --global user.name "$GIT_USER_NAME"
     - apt-get update && apt-get install -y zip curl wput jq
     - pip install -r devtools/docsValidation/python-dependencies.txt
     - git fetch --all --tags
-    - git checkout tags/$DEPLOY_TAG
+    - git checkout tags/$[[ inputs.deploy_tag ]]
     - mkdir -p docs/_snippets
-    - printf '# Welcome to the Masterportal Documentation (%s)\n' "$DEPLOY_TAG" > docs/_snippets/index_title.md
-    - mike deploy $DEPLOY_TAG
-    - mv $CI_PROJECT_DIR/site $CI_PROJECT_DIR/$DEPLOY_TAG
+    - printf '# Welcome to the Masterportal Documentation (%s)\n' "$[[ inputs.deploy_tag ]]" > docs/_snippets/index_title.md
+    - mike deploy $[[ inputs.deploy_tag ]]
+    - mv $CI_PROJECT_DIR/site $CI_PROJECT_DIR/$[[ inputs.deploy_tag ]]
     - echo "Upload to FTP - configure MKDOCS_FTP_* in CI/CD variables"
-  rules:
-    - if: '$CI_PIPELINE_SOURCE == "web"'
-      when: manual
-  variables:
-    DEPLOY_TAG: ""
 
 mkdocs_latest:
   stage: docs
@@ -197,23 +212,20 @@ mkdocs_latest:
   cache:
     paths:
       - .cache/pip/
+  rules:
+    - if: '$[[ inputs.pipeline_action ]] == "mkdocs_latest"'
   script:
     - git config --global user.email "$GIT_USER_EMAIL"
     - git config --global user.name "$GIT_USER_NAME"
     - apt-get update && apt-get install -y zip curl wput jq
     - pip install -r devtools/docsValidation/python-dependencies.txt
     - git fetch --all --tags
-    - git checkout tags/$DEPLOY_TAG
+    - git checkout tags/$[[ inputs.deploy_tag ]]
     - mkdir -p docs/_snippets
-    - printf '# Welcome to the Masterportal Documentation (%s)\n' "$DEPLOY_TAG" > docs/_snippets/index_title.md
-    - mike deploy $DEPLOY_TAG
+    - printf '# Welcome to the Masterportal Documentation (%s)\n' "$[[ inputs.deploy_tag ]]" > docs/_snippets/index_title.md
+    - mike deploy $[[ inputs.deploy_tag ]]
     - mv $CI_PROJECT_DIR/site $CI_PROJECT_DIR/Latest
     - echo "Upload to FTP - configure MKDOCS_FTP_* in CI/CD variables"
-  rules:
-    - if: '$CI_PIPELINE_SOURCE == "web"'
-      when: manual
-  variables:
-    DEPLOY_TAG: ""
 
 validate_mkdocs_manual:
   stage: docs
@@ -221,14 +233,13 @@ validate_mkdocs_manual:
   cache:
     paths:
       - .cache/pip/
+  rules:
+    - if: '$[[ inputs.pipeline_action ]] == "validate_mkdocs"'
   script:
     - python -m venv .venv
     - source .venv/bin/activate
     - pip install -r devtools/docsValidation/python-dependencies.txt
     - devtools/docsValidation/docsValidation.sh
-  rules:
-    - if: '$CI_PIPELINE_SOURCE == "web"'
-      when: manual
 
 build_examples_manual:
   stage: build
@@ -239,14 +250,11 @@ build_examples_manual:
     paths:
       - dist/**
     expire_in: 7 days
+  rules:
+    - if: '$[[ inputs.pipeline_action ]] == "build_examples"'
   script:
     - git fetch --all --tags
-    - git checkout tags/$DEPLOY_TAG
+    - git checkout tags/$[[ inputs.deploy_tag ]]
     - npm install
     - npm run buildExamples
     - apt-get update && apt-get install -y curl
-  rules:
-    - if: '$CI_PIPELINE_SOURCE == "web"'
-      when: manual
-  variables:
-    DEPLOY_TAG: ""
