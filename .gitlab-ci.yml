@@ -73,7 +73,8 @@ create_mkdocs_release:
       else
         printf '# Welcome to the Masterportal Documentation (%s)\n' "$CI_COMMIT_TAG" > docs/_snippets/index_title.md
       fi
-    - echo "Release tag found in changelog: v${RELEASE_VERSION}"
+    - |
+      echo "Release tag found in changelog: v${RELEASE_VERSION}"
     - |
       if grep -q "^## .* v${RELEASE_VERSION}.*LTS.*$" CHANGELOG.md 2>/dev/null; then
         echo "Type: LTS Release"
@@ -81,7 +82,8 @@ create_mkdocs_release:
         echo "Type: Standard Release"
       fi
     - mike deploy $CI_COMMIT_TAG
-    - echo "Documentation deployed for release: $CI_COMMIT_TAG"
+    - |
+      echo "Documentation deployed for release: $CI_COMMIT_TAG"
     - mv $CI_PROJECT_DIR/site $CI_PROJECT_DIR/$CI_COMMIT_TAG
     - echo "deployment"
     # - |
