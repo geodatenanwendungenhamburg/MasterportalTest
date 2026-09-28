@@ -163,7 +163,7 @@ npm_audit_security:
     paths:
       - node_modules/
   rules:
-    - if: '$[[ inputs.pipeline_action ]] == "npm_audit"'
+    - if: '"$[[ inputs.pipeline_action ]]" == "npm_audit"'
   script:
     - npm install
     - npm audit --json
