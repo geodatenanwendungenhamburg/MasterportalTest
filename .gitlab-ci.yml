@@ -108,10 +108,10 @@ create_mkdocs:
       echo "Documentation deployed for release: $CI_COMMIT_TAG"
     - mv $CI_PROJECT_DIR/site $CI_PROJECT_DIR/$CI_COMMIT_TAG
     - echo "deployment"
-    # - |
-    #   if [ -n "$MKDOCS_FTP_NAME" ] && [ -n "$MKDOCS_FTP_PW" ] && [ -n "$MKDOCS_FTP_SERVER" ]; then
-    #     wput -u $MKDOCS_FTP_NAME -p $MKDOCS_FTP_PW -w ftp://$MKDOCS_FTP_SERVER/$CI_COMMIT_TAG $CI_PROJECT_DIR/$CI_COMMIT_TAG/*
-    #   fi
+    - |
+      if [ -n "$MKDOCS_FTP_NAME" ] && [ -n "$MKDOCS_FTP_PW" ] && [ -n "$MKDOCS_FTP_SERVER" ]; then
+        wput -u $MKDOCS_FTP_NAME -p $MKDOCS_FTP_PW -w ftp://$MKDOCS_FTP_SERVER/$CI_COMMIT_TAG $CI_PROJECT_DIR/$CI_COMMIT_TAG/*
+      fi
     - RELEASE_VERSION="${CI_COMMIT_TAG#v}"
     - CHANGELOG_RELEASE_HEADER="$(grep -m1 -E "^## .* v${RELEASE_VERSION}( \(LTS\))?$" CHANGELOG.md || true)"
     - |
@@ -138,10 +138,10 @@ create_mkdocs:
     - mv $CI_PROJECT_DIR/$CI_COMMIT_TAG $CI_PROJECT_DIR/Latest
     - echo "Moved documentation to Latest folder"
     - echo "deployment"
-    # - |
-    #   if [ -n "$MKDOCS_FTP_NAME" ] && [ -n "$MKDOCS_FTP_PW" ] && [ -n "$MKDOCS_FTP_SERVER" ]; then
-    #     wput -u $MKDOCS_FTP_NAME -p $MKDOCS_FTP_PW -w ftp://$MKDOCS_FTP_SERVER/Latest $CI_PROJECT_DIR/Latest/*
-    #   fi
+    - |
+      if [ -n "$MKDOCS_FTP_NAME" ] && [ -n "$MKDOCS_FTP_PW" ] && [ -n "$MKDOCS_FTP_SERVER" ]; then
+        wput -u $MKDOCS_FTP_NAME -p $MKDOCS_FTP_PW -w ftp://$MKDOCS_FTP_SERVER/Latest $CI_PROJECT_DIR/Latest/*
+      fi
   rules:
     - if: '$CI_COMMIT_TAG && $CI_COMMIT_TAG !~ /^(lts|latest)$/'
 
