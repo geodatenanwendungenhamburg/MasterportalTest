@@ -27,6 +27,7 @@
 
 ### Fixed
 - Draw: Fixed an error when editing imported multi geometries (e.g. from KML files), which prevented the measurement tooltip from being positioned.
+- FileImport: Fixed CRS mapping for GeoJSON and added support for fill and fill-opacity properties to style imported features correctly.
 
 ---
 

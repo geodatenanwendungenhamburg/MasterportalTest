@@ -1,3 +1,4 @@
+import {convertColor} from "@shared/js/utils/convertColor.js";
 import {GeoJSON, GPX, KML} from "ol/format.js";
 import Circle from "ol/geom/Circle.js";
 import Polygon from "ol/geom/Polygon.js";
@@ -15,6 +16,7 @@ import {uniqueId} from "@shared/js/utils/uniqueId.js";
 import layerCollection from "@core/layers/js/layerCollection.js";
 import {treeSubjectsKey} from "@shared/js/utils/constants.js";
 import {supportedFiletypes} from "../utils/supportedFiletypes.js";
+import convertCrsToEpsg from "@shared/js/utils/convertCrsToEpsg.js";
 
 const defaultFont = "16px Arial",
     gpxDrawStateNamespace = "https://masterportal.org/gpx",
@@ -493,22 +495,7 @@ export default {
                 }
 
                 geometries.forEach(geometry => {
-                    let mappedCrsPropName = crsPropName;
-
-                    if ((crsPropName === "urn:ogc:def:crs:EPSG:6.6:4326") ||
-                       (crsPropName === "urn:ogc:def:crs:OGC:1.3:CRS84") ||
-                       (crsPropName === "urn:ogc:def:crs:OGC:1.3:CRS:84") ||
-                       (crsPropName === "urn:ogc:def:crs:OGC:2:84") ||
-                       (crsPropName === "urn:x-ogc:def:crs:EPSG:4326")) {
-                        mappedCrsPropName = "EPSG:4326";
-                    }
-                    else if ((crsPropName === "EPSG:102100") ||
-                        (crsPropName === "EPSG:102113") ||
-                        (crsPropName === "EPSG:900913") ||
-                        (crsPropName === "urn:ogc:def:crs:EPSG:6.18:3:3857")) {
-                        mappedCrsPropName = "EPSG:3857";
-                    }
-                    geometry.transform(mappedCrsPropName, rootGetters["Maps/projectionCode"]);
+                    geometry.transform(convertCrsToEpsg(crsPropName), rootGetters["Maps/projectionCode"]);
                     feature.set("source", fileName);
                 });
             }
@@ -562,9 +549,9 @@ export default {
             format = getFormat(fileName, state.selectedFiletype, supportedFormats),
             fileDataProjection = getCrsPropertyName(datasrc.raw);
 
-        let
-            alertingMessage,
-            features;
+        let alertingMessage,
+            features,
+            mappedDataProjection = fileDataProjection;
 
         if (format === false) {
             const fileNameSplit = fileName.split("."),
@@ -579,9 +566,11 @@ export default {
             return;
         }
 
+        mappedDataProjection = convertCrsToEpsg(fileDataProjection);
+
         try {
             features = format.readFeatures(datasrc.raw, {
-                dataProjection: fileDataProjection,
+                dataProjection: mappedDataProjection,
                 featureProjection: rootGetters["Maps/projectionCode"]
             });
         }
@@ -617,7 +606,7 @@ export default {
                 return style ? style.clone() : new Style();
             }
 
-            if (!drawState && !customStyles) {
+            if (!drawState && !customStyles && !feature.get("fill")) {
                 const defaultColor = [226, 26, 28, 0.9],
                     defaultFillColor = [228, 26, 28, 0.5],
                     defaultPointSize = 16,
@@ -679,7 +668,96 @@ export default {
                 return style.clone();
             }
 
-            if (!drawState && customStyles) {
+            if (!drawState && !customStyles && feature.get("fill")) {
+                const fillColor = feature.get("fill");
+                const fillOpacity = feature.get("fill-opacity") ?? 0.5;
+                const rgbFill = convertColor(fillColor, "rgb");
+                const colorWithOpacity = [...rgbFill, fillOpacity];
+                const strokeColor = [100, 100, 100, 0.8];
+
+                style = new Style({
+                    stroke: new Stroke({color: strokeColor, width: 1}),
+                    fill: new Fill({color: colorWithOpacity})
+                });
+
+                return style.clone();
+            }
+
+            if (drawState?.drawType.geometry === "Point") {
+                if (drawState.text) {
+                    style = new Style({
+                        image: new CircleStyle({
+                        }),
+                        text: new Text({
+                            text: drawState.text,
+                            font: drawState.fontSize + "px " + (drawState.font || "Arial,sans-serif"),
+                            fill: new Fill({
+                                color: drawState.color
+                            }),
+                            textAlign: drawState.textAlign || "left",
+                            textBaseline: drawState.textBaseline || "bottom"
+                        })
+                    });
+                }
+                else if (drawState?.symbol.value !== "simple_point") {
+                    style = new Style({
+                        image: new Icon({
+                            crossOrigin: "anonymous",
+                            src: drawState.symbol.value.indexOf("/") > 0 ? drawState.symbol.value : drawState.imgPath + drawState.symbol.value,
+                            scale: drawState.symbol.scale
+                        })
+                    });
+                }
+                else {
+                    style = createDrawStyle(drawState?.color, drawState?.color, drawState?.drawType.geometry, drawState?.pointSize, 1, drawState?.zIndex);
+                }
+            }
+            else if (drawState?.drawType.geometry === "LineString" || drawState?.drawType.geometry === "MultiLineString") {
+                style = new Style({
+                    stroke: new Stroke({
+                        color: drawState.colorContour,
+                        width: drawState.strokeWidth
+                    })
+                });
+            }
+            else if (drawState?.drawType.geometry === "Polygon" || drawState?.drawType.geometry === "MultiPolygon") {
+                style = new Style({
+                    stroke: new Stroke({
+                        color: drawState.colorContour,
+                        width: drawState.strokeWidth
+                    }),
+                    fill: new Fill({
+                        color: drawState.color
+                    })
+                });
+            }
+            else if (drawState?.drawType.geometry === "Circle") {
+                style = new Style({
+                    stroke: new Stroke({
+                        color: drawState.colorContour,
+                        width: drawState.strokeWidth
+                    }),
+                    fill: new Fill({
+                        color: drawState.color
+                    }),
+                    circleRadius: drawState.circleRadius,
+                    circleOuterRadius: drawState.circleOuterRadius,
+                    colorContour: drawState.colorContour,
+                    outerColorContour: drawState.outerColorContour
+                });
+            }
+            else if (drawState?.drawType.geometry === "Square") {
+                style = new Style({
+                    stroke: new Stroke({
+                        color: drawState.colorContour,
+                        width: drawState.strokeWidth
+                    }),
+                    fill: new Fill({
+                        color: drawState.color
+                    })
+                });
+            }
+            else if (!drawState && customStyles) {
                 const geometryType = feature ? feature.getGeometry().getType() : "cesium",
                     featureAttribute = feature.get(customStyles[0].attribute),
                     featureColor = customStyles.find(attribute => {
@@ -799,9 +877,7 @@ export default {
                     circleRadius = parseFloat(feature.get("masterportal_attributes").geoCircleRadius);
 
                 feature.setGeometry(new Circle(circleCenter, circleRadius));
-
-                // Transformation here is necessary because all other geometries have already been transformed within "format.readFeatures(..."
-                feature.getGeometry().transform(fileDataProjection, rootGetters["Maps/projectionCode"]);
+                feature.getGeometry().transform(mappedDataProjection, rootGetters["Maps/projectionCode"]);
             }
             if (feature.get("masterportal_attributes").isSquare) {
                 const coords = feature.get("masterportal_attributes").squareCoords;
