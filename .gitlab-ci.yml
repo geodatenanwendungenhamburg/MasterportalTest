@@ -163,7 +163,7 @@ npm_audit_security:
     paths:
       - node_modules/
   rules:
-    - if: ${{ inputs.pipeline_action == "npm_audit" }}
+    - if: '$[[ inputs.pipeline_action ]] == "npm_audit"'
   script:
     - npm install
     - npm audit --json
@@ -177,7 +177,7 @@ osv_scan_security:
     paths:
       - osv-result.json
   rules:
-    - if: ${{ inputs.pipeline_action == "osv_scan" }}
+    - if: '$[[ inputs.pipeline_action ]] == "osv_scan"'
   script:
     - npm install
     - curl -sSL -o /usr/local/bin/osv-scanner https://github.com/google/osv-scanner/releases/latest/download/osv-scanner_linux_amd64
@@ -192,18 +192,18 @@ mkdocs_version:
     paths:
       - .cache/pip/
   rules:
-    - if: ${{ inputs.pipeline_action == "mkdocs_version" }}
+    - if: '$[[ inputs.pipeline_action ]] == "mkdocs_version"'
   script:
     - git config --global user.email "$GIT_USER_EMAIL"
     - git config --global user.name "$GIT_USER_NAME"
     - apt-get update && apt-get install -y zip curl wput jq
     - pip install -r devtools/docsValidation/python-dependencies.txt
     - git fetch --all --tags
-    - git checkout tags/${{ inputs.deploy_tag }}
+    - git checkout "tags/$[[ inputs.deploy_tag ]]"
     - mkdir -p docs/_snippets
-    - printf '# Welcome to the Masterportal Documentation (%s)\n' "${{ inputs.deploy_tag }}" > docs/_snippets/index_title.md
-    - mike deploy ${{ inputs.deploy_tag }}
-    - mv $CI_PROJECT_DIR/site $CI_PROJECT_DIR/${{ inputs.deploy_tag }}
+    - printf '# Welcome to the Masterportal Documentation (%s)\n' "$[[ inputs.deploy_tag ]]" > docs/_snippets/index_title.md
+    - mike deploy "$[[ inputs.deploy_tag ]]"
+    - mv "$CI_PROJECT_DIR/site" "$CI_PROJECT_DIR/$[[ inputs.deploy_tag ]]"
     - echo "Upload to FTP - configure MKDOCS_FTP_* in CI/CD variables"
 
 mkdocs_latest:
@@ -213,18 +213,18 @@ mkdocs_latest:
     paths:
       - .cache/pip/
   rules:
-    - if: ${{ inputs.pipeline_action == "mkdocs_latest" }}
+    - if: '$[[ inputs.pipeline_action ]] == "mkdocs_latest"'
   script:
     - git config --global user.email "$GIT_USER_EMAIL"
     - git config --global user.name "$GIT_USER_NAME"
     - apt-get update && apt-get install -y zip curl wput jq
     - pip install -r devtools/docsValidation/python-dependencies.txt
     - git fetch --all --tags
-    - git checkout tags/${{ inputs.deploy_tag }}
+    - git checkout "tags/$[[ inputs.deploy_tag ]]"
     - mkdir -p docs/_snippets
-    - printf '# Welcome to the Masterportal Documentation (%s)\n' "${{ inputs.deploy_tag }}" > docs/_snippets/index_title.md
-    - mike deploy ${{ inputs.deploy_tag }}
-    - mv $CI_PROJECT_DIR/site $CI_PROJECT_DIR/Latest
+    - printf '# Welcome to the Masterportal Documentation (%s)\n' "$[[ inputs.deploy_tag ]]" > docs/_snippets/index_title.md
+    - mike deploy "$[[ inputs.deploy_tag ]]"
+    - mv "$CI_PROJECT_DIR/site" "$CI_PROJECT_DIR/Latest"
     - echo "Upload to FTP - configure MKDOCS_FTP_* in CI/CD variables"
 
 validate_mkdocs_manual:
@@ -234,7 +234,7 @@ validate_mkdocs_manual:
     paths:
       - .cache/pip/
   rules:
-    - if: ${{ inputs.pipeline_action == "validate_mkdocs" }}
+    - if: '$[[ inputs.pipeline_action ]] == "validate_mkdocs"'
   script:
     - python -m venv .venv
     - source .venv/bin/activate
@@ -251,10 +251,10 @@ build_examples_manual:
       - dist/**
     expire_in: 7 days
   rules:
-    - if: ${{ inputs.pipeline_action == "build_examples" }}
+    - if: '$[[ inputs.pipeline_action ]] == "build_examples"'
   script:
     - git fetch --all --tags
-    - git checkout tags/${{ inputs.deploy_tag }}
+    - git checkout "tags/$[[ inputs.deploy_tag ]]"
     - npm install
     - npm run buildExamples
     - apt-get update && apt-get install -y curl
