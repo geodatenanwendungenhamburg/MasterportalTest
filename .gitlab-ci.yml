@@ -199,11 +199,11 @@ mkdocs_version:
     - apt-get update && apt-get install -y zip curl wput jq
     - pip install -r devtools/docsValidation/python-dependencies.txt
     - git fetch --all --tags
-    - git checkout tags/$[[ inputs.deploy_tag ]]
+    - git checkout tags/${{ inputs.deploy_tag }}
     - mkdir -p docs/_snippets
-    - printf '# Welcome to the Masterportal Documentation (%s)\n' "$[[ inputs.deploy_tag ]]" > docs/_snippets/index_title.md
-    - mike deploy $[[ inputs.deploy_tag ]]
-    - mv $CI_PROJECT_DIR/site $CI_PROJECT_DIR/$[[ inputs.deploy_tag ]]
+    - printf '# Welcome to the Masterportal Documentation (%s)\n' "${{ inputs.deploy_tag }}" > docs/_snippets/index_title.md
+    - mike deploy ${{ inputs.deploy_tag }}
+    - mv $CI_PROJECT_DIR/site $CI_PROJECT_DIR/${{ inputs.deploy_tag }}
     - echo "Upload to FTP - configure MKDOCS_FTP_* in CI/CD variables"
 
 mkdocs_latest:
@@ -220,10 +220,10 @@ mkdocs_latest:
     - apt-get update && apt-get install -y zip curl wput jq
     - pip install -r devtools/docsValidation/python-dependencies.txt
     - git fetch --all --tags
-    - git checkout tags/$[[ inputs.deploy_tag ]]
+    - git checkout tags/${{ inputs.deploy_tag }}
     - mkdir -p docs/_snippets
-    - printf '# Welcome to the Masterportal Documentation (%s)\n' "$[[ inputs.deploy_tag ]]" > docs/_snippets/index_title.md
-    - mike deploy $[[ inputs.deploy_tag ]]
+    - printf '# Welcome to the Masterportal Documentation (%s)\n' "${{ inputs.deploy_tag }}" > docs/_snippets/index_title.md
+    - mike deploy ${{ inputs.deploy_tag }}
     - mv $CI_PROJECT_DIR/site $CI_PROJECT_DIR/Latest
     - echo "Upload to FTP - configure MKDOCS_FTP_* in CI/CD variables"
 
@@ -254,7 +254,7 @@ build_examples_manual:
     - if: '${{ inputs.pipeline_action }} == "build_examples"'
   script:
     - git fetch --all --tags
-    - git checkout tags/$[[ inputs.deploy_tag ]]
+    - git checkout tags/${{ inputs.deploy_tag }}
     - npm install
     - npm run buildExamples
     - apt-get update && apt-get install -y curl
