@@ -82,7 +82,8 @@ create_mkdocs:
       - .cache/pip/
   artifacts:
     paths:
-      - site
+      - "$CI_COMMIT_TAG/"
+    expire_in: 7 days
   script:
     - git config --global user.email "$GIT_USER_EMAIL"
     - git config --global user.name "$GIT_USER_NAME"
@@ -136,8 +137,8 @@ create_mkdocs:
         echo "LTS hotfix detected for $CI_COMMIT_TAG - skip Latest docs upload."
         exit 0
       fi
-    - mv $CI_PROJECT_DIR/$CI_COMMIT_TAG $CI_PROJECT_DIR/Latest
-    - echo "Moved documentation to Latest folder"
+    - cp -a "$CI_PROJECT_DIR/$CI_COMMIT_TAG" "$CI_PROJECT_DIR/Latest"
+    - echo "Copied documentation to Latest folder"
     - echo "deployment"
     - |
       if [ -n "$MKDOCS_FTP_NAME" ] && [ -n "$MKDOCS_FTP_PW" ] && [ -n "$MKDOCS_FTP_SERVER" ]; then
