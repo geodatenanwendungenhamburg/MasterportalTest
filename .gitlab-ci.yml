@@ -163,7 +163,7 @@ npm_audit_security:
     paths:
       - node_modules/
   rules:
-    - if: '$[[ inputs.pipeline_action ]] == "npm_audit"'
+    - if: '${{ inputs.pipeline_action }} == "npm_audit"'
   script:
     - npm install
     - npm audit --json
@@ -177,7 +177,7 @@ osv_scan_security:
     paths:
       - osv-result.json
   rules:
-    - if: '$[[ inputs.pipeline_action ]] == "osv_scan"'
+    - if: '${{ inputs.pipeline_action }} == "osv_scan"'
   script:
     - npm install
     - curl -sSL -o /usr/local/bin/osv-scanner https://github.com/google/osv-scanner/releases/latest/download/osv-scanner_linux_amd64
@@ -192,7 +192,7 @@ mkdocs_version:
     paths:
       - .cache/pip/
   rules:
-    - if: '$[[ inputs.pipeline_action ]] == "mkdocs_version"'
+    - if: '${{ inputs.pipeline_action }} == "mkdocs_version"'
   script:
     - git config --global user.email "$GIT_USER_EMAIL"
     - git config --global user.name "$GIT_USER_NAME"
@@ -213,7 +213,7 @@ mkdocs_latest:
     paths:
       - .cache/pip/
   rules:
-    - if: '$[[ inputs.pipeline_action ]] == "mkdocs_latest"'
+    - if: '${{ inputs.pipeline_action }} == "mkdocs_latest"'
   script:
     - git config --global user.email "$GIT_USER_EMAIL"
     - git config --global user.name "$GIT_USER_NAME"
@@ -234,7 +234,7 @@ validate_mkdocs_manual:
     paths:
       - .cache/pip/
   rules:
-    - if: '$[[ inputs.pipeline_action ]] == "validate_mkdocs"'
+    - if: '${{ inputs.pipeline_action }} == "validate_mkdocs"'
   script:
     - python -m venv .venv
     - source .venv/bin/activate
@@ -251,7 +251,7 @@ build_examples_manual:
       - dist/**
     expire_in: 7 days
   rules:
-    - if: '$[[ inputs.pipeline_action ]] == "build_examples"'
+    - if: '${{ inputs.pipeline_action }} == "build_examples"'
   script:
     - git fetch --all --tags
     - git checkout tags/$[[ inputs.deploy_tag ]]
