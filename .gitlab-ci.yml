@@ -164,7 +164,7 @@ npm_audit_security:
     paths:
       - node_modules/
   rules:
-    - if: '$PIPELINE_ACTION == "npm_audit"'
+    - if: '$CI_PIPELINE_SOURCE == "web" && $PIPELINE_ACTION == "npm_audit"'
   script:
     - npm install
     - npm audit --json
@@ -178,7 +178,7 @@ osv_scan_security:
     paths:
       - osv-result.json
   rules:
-    - if: '$PIPELINE_ACTION == "osv_scan"'
+    - if: '$CI_PIPELINE_SOURCE == "web" && $PIPELINE_ACTION == "osv_scan"'
   script:
     - npm install
     - curl -sSL -o /usr/local/bin/osv-scanner https://github.com/google/osv-scanner/releases/latest/download/osv-scanner_linux_amd64
@@ -193,7 +193,7 @@ mkdocs_version:
     paths:
       - .cache/pip/
   rules:
-    - if: '$PIPELINE_ACTION == "mkdocs_version"'
+    - if: '$CI_PIPELINE_SOURCE == "web" && $PIPELINE_ACTION == "mkdocs_version"'
   script:
     - git config --global user.email "$GIT_USER_EMAIL"
     - git config --global user.name "$GIT_USER_NAME"
@@ -214,7 +214,7 @@ mkdocs_latest:
     paths:
       - .cache/pip/
   rules:
-    - if: '$PIPELINE_ACTION == "mkdocs_latest"'
+    - if: '$CI_PIPELINE_SOURCE == "web" && $PIPELINE_ACTION == "mkdocs_latest"'
   script:
     - git config --global user.email "$GIT_USER_EMAIL"
     - git config --global user.name "$GIT_USER_NAME"
@@ -235,7 +235,7 @@ validate_mkdocs_manual:
     paths:
       - .cache/pip/
   rules:
-    - if: '$PIPELINE_ACTION == "validate_mkdocs"'
+    - if: '$CI_PIPELINE_SOURCE == "web" && $PIPELINE_ACTION == "validate_mkdocs"'
   script:
     - python -m venv .venv
     - source .venv/bin/activate
@@ -252,7 +252,7 @@ build_examples_manual:
       - dist/**
     expire_in: 7 days
   rules:
-    - if: '$PIPELINE_ACTION == "build_examples"'
+    - if: '$CI_PIPELINE_SOURCE == "web" && $PIPELINE_ACTION == "build_examples"'
   script:
     - git fetch --all --tags
     - git checkout "tags/$[[ inputs.deploy_tag ]]"
