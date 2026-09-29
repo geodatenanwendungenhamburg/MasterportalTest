@@ -107,10 +107,16 @@ create_mkdocs:
     - 'echo "FTP user: $MKDOCS_FTP_NAME"'
     # Fail fast with a clear message if the FTP CI/CD variables are missing (check Settings > CI/CD > Variables - not Protected-only)
     - 'if [ -z "$MKDOCS_FTP_SERVER" ] || [ -z "$MKDOCS_FTP_NAME" ] || [ -z "$MKDOCS_FTP_PW" ]; then echo "ERROR: MKDOCS_FTP_SERVER, MKDOCS_FTP_NAME or MKDOCS_FTP_PW is not set in this pipeline context." && exit 1; fi'
+    # Strip stray CR/LF and surrounding whitespace (common when a variable value was pasted from Windows/Notepad) to rule out hidden-character login failures
+    - FTP_USER_CLEAN=$(printf '%s' "$MKDOCS_FTP_NAME" | tr -d '\r\n' | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//')
+    - FTP_PW_CLEAN=$(printf '%s' "$MKDOCS_FTP_PW" | tr -d '\r\n' | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//')
+    # Safe length-only debug (does not leak the secret) - compare against the raw variable length to detect hidden characters
+    - 'echo "FTP user raw length: $(printf %s "$MKDOCS_FTP_NAME" | wc -c), cleaned length: $(printf %s "$FTP_USER_CLEAN" | wc -c)"'
+    - 'echo "FTP password raw length: $(printf %s "$MKDOCS_FTP_PW" | wc -c), cleaned length: $(printf %s "$FTP_PW_CLEAN" | wc -c)"'
     # Strip any accidental scheme (e.g. ftp://) and trailing slash in case MKDOCS_FTP_SERVER was stored as a full URL
-    - FTP_SERVER_CLEAN=$(printf '%s' "$MKDOCS_FTP_SERVER" | sed -E 's#^[a-zA-Z][a-zA-Z0-9+.-]*://##; s#/+$##')
+    - FTP_SERVER_CLEAN=$(printf '%s' "$MKDOCS_FTP_SERVER" | tr -d '\r\n' | sed -E 's#^[a-zA-Z][a-zA-Z0-9+.-]*://##; s#/+$##')
     # Upload version directly to FTP via lftp (plain FTP, no TLS negotiation)
-    - lftp -u "$MKDOCS_FTP_NAME,$MKDOCS_FTP_PW" -e "set ftp:ssl-allow no; set ssl:verify-certificate no; mirror -R --verbose \"$CI_PROJECT_DIR/$CI_COMMIT_TAG/\" \"/$CI_COMMIT_TAG/\"; bye" "$FTP_SERVER_CLEAN"
+    - lftp -u "$FTP_USER_CLEAN,$FTP_PW_CLEAN" -e "set ftp:ssl-allow no; set ssl:verify-certificate no; mirror -R --verbose \"$CI_PROJECT_DIR/$CI_COMMIT_TAG/\" \"/$CI_COMMIT_TAG/\"; bye" "$FTP_SERVER_CLEAN"
 
     # Determine LTS release
     - RELEASE_VERSION="${CI_COMMIT_TAG#v}"
@@ -130,7 +136,7 @@ create_mkdocs:
 
     # Normal release -> same files are uploaded to Latest
     - mv "$CI_PROJECT_DIR/$CI_COMMIT_TAG" "$CI_PROJECT_DIR/Latest"
-    - lftp -u "$MKDOCS_FTP_NAME,$MKDOCS_FTP_PW" -e "set ftp:ssl-allow no; set ssl:verify-certificate no; mirror -R --verbose \"$CI_PROJECT_DIR/Latest/\" \"/Latest/\"; bye" "$FTP_SERVER_CLEAN"
+    - lftp -u "$FTP_USER_CLEAN,$FTP_PW_CLEAN" -e "set ftp:ssl-allow no; set ssl:verify-certificate no; mirror -R --verbose \"$CI_PROJECT_DIR/Latest/\" \"/Latest/\"; bye" "$FTP_SERVER_CLEAN"
         
 # deploy_mkdocs_to_masterportal_org:
 #   stage: docs
