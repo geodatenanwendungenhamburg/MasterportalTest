@@ -181,7 +181,7 @@ mkdocs_version:
   script:
     - git config --global user.email "$GIT_USER_EMAIL"
     - git config --global user.name "$GIT_USER_NAME"
-    - apt-get update && apt-get install -y zip curl wput jq
+    - apt-get update && apt-get install -y zip curl lftp
     - pip install -r devtools/docsValidation/python-dependencies.txt
     - git fetch --all --tags
     - git checkout "tags/$[[ inputs.deploy_tag ]]"
@@ -189,7 +189,9 @@ mkdocs_version:
     - printf '# Welcome to the Masterportal Documentation (%s)\n' "$[[ inputs.deploy_tag ]]" > docs/_snippets/index_title.md
     - mike deploy "$[[ inputs.deploy_tag ]]"
     - mv "$CI_PROJECT_DIR/site" "$CI_PROJECT_DIR/$[[ inputs.deploy_tag ]]"
-    - echo "Upload to FTP - configure MKDOCS_FTP_* in CI/CD variables"
+    - 'if [ -z "$MKDOCS_FTP_SERVER" ] || [ -z "$MKDOCS_FTP_NAME" ] || [ -z "$MKDOCS_FTP_PW" ]; then echo "ERROR: MKDOCS_FTP_SERVER, MKDOCS_FTP_NAME or MKDOCS_FTP_PW is not set in this pipeline context." && exit 1; fi'
+    - FTP_SERVER_CLEAN=$(printf '%s' "$MKDOCS_FTP_SERVER" | sed -E 's#^[a-zA-Z][a-zA-Z0-9+.-]*://##; s#/+$##')
+    - lftp -u "$MKDOCS_FTP_NAME,$MKDOCS_FTP_PW" -e "set ftp:ssl-allow no; set ssl:verify-certificate no; mirror -R --verbose \"$CI_PROJECT_DIR/$[[ inputs.deploy_tag ]]/\" \"/$[[ inputs.deploy_tag ]]/\"; bye" "$FTP_SERVER_CLEAN"
 
 mkdocs_latest:
   stage: docs
@@ -202,7 +204,7 @@ mkdocs_latest:
   script:
     - git config --global user.email "$GIT_USER_EMAIL"
     - git config --global user.name "$GIT_USER_NAME"
-    - apt-get update && apt-get install -y zip curl wput jq
+    - apt-get update && apt-get install -y zip curl lftp
     - pip install -r devtools/docsValidation/python-dependencies.txt
     - git fetch --all --tags
     - git checkout "tags/$[[ inputs.deploy_tag ]]"
@@ -210,7 +212,9 @@ mkdocs_latest:
     - printf '# Welcome to the Masterportal Documentation (%s)\n' "$[[ inputs.deploy_tag ]]" > docs/_snippets/index_title.md
     - mike deploy "$[[ inputs.deploy_tag ]]"
     - mv "$CI_PROJECT_DIR/site" "$CI_PROJECT_DIR/Latest"
-    - echo "Upload to FTP - configure MKDOCS_FTP_* in CI/CD variables"
+    - 'if [ -z "$MKDOCS_FTP_SERVER" ] || [ -z "$MKDOCS_FTP_NAME" ] || [ -z "$MKDOCS_FTP_PW" ]; then echo "ERROR: MKDOCS_FTP_SERVER, MKDOCS_FTP_NAME or MKDOCS_FTP_PW is not set in this pipeline context." && exit 1; fi'
+    - FTP_SERVER_CLEAN=$(printf '%s' "$MKDOCS_FTP_SERVER" | sed -E 's#^[a-zA-Z][a-zA-Z0-9+.-]*://##; s#/+$##')
+    - lftp -u "$MKDOCS_FTP_NAME,$MKDOCS_FTP_PW" -e "set ftp:ssl-allow no; set ssl:verify-certificate no; mirror -R --verbose \"$CI_PROJECT_DIR/Latest/\" \"/Latest/\"; bye" "$FTP_SERVER_CLEAN"
 
 validate_mkdocs_manual:
   stage: docs
