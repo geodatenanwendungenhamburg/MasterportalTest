@@ -105,8 +105,13 @@ create_mkdocs:
     
     - 'echo "FTP server: $MKDOCS_FTP_SERVER"'
     - 'echo "FTP user: $MKDOCS_FTP_NAME"'
+    # Fail fast with a clear message if the FTP CI/CD variables are missing (check Settings > CI/CD > Variables - not Protected-only)
+    - if [ -z "$MKDOCS_FTP_SERVER" ] || [ -z "$MKDOCS_FTP_NAME" ] || [ -z "$MKDOCS_FTP_PW" ]; then echo "ERROR: MKDOCS_FTP_SERVER, MKDOCS_FTP_NAME or MKDOCS_FTP_PW is not set in this pipeline context." && exit 1; fi
+    # URL-encode credentials so special characters (@, :, /, %, ...) don't break the ftp:// URL
+    - FTP_USER_ENC=$(printf '%s' "$MKDOCS_FTP_NAME" | jq -sRr @uri)
+    - FTP_PW_ENC=$(printf '%s' "$MKDOCS_FTP_PW" | jq -sRr @uri)
     # Upload version directly to FTP
-    - wput -u -v "$CI_PROJECT_DIR/$CI_COMMIT_TAG/" "ftp://$MKDOCS_FTP_NAME:$MKDOCS_FTP_PW@$MKDOCS_FTP_SERVER/$CI_COMMIT_TAG/"
+    - wput -u -v "$CI_PROJECT_DIR/$CI_COMMIT_TAG/" "ftp://${FTP_USER_ENC}:${FTP_PW_ENC}@$MKDOCS_FTP_SERVER/$CI_COMMIT_TAG/"
 
     # Determine LTS release
     - RELEASE_VERSION="${CI_COMMIT_TAG#v}"
@@ -126,7 +131,7 @@ create_mkdocs:
 
     # Normal release -> same files are uploaded to Latest
     - mv "$CI_PROJECT_DIR/$CI_COMMIT_TAG" "$CI_PROJECT_DIR/Latest"
-    - wput -u -v "$CI_PROJECT_DIR/Latest/" "ftp://$MKDOCS_FTP_NAME:$MKDOCS_FTP_PW@$MKDOCS_FTP_SERVER/Latest/"
+    - wput -u -v "$CI_PROJECT_DIR/Latest/" "ftp://${FTP_USER_ENC}:${FTP_PW_ENC}@$MKDOCS_FTP_SERVER/Latest/"
         
 # deploy_mkdocs_to_masterportal_org:
 #   stage: docs
