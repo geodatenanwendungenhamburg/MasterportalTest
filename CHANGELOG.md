@@ -4,7 +4,7 @@
 
 [Semantic versioning](https://semver.org/spec/v2.0.0.html) is used.
 
-## 2026-09-11 v3.160.1 (LTS)
+## 2026-09-11 v3.161.1 (LTS)
 
 ### Added
 - LinechartItem: Added possibility to configure custom plugins to extend Chart.js default behaviour.
