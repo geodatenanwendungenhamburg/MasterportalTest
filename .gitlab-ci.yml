@@ -102,25 +102,9 @@ create_mkdocs:
 
     # Rename generated site to the version directory
     - mv "$CI_PROJECT_DIR/site" "$CI_PROJECT_DIR/$CI_COMMIT_TAG"
-
-     - |
-      if [ -z "$MKDOCS_FTP_NAME" ]; then
-        echo "ERROR MKDOCS_FTP_NAME is not set"
-        exit 1
-      fi
-
-      if [ -z "$MKDOCS_FTP_PW" ]; then
-        echo "ERROR MKDOCS_FTP_PW is not set"
-        exit 1
-      fi
-
-      if [ -z "$MKDOCS_FTP_SERVER" ]; then
-        echo "ERROR MKDOCS_FTP_SERVER is not set"
-        exit 1
-      fi
-
-      echo "FTP server $MKDOCS_FTP_SERVER"
-      echo "FTP user $MKDOCS_FTP_NAME"
+    
+    - 'echo "FTP server: $MKDOCS_FTP_SERVER"'
+    - 'echo "FTP user: $MKDOCS_FTP_NAME"'
     # Upload version directly to FTP
     - wput -u -v "$CI_PROJECT_DIR/$CI_COMMIT_TAG/" "ftp://$MKDOCS_FTP_NAME:$MKDOCS_FTP_PW@$MKDOCS_FTP_SERVER/$CI_COMMIT_TAG/"
 
