@@ -106,7 +106,7 @@ create_mkdocs:
     - 'echo "FTP server: $MKDOCS_FTP_SERVER"'
     - 'echo "FTP user: $MKDOCS_FTP_NAME"'
     # Fail fast with a clear message if the FTP CI/CD variables are missing (check Settings > CI/CD > Variables - not Protected-only)
-    - if [ -z "$MKDOCS_FTP_SERVER" ] || [ -z "$MKDOCS_FTP_NAME" ] || [ -z "$MKDOCS_FTP_PW" ]; then echo "ERROR: MKDOCS_FTP_SERVER, MKDOCS_FTP_NAME or MKDOCS_FTP_PW is not set in this pipeline context." && exit 1; fi
+    - 'if [ -z "$MKDOCS_FTP_SERVER" ] || [ -z "$MKDOCS_FTP_NAME" ] || [ -z "$MKDOCS_FTP_PW" ]; then echo "ERROR: MKDOCS_FTP_SERVER, MKDOCS_FTP_NAME or MKDOCS_FTP_PW is not set in this pipeline context." && exit 1; fi'
     # URL-encode credentials so special characters (@, :, /, %, ...) don't break the ftp:// URL
     - FTP_USER_ENC=$(printf '%s' "$MKDOCS_FTP_NAME" | jq -sRr @uri)
     - FTP_PW_ENC=$(printf '%s' "$MKDOCS_FTP_PW" | jq -sRr @uri)
