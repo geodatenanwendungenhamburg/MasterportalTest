@@ -90,6 +90,11 @@ create_mkdocs:
     - git config --global user.email "$GIT_USER_EMAIL"
     - git config --global user.name "$GIT_USER_NAME"
     
+    - test -n "$MKDOCS_FTP_NAME" || (echo "ERROR: MKDOCS_FTP_NAME is not set" && exit 1)
+    - test -n "$MKDOCS_FTP_PW" || (echo "ERROR: MKDOCS_FTP_PW is not set" && exit 1)
+    - test -n "$MKDOCS_FTP_SERVER" || (echo "ERROR: MKDOCS_FTP_SERVER is not set" && exit 1)
+    - echo "FTP server: $MKDOCS_FTP_SERVER"
+    - echo "FTP user: $MKDOCS_FTP_NAME"
     # IMPORTANT: same documentation dependencies as Bitbucket
     - pip install -r devtools/docsValidation/python-dependencies.txt
 
