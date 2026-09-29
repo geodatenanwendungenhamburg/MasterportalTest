@@ -81,39 +81,52 @@ create_mkdocs:
   rules:
     - if: '$CI_COMMIT_TAG'
 
-  before_script:
-    - pip install mike
-    - apt-get update && apt-get install -y wput
-
   script:
-    - mike deploy $CI_COMMIT_TAG
+    # Install system dependencies
+    - apt-get update
+    - apt-get install -y curl wput jq zip
 
-    # Keep the generated site locally in the job workspace
+    # Git identity required by mike
+    - git config --global user.email "$GIT_USER_EMAIL"
+    - git config --global user.name "$GIT_USER_NAME"
+    
+    # IMPORTANT: same documentation dependencies as Bitbucket
+    - pip install -r devtools/docsValidation/python-dependencies.txt
+
+    # Create documentation snippet
+    - mkdir -p docs/_snippets
+    - RELEASE_VERSION="${CI_COMMIT_TAG#v}" && if grep -q "^## .* v${RELEASE_VERSION}.*LTS.*$" CHANGELOG.md 2>/dev/null; then printf '# Welcome to the Masterportal Documentation (%s (lts))\n' "$RELEASE_VERSION" > docs/_snippets/index_title.md; else printf '# Welcome to the Masterportal Documentation (%s)\n' "$CI_COMMIT_TAG" > docs/_snippets/index_title.md; fi
+
+    # Build MkDocs
+    - mike deploy "$CI_COMMIT_TAG"
+
+    # Rename generated site to the version directory
     - mv "$CI_PROJECT_DIR/site" "$CI_PROJECT_DIR/$CI_COMMIT_TAG"
+    
+    - 'echo "FTP server: $MKDOCS_FTP_SERVER"'
+    - 'echo "FTP user: $MKDOCS_FTP_NAME"'
+    # Upload version directly to FTP
+    - wput -u -v "$CI_PROJECT_DIR/$CI_COMMIT_TAG/" "ftp://$MKDOCS_FTP_NAME:$MKDOCS_FTP_PW@$MKDOCS_FTP_SERVER/$CI_COMMIT_TAG/"
 
-    # Upload versioned documentation directly to FTP
-    - wput -u "$MKDOCS_FTP_NAME" -p "$MKDOCS_FTP_PW" \
-        "ftp://$MKDOCS_FTP_SERVER/$CI_COMMIT_TAG/" \
-        "$CI_PROJECT_DIR/$CI_COMMIT_TAG/*"
-
-    # Determine whether this is an LTS release / hotfix
+    # Determine LTS release
     - RELEASE_VERSION="${CI_COMMIT_TAG#v}"
-    - CHANGELOG_RELEASE_HEADER="$(grep -m1 -E "^## .* v${RELEASE_VERSION} \(LTS\)?$" CHANGELOG.md || true)"
+    - CHANGELOG_RELEASE_HEADER="$(grep -m1 -E "^## .* v${RELEASE_VERSION}( \(LTS\))?$" CHANGELOG.md || true)"
     - if [ -z "$CHANGELOG_RELEASE_HEADER" ]; then echo "Could not find release headline for $CI_COMMIT_TAG in CHANGELOG.md." && exit 1; fi
+
     - IS_RELEASE_LTS="false"
     - if echo "$CHANGELOG_RELEASE_HEADER" | grep -q ' (LTS)$'; then IS_RELEASE_LTS="true"; fi
+
     - RELEASE_PATCH="${RELEASE_VERSION##*.}"
+
     - IS_LTS_HOTFIX="false"
     - if [ "$IS_RELEASE_LTS" = "true" ] && [ "$RELEASE_PATCH" != "0" ]; then IS_LTS_HOTFIX="true"; fi
 
-    # LTS hotfix: do NOT update Latest
+    # LTS hotfix -> version is uploaded, Latest is NOT changed
     - if [ "$IS_LTS_HOTFIX" = "true" ]; then echo "LTS hotfix detected for $CI_COMMIT_TAG - skip Latest docs upload." && exit 0; fi
 
-    # Normal release: upload the same generated site as Latest
+    # Normal release -> same files are uploaded to Latest
     - mv "$CI_PROJECT_DIR/$CI_COMMIT_TAG" "$CI_PROJECT_DIR/Latest"
-    - wput -u "$MKDOCS_FTP_NAME" -p "$MKDOCS_FTP_PW" \
-        "ftp://$MKDOCS_FTP_SERVER/Latest/" \
-        "$CI_PROJECT_DIR/Latest/*"
+    - wput -u -v "$CI_PROJECT_DIR/Latest/" "ftp://$MKDOCS_FTP_NAME:$MKDOCS_FTP_PW@$MKDOCS_FTP_SERVER/Latest/"
         
 # deploy_mkdocs_to_masterportal_org:
 #   stage: docs
