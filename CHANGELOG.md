@@ -24,6 +24,7 @@
       - @vitest/web-worker: "^4.0.16" to "4.1.11"
       - jsdom: "29.1.1" to "^30.1.2"
 - WMS-Time: Changed button name to avoid confusion.
+- LayerTree/LayerSelection: In portals with a configured login, secured layers can no longer be activated without being logged in. Instead, an alert asks the user to log in. The lock icon of secured layers is shown open when logged in and closed otherwise.
 
 ### Deprecated
 - WMTS: The `services.json` parameter `transparent` is deprecated and has no effect. Use `transparency` instead.
