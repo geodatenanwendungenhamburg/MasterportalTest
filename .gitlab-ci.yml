@@ -60,16 +60,11 @@ create_release:
   script:
     - |
       RELEASE_VERSION="${CI_COMMIT_TAG#v}"
-      export CHANGELOG_CONTENT=$(sed -n "/^## .*v${RELEASE_VERSION}/,/^## /p" CHANGELOG.md | sed '$ d' | tail -n +2)
-  release:
-    tag_name: $CI_COMMIT_TAG
-    name: "Release $CI_COMMIT_TAG"
-    description: $CHANGELOG_CONTENT
-    assets:
-      links:
-        - name: examples.zip
-          url: "$CI_PROJECT_URL/-/jobs/artifacts/$CI_COMMIT_TAG/raw/examples.zip?job=build_examples_zip"
-          link_type: other
+      CHANGELOG_CONTENT=$(sed -n "/^## .*v${RELEASE_VERSION}/,/^## /p" CHANGELOG.md | sed '$ d' | tail -n +2)
+      glab release create "$CI_COMMIT_TAG" \
+        --name "Release $CI_COMMIT_TAG" \
+        --notes "$CHANGELOG_CONTENT" \
+        --assets-link name=examples.zip url="$CI_PROJECT_URL/-/jobs/artifacts/$CI_COMMIT_TAG/raw/examples.zip?job=build_examples_zip" link-type=other
   rules:
     - if: '$CI_COMMIT_TAG && $CI_COMMIT_TAG !~ /^(lts|latest)$/'  
 
