@@ -60,11 +60,40 @@ create_release:
   script:
     - |
       RELEASE_VERSION="${CI_COMMIT_TAG#v}"
-      CHANGELOG_CONTENT=$(sed -n "/^## .*v${RELEASE_VERSION}/,/^## /p" CHANGELOG.md | sed '$ d' | tail -n +2)
+
+      CHANGELOG_CONTENT="$(
+        awk -v version="v${RELEASE_VERSION}" '
+          $0 ~ "^## .*" version "([[:space:]]|$)" {
+            found=1
+            next
+          }
+
+          found && /^## / {
+            exit
+          }
+
+          found {
+            print
+          }
+        ' CHANGELOG.md
+      )"
+
+      if [ -z "$CHANGELOG_CONTENT" ]; then
+        echo "ERROR: Could not find changelog entry for $CI_COMMIT_TAG"
+        exit 1
+      fi
+
+      echo "Release description for $CI_COMMIT_TAG:"
+      echo "$CHANGELOG_CONTENT"
+
+      printf '%s\n' "$CHANGELOG_CONTENT" > release-notes.md
+
+      # Create the release using the generated Markdown file
       glab release create "$CI_COMMIT_TAG" \
         --name "Release $CI_COMMIT_TAG" \
-        --notes "$CHANGELOG_CONTENT" \
-        --assets-link name=examples.zip url="$CI_PROJECT_URL/-/jobs/artifacts/$CI_COMMIT_TAG/raw/examples.zip?job=build_examples_zip" link-type=other
+        --notes-file release-notes.md \
+        --ref "$CI_COMMIT_TAG" \
+        --assets-links '[{"name":"examples.zip","url":"'"$CI_PROJECT_URL"'/-/jobs/artifacts/'"$CI_COMMIT_TAG"'/raw/examples.zip?job=build_examples_zip","link_type":"other"}]'
   rules:
     - if: '$CI_COMMIT_TAG && $CI_COMMIT_TAG !~ /^(lts|latest)$/'  
 
