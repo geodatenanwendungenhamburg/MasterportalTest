@@ -4,7 +4,7 @@
 
 [Semantic versioning](https://semver.org/spec/v2.0.0.html) is used.
 
-## 2026-09-11 v3.168.1
+## 2026-09-11 v3.169.1
 
 ### Added
 - LinechartItem: Added possibility to configure custom plugins to extend Chart.js default behaviour.
@@ -12,10 +12,6 @@
 
 ### Changed
 - Issue \#1654: Relaxed the strict ISO8601 unit validation for WMS-Time layers to a console warning. This enables support for alternative time units.
-
-### Deprecated
-
-### Removed
 
 ### Fixed
 - Issue \#1655: Menu modules now keep their own configuration when multiple modules of the same type are defined in config.json. LayerSlider and Filter no longer reuse the last configured instance.
