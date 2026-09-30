@@ -13,7 +13,7 @@ spec:
       default: npm_audit
     
     deploy_tag:
-      description: "Tag to deploy (e.g., v3.1.0) - required for mkdocs_version and build_examples; optional for mkdocs_latest (auto-detects latest if empty)"
+      description: "Tag to deploy (e.g., v3.1.0) - required for mkdocs_version and build_examples"
       type: string
       default: ""
 
@@ -217,27 +217,15 @@ mkdocs_latest:
     - apt-get update && apt-get install -y zip curl lftp
     - pip install -r devtools/docsValidation/python-dependencies.txt
     - git fetch --all --tags
-    - |
-      DEPLOY_TAG="${[[ inputs.deploy_tag ]]}"
-      if [ -z "$DEPLOY_TAG" ]; then
-        DEPLOY_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "")
-      fi
-      if [ -z "$DEPLOY_TAG" ]; then
-        echo "ERROR: Could not determine a tag. No tags exist in repository or deploy_tag not provided."
-        exit 1
-      fi
-      echo "Deploying documentation for latest tag: $DEPLOY_TAG"
-      export DEPLOY_TAG
-    - git checkout "tags/${DEPLOY_TAG}"
+    - DEPLOY_TAG=$(git describe --tags --abbrev=0 2>/dev/null)
+    - if [ -z "$DEPLOY_TAG" ]; then echo "ERROR: No tags found in repository." && exit 1; fi
+    - echo "Deploying documentation for latest tag: $DEPLOY_TAG"
+    - git checkout "tags/$DEPLOY_TAG"
     - mkdir -p docs/_snippets
-    - printf '# Welcome to the Masterportal Documentation (%s)\n' "${DEPLOY_TAG}" > docs/_snippets/index_title.md
-    - mike deploy "${DEPLOY_TAG}"
+    - printf '# Welcome to the Masterportal Documentation (%s)\n' "$DEPLOY_TAG" > docs/_snippets/index_title.md
+    - mike deploy "$DEPLOY_TAG"
     - mv "$CI_PROJECT_DIR/site" "$CI_PROJECT_DIR/Latest"
-    - |
-      if [ -z "$MKDOCS_FTP_SERVER" ] || [ -z "$MKDOCS_FTP_NAME" ] || [ -z "$MKDOCS_FTP_PW" ]; then
-        echo "ERROR: MKDOCS_FTP_SERVER, MKDOCS_FTP_NAME or MKDOCS_FTP_PW is not set in this pipeline context."
-        exit 1
-      fi
+    - if [ -z "$MKDOCS_FTP_SERVER" ] || [ -z "$MKDOCS_FTP_NAME" ] || [ -z "$MKDOCS_FTP_PW" ]; then echo "ERROR: MKDOCS_FTP_SERVER, MKDOCS_FTP_NAME or MKDOCS_FTP_PW not set." && exit 1; fi
     - FTP_SERVER_CLEAN=$(printf '%s' "$MKDOCS_FTP_SERVER" | sed -E 's#^[a-zA-Z][a-zA-Z0-9+.-]*://##; s#/+$##')
     - lftp -u "$MKDOCS_FTP_NAME,$MKDOCS_FTP_PW" -e "set ftp:ssl-allow no; set ssl:verify-certificate no; mirror -R --verbose \"$CI_PROJECT_DIR/Latest/\" \"/Latest/\"; bye" "$FTP_SERVER_CLEAN"
 
