@@ -58,12 +58,13 @@ create_release:
     - job: build_examples_zip
       artifacts: true
   script:
-    - RELEASE_VERSION="${CI_COMMIT_TAG#v}"
-    - CHANGELOG_CONTENT=$(sed -n "/^## .*v${RELEASE_VERSION}/,/^## /p" CHANGELOG.md | sed '$ d' | tail -n +2)
+    - |
+      RELEASE_VERSION="${CI_COMMIT_TAG#v}"
+      export CHANGELOG_CONTENT=$(sed -n "/^## .*v${RELEASE_VERSION}/,/^## /p" CHANGELOG.md | sed '$ d' | tail -n +2)
   release:
     tag_name: $CI_COMMIT_TAG
     name: "Release $CI_COMMIT_TAG"
-    description: "$CHANGELOG_CONTENT"
+    description: $CHANGELOG_CONTENT
     assets:
       links:
         - name: examples.zip
