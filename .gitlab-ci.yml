@@ -89,6 +89,9 @@ create_release:
         echo "ERROR: Could not find changelog entry for $CI_COMMIT_TAG"
         exit 1
       fi
+      
+    - |
+      sed -i ':a;N;$!ba;s/[[:space:]]*---[[:space:]]*$//' release-description.md
 
     - echo "Release description:"
     - cat release-description.md
