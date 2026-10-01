@@ -57,45 +57,52 @@ create_release:
   needs:
     - job: build_examples_zip
       artifacts: true
+
   script:
+    - echo "Creating release $CI_COMMIT_TAG"
+
+    # Extract the changelog section belonging to the current tag.
+    # Example: v3.172.1 -> ## 2026-09-11 v3.172.1 (LTS)
     - |
-      RELEASE_VERSION="${CI_COMMIT_TAG#v}"
+      awk -v tag="$CI_COMMIT_TAG" '
+        BEGIN {
+          found = 0
+        }
 
-      CHANGELOG_CONTENT="$(
-        awk -v version="v${RELEASE_VERSION}" '
-          $0 ~ "^## .*" version "([[:space:]]|$)" {
-            found=1
-            next
-          }
+        # Start of the requested release
+        $0 ~ "^## .*" tag "([[:space:]]|$)" {
+          found = 1
+        }
 
-          found && /^## / {
-            exit
-          }
+        # Start of the next release -> stop
+        found && /^## / && $0 !~ "^## .*" tag "([[:space:]]|$)" {
+          exit
+        }
 
-          found {
-            print
-          }
-        ' CHANGELOG.md
-      )"
+        found {
+          print
+        }
+      ' CHANGELOG.md > release-description.md
 
-      if [ -z "$CHANGELOG_CONTENT" ]; then
+    - |
+      if [ ! -s release-description.md ]; then
         echo "ERROR: Could not find changelog entry for $CI_COMMIT_TAG"
         exit 1
       fi
 
-      echo "Release description for $CI_COMMIT_TAG:"
-      echo "$CHANGELOG_CONTENT"
-
-      printf '%s\n' "$CHANGELOG_CONTENT" > release-notes.md
-
-      # Create the release using the generated Markdown file
-      glab release create "$CI_COMMIT_TAG" \
-        --name "Release $CI_COMMIT_TAG" \
-        --notes-file release-notes.md \
-        --ref "$CI_COMMIT_TAG" \
-        --assets-links '[{"name":"examples.zip","url":"'"$CI_PROJECT_URL"'/-/jobs/artifacts/'"$CI_COMMIT_TAG"'/raw/examples.zip?job=build_examples_zip","link_type":"other"}]'
+    - echo "Release description:"
+    - cat release-description.md
+  release:
+    tag_name: $CI_COMMIT_TAG
+    name: "Release $CI_COMMIT_TAG"
+    description: "./release-description.md"
+    assets:
+      links:
+        - name: examples.zip
+          url: "$CI_PROJECT_URL/-/jobs/artifacts/$CI_COMMIT_TAG/raw/examples.zip?job=build_examples_zip"
+          link_type: other
   rules:
-    - if: '$CI_COMMIT_TAG && $CI_COMMIT_TAG !~ /^(lts|latest)$/'  
+    - if: '$CI_COMMIT_TAG && $CI_COMMIT_TAG !~ /^(lts|latest)$/'
 
 create_deploy_mkdocs:
   stage: docs
