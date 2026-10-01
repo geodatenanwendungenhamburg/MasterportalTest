@@ -4,30 +4,7 @@
 
 [Semantic versioning](https://semver.org/spec/v2.0.0.html) is used.
 
-## 2026-09-11 v3.173.1 (LTS)
-
-### Added
-- LinechartItem: Added possibility to configure custom plugins to extend Chart.js default behaviour.
-- WFS-T: Added configurable per-field input validation on single insert and update, configurable in the layer's `gfiAttributes`.
-
-### Changed
-- Issue \#1654: Relaxed the strict ISO8601 unit validation for WMS-Time layers to a console warning. This enables support for alternative time units.
-
-### Fixed
-- Issue \#1655: Menu modules now keep their own configuration when multiple modules of the same type are defined in config.json. LayerSlider and Filter no longer reuse the last configured instance.
-- Issue \#1658: Share View now filters all available legacy URL parameters.
-- Accessibility: Fixed accessibility issues across layer tree and controls (label associations, icon-button naming, ARIA semantics, and preview alt text).
-
----
-
-## 2026-09-11 v3.26.1
-
-### Changed
-- Build: Added plugin to remove rolldown-runtime.js from index.html
-
----
-
-## 2026-09-02 v3.26.0
+## 2026-09-11 v3.175.0
 
 ### Added
 - NavTab: Added styleVariant prop for more styling options.
