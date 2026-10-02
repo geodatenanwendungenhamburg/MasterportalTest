@@ -115,10 +115,9 @@ mirror_tag_to_github:
     - apk add --no-cache git
     - git config --global user.name "$GIT_USER_NAME"
     - git config --global user.email "$GIT_USER_EMAIL"
-    - git fetch --tags origin
+    - git fetch --unshallow --tags origin || git fetch --depth=10000 --tags origin
     - git checkout "$CI_COMMIT_TAG"
     - git remote add github https://x-access-token:${GITHUB_TOKEN}@github.com/geodatenanwendungenhamburg/MasterportalTest.git
-    - git push github HEAD:refs/heads/main
     - git push github "refs/tags/$CI_COMMIT_TAG:refs/tags/$CI_COMMIT_TAG"
 
 create_deploy_mkdocs:
