@@ -104,7 +104,7 @@ describe("src/modules/statisticDashboard/utils/handleFeatures.js", () => {
                         "2018": 99
                     }
                 },
-                styleFunction = FeatureHandler.getStyleFunction(statisticData, colorScheme, "2018", "region", [0, 80, 100]);
+                styleFunction = FeatureHandler.getStyleFunction(statisticData, colorScheme, "2018", ["region"], [0, 80, 100]);
 
             expect(feature3.get("noValue")).to.be.undefined;
 

@@ -143,7 +143,10 @@ export default {
             else {
                 const uniqueValues = await this.getValuesFromLayer(this.selectedLevel.layerId, region, schemeRequest || this.requestScheme(region, this.containsAllTag(value)));
 
-                region.child.values = Object.keys(uniqueValues[region.child.attrName]).map(key => {
+                const childAttributeNames = Array.isArray(region.child.attrName) ? region.child.attrName : [region.child.attrName],
+                      childValues = [...new Set(childAttributeNames.flatMap(attributeName => Object.keys(uniqueValues[attributeName] || {})))];
+
+                region.child.values = childValues.map(key => {
                     return {label: key, value: key};
                 });
 
@@ -158,54 +161,69 @@ export default {
 
         /**
          * Gets values from the layer. This function decides wether to get the values by oaf or wfs based on the given layerId.
-         * @param {String} layerId The layer id.
+         * @param {String|String[]} layerId The layer id or layer ids.
          * @param {Object} region The region object.
          * @param {Boolean} schemeRequest Flag to decide if the data for the given region field should be requested via scheme oaf scheme.
          * @returns {Object} the values unified.
          */
         async getValuesFromLayer (layerId, region, schemeRequest = false) {
-            const {url, collection, typ, featureType, featureNS} = rawLayerList.getLayerWhere({id: layerId});
-            let uniqueValues = {};
+            const layerIds = Array.isArray(layerId) ? layerId : [layerId],
+                  uniqueValues = {};
 
             region.child.loadingDataCounter++;
-            if (typ === "OAF") {
-                if (schemeRequest) {
-                    uniqueValues = await getOAFFeature.getUniqueValuesByScheme(url, collection, [region.child.attrName]);
-                }
-                else {
+            try {
+                for (const [index, currentLayerId] of layerIds.entries()) {
+                    const {url, collection, typ, featureType, featureNS} = rawLayerList.getLayerWhere({id: currentLayerId}),
+                          childAttributeName = Array.isArray(region.child.attrName) ? region.child.attrName[index] : region.child.attrName,
+                          regionAttributeName = Array.isArray(region.attrName) ? region.attrName[index] : region.attrName;
+                    let layerUniqueValues = {};
 
-                    const filter = this.getFilterOAF(region.attrName, this.containsAllTag(region.selectedValues) ? region.values : region.selectedValues),
-                          features = await getOAFFeature.getOAFFeatureGet(url, collection, {
-                              filter,
-                              filterCrs: this.selectedLevel.oafRequestCRS,
-                              crs: this.selectedLevel.oafRequestCRS,
-                              propertyNames: [region.child.attrName],
-                              datetime: this.selectedLevel.geomRequestParams?.datetime,
-                              limit: 10000,
-                              skipGeometry: true
-                          }),
-                          fetchedProperties = features.map(feature => feature?.properties);
+                    if (typ === "OAF") {
+                        if (schemeRequest) {
+                            layerUniqueValues = await getOAFFeature.getUniqueValuesByScheme(url, collection, [childAttributeName]);
+                        }
+                        else {
+                            const filter = this.getFilterOAF(regionAttributeName, this.containsAllTag(region.selectedValues) ? region.values : region.selectedValues),
+                                  features = await getOAFFeature.getOAFFeatureGet(url, collection, {
+                                      filter,
+                                      filterCrs: this.selectedLevel.oafRequestCRS,
+                                      crs: this.selectedLevel.oafRequestCRS,
+                                      propertyNames: [childAttributeName],
+                                      datetime: this.selectedLevel.geomRequestParams?.datetime,
+                                      limit: 10000,
+                                      skipGeometry: true
+                                  }),
+                                  fetchedProperties = features.map(feature => feature?.properties);
 
-                    uniqueValues = getUniqueValuesFromOAF(fetchedProperties, [region.child.attrName], true);
+                            layerUniqueValues = getUniqueValuesFromOAF(fetchedProperties, [childAttributeName], true);
+                        }
+                    }
+                    else {
+                        const payload = {
+                                  featureTypes: [featureType],
+                                  featureNS: featureNS,
+                                  srsName: this.projection.getCode(),
+                                  propertyNames: [childAttributeName],
+                                  filter: this.getFilterWFS(regionAttributeName, region.selectedValues)
+                              },
+                              features = await getFeature.getFeaturePOST(url, payload, error => {
+                                  console.error(error);
+                              }),
+                              olFeatures = new WFS().readFeatures(features),
+                              attributesWithType = await FetchDataHandler.getAttributesWithType(url, [childAttributeName], featureType);
+
+                        layerUniqueValues = FetchDataHandler.getUniqueValuesFromFeatures(olFeatures, attributesWithType);
+                    }
+
+                    Object.entries(layerUniqueValues || {}).forEach(([attributeName, values]) => {
+                        uniqueValues[attributeName] = {...uniqueValues[attributeName], ...values};
+                    });
                 }
             }
-            else {
-                const payload = {
-                          featureTypes: [featureType],
-                          featureNS: featureNS,
-                          srsName: this.projection.getCode(),
-                          propertyNames: [region.child.attrName],
-                          filter: this.getFilterWFS(region.attrName, region.selectedValues)
-                      },
-                      features = await getFeature.getFeaturePOST(url, payload, error => {
-                          console.error(error);
-                      }),
-                      olFeatures = new WFS().readFeatures(features),
-                      attributesWithType = await FetchDataHandler.getAttributesWithType(url, [region.child.attrName], featureType);
-
-                uniqueValues = FetchDataHandler.getUniqueValuesFromFeatures(olFeatures, attributesWithType);
+            finally {
+                region.child.loadingDataCounter--;
             }
-            region.child.loadingDataCounter--;
+
             return uniqueValues;
         },
 

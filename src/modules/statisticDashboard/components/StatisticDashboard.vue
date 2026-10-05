@@ -548,14 +548,21 @@ export default {
             if (!isObject(level) || !isObject(level.mappingFilter) || !isObject(level.mappingFilter.timeAttribute) || !isObject(level.mappingFilter.regionNameAttribute)) {
                 return {};
             }
-            const layerId = level.layerId,
+            const layerIds = Array.isArray(level.layerId) ? level.layerId : [level.layerId],
                   timeAttribute = level.mappingFilter.timeAttribute.attrName,
                   timeInputFormat = level.mappingFilter.timeAttribute.inputFormat,
                   timeOutputFormat = level.mappingFilter.timeAttribute.outputFormat,
-                  regionNameAttribute = level.mappingFilter.regionNameAttribute.attrName;
-            let uniqueValues = null;
+                  regionNameAttributes = level.mappingFilter.regionNameAttribute.attrName;
+            const uniqueValues = {};
 
-            uniqueValues = await FetchDataHandler.getUniqueValues(layerId, [timeAttribute, regionNameAttribute], timeInputFormat, timeOutputFormat);
+            for (const [index, layerId] of layerIds.entries()) {
+                const regionNameAttribute = Array.isArray(regionNameAttributes) ? regionNameAttributes[index] : regionNameAttributes,
+                      layerUniqueValues = await FetchDataHandler.getUniqueValues(layerId, [timeAttribute, regionNameAttribute], timeInputFormat, timeOutputFormat);
+
+                Object.entries(layerUniqueValues || {}).forEach(([attributeName, values]) => {
+                    uniqueValues[attributeName] = {...uniqueValues[attributeName], ...values};
+                });
+            }
 
             return uniqueValues;
         },
@@ -852,51 +859,63 @@ export default {
             this.handleReset();
             this.setIsFeatureLoaded(false);
 
-            const statsKeys = Object.keys(this.selectedStatistics),
-                  selectedLayer = this.getRawLayerByLayerId(this.selectedLevel.layerId),
-                  selectedLevelRegionNameAttribute = this.getSelectedLevelRegionNameAttributeInDepth(this.selectedLevel.mappingFilter.regionNameAttribute),
-                  selectedLevelDateAttribute = this.getSelectedLevelDateAttribute(this.selectedLevel),
-                  payload = {
-                      featureTypes: [selectedLayer.featureType],
-                      featureNS: selectedLayer.featureNS,
-                      srsName: this.projection.getCode(),
-                      propertyNames: [...statsKeys, selectedLevelRegionNameAttribute.attrName, selectedLevelDateAttribute.attrName, this.selectedLevel.geometryAttribute],
-                      filter: this.getFilter(regions, dates)
-                  };
+            for (const [index, layerId] of this.selectedLevel.layerId.entries()) {
+                const selectedLayer = this.getRawLayerByLayerId(layerId),
+                      selectedLayerGfiAttributes = selectedLayer.gfiAttributes,
+                      selectedStatistics = Object.values(this.selectedStatistics).filter(statistic => Object.prototype.hasOwnProperty.call(selectedLayerGfiAttributes || {}, statistic.key)),
+                      statsKeys = selectedStatistics.map(statistic => statistic.key),
+                      statsValues = selectedStatistics.map(statistic => statistic.name),
+                      selectedLevelRegionNameAttribute = this.getSelectedLevelRegionNameAttributeInDepth(this.selectedLevel.mappingFilter.regionNameAttribute),
+                      selectedLevelDateAttribute = this.getSelectedLevelDateAttribute(this.selectedLevel),
+                      payload = {
+                          featureTypes: [selectedLayer.featureType],
+                          featureNS: selectedLayer.featureNS,
+                          srsName: this.projection.getCode(),
+                          propertyNames: [...statsKeys, selectedLevelRegionNameAttribute.attrName[index], selectedLevelDateAttribute.attrName, this.selectedLevel.geometryAttribute[index]],
+                          filter: this.getFilter(regions, dates, selectedLevelRegionNameAttribute.attrName[index])
+                      };
 
-            let response = null,
-                statFeatures = [];
+                let response = null,
+                    statFeatures = [];
 
-            if (selectedLayer.typ === "WFS") {
-                response = await getFeature.getFeaturePOST(selectedLayer.url, payload, error => {
-                    console.error(error);
-                });
-                this.loadedFeatures = new WFS().readFeatures(response);
-                this.layer.getSource().addFeatures(this.loadedFeatures);
-                statFeatures = new GeoJSON().writeFeaturesObject(this.loadedFeatures).features;
-            }
-            else if (selectedLayer.typ === "OAF") {
-                payload.propertyNames.splice(payload.propertyNames.indexOf(this.selectedLevel.geometryAttribute), 1);
-                try {
-                    statFeatures = await getOAFFeature.getOAFFeatureGet(
-                        selectedLayer.url,
-                        selectedLayer.collection,
-                        {
-                            signal: this.abortController.signal,
-                            filter: this.parseOLFilterToOAF(payload.filter, this.filterMap),
-                            filterCrs: this.selectedLevel.oafRequestCRS,
-                            crs: this.selectedLevel.oafRequestCRS,
-                            propertyNames: payload.propertyNames,
-                            limit: 10000,
-                            skipGeometry: true
-                        }
-                    );
-                }
-                catch (error) {
-                    if (!(error instanceof CanceledError)) {
+                if (selectedLayer.typ === "WFS") {
+                    response = await getFeature.getFeaturePOST(selectedLayer.url, payload, error => {
                         console.error(error);
+                    });
+                    this.loadedFeatures = new WFS().readFeatures(response);
+                    this.layer.getSource().addFeatures(this.loadedFeatures);
+                    statFeatures = new GeoJSON().writeFeaturesObject(this.loadedFeatures).features;
+                }
+                else if (selectedLayer.typ === "OAF") {
+                    payload.propertyNames.splice(payload.propertyNames.indexOf(this.selectedLevel.geometryAttribute[index]), 1);
+                    try {
+                        statFeatures = await getOAFFeature.getOAFFeatureGet(
+                            selectedLayer.url,
+                            selectedLayer.collection,
+                            {
+                                signal: this.abortController.signal,
+                                filter: this.parseOLFilterToOAF(payload.filter, this.filterMap),
+                                filterCrs: this.selectedLevel.oafRequestCRS,
+                                crs: this.selectedLevel.oafRequestCRS,
+                                propertyNames: payload.propertyNames,
+                                limit: 10000,
+                                skipGeometry: true
+                            }
+                        );
                     }
-                    return;
+                    catch (error) {
+                        if (!(error instanceof CanceledError)) {
+                            console.error(error);
+                        }
+                        return;
+                    }
+                }
+                this.statisticsData = Object.assign({}, this.statisticsData, this.prepareStatisticsData(statFeatures, statsValues, regions, dates, selectedLevelDateAttribute, selectedLevelRegionNameAttribute.attrName[index], differenceMode));
+                if (typeof differenceMode === "string") {
+                    this.chartData.push(...this.getChartDataOutOfDifference(statFeatures, this.selectedStatisticsNames, regions, dates, selectedLevelDateAttribute, selectedLevelRegionNameAttribute.attrName[index], differenceMode));
+                }
+                else {
+                    this.chartData = this.statisticsData;
                 }
             }
             this.setIsFeatureLoaded(true);
@@ -904,36 +923,20 @@ export default {
             if (differenceMode) {
                 this.referenceFeatures = {};
             }
+            this.prepareData(regions, dates, differenceMode);
 
-            this.prepareData(statFeatures, this.selectedStatisticsNames, regions, dates, selectedLevelDateAttribute, selectedLevelRegionNameAttribute, differenceMode);
         },
         /**
          * Prepares and sets the data.
-         * @param {ol/Feature[]} features - The features.
-         * @param {String[]} statistics - The key to the statistic whose value is being looked for.
          * @param {String[]} regions - The regions of the statistic wanted.
          * @param {String[]} dates - The dates of the statistic wanted.
-         * @param {String} dateAttribute - The configured date attribute.
-         * @param {String} regionAttribute - The configured region attribute.
          * @param {String|Boolean} differenceMode - Indicates the difference mode('date' or 'region') otherwise false.
          * @returns {void}
          */
-        async prepareData (loadedFeatures, selectedStatisticsNames, regions, dates, selectedLevelDateAttribute, selectedLevelRegionNameAttribute, differenceMode) {
-            if (!Array.isArray(loadedFeatures) || loadedFeatures.length === 0 || !Array.isArray(selectedStatisticsNames) || !Array.isArray(regions) || !Array.isArray(dates) || !selectedLevelDateAttribute || !selectedLevelRegionNameAttribute) {
-                return;
-            }
-
-            this.statisticsData = this.prepareStatisticsData(loadedFeatures, selectedStatisticsNames, regions, dates, selectedLevelDateAttribute, selectedLevelRegionNameAttribute, differenceMode);
+        async prepareData (regions, dates, differenceMode) {
             this.tableData = this.getTableData(this.statisticsData);
             this.chosenTableData = this.getTableData(this.statisticsData, this.chosenStatisticName);
             this.chartCounts = this.selectedStatisticsNames.length;
-
-            if (typeof differenceMode === "string") {
-                this.chartData = this.getChartDataOutOfDifference(loadedFeatures, selectedStatisticsNames, regions, dates, selectedLevelDateAttribute, selectedLevelRegionNameAttribute, differenceMode);
-            }
-            else {
-                this.chartData = this.statisticsData;
-            }
 
             this.handleChartData(this.statisticNameOfChart, regions, dates, this.chartData, differenceMode);
 
@@ -1309,14 +1312,14 @@ export default {
          * Gets an EqualTo Filter if one of them has only one entry.
          * @param {String[]} regions The regions.
          * @param {String[]} dates The dates.
+         * @param {String} regionAttrName The attribute name of the region.
          * @returns {ol/format/filter} The filter.
          */
-        getFilter (regions, dates) {
+        getFilter (regions, dates, regionAttrName) {
             if (!Array.isArray(regions) || !Array.isArray(dates)) {
                 return undefined;
             }
-            const regionAttrName = this.getSelectedLevelRegionNameAttributeInDepth(this.selectedLevel?.mappingFilter?.regionNameAttribute)?.attrName,
-                  dateAttrName = this.getSelectedLevelDateAttribute(this.selectedLevel)?.attrName,
+            const dateAttrName = this.getSelectedLevelDateAttribute(this.selectedLevel)?.attrName,
                   tmpFlattenedRegions = [...this.flattenedRegions].reverse(),
                   allRegions = this.flattenedRegions.find(region => !Object.prototype.hasOwnProperty.call(region, "child"))?.values;
 
@@ -1331,7 +1334,7 @@ export default {
                     const nextRegion = tmpFlattenedRegions[i];
 
                     if (!nextRegion.selectedValues.some(selectedValue => selectedValue.label === i18next.t("common:modules.statisticDashboard.button.all"))) {
-                        return andFilter(this.getFilterForList(dates, dateAttrName), this.getFilterForList(nextRegion.selectedValues.map(selectedValue => selectedValue.label), nextRegion.attrName));
+                        return andFilter(this.getFilterForList(dates, dateAttrName), this.getFilterForList(nextRegion.selectedValues.map(selectedValue => selectedValue.label), nextRegion.attrName[0]));
                     }
                 }
             }
@@ -1425,7 +1428,7 @@ export default {
          * @returns {Object} The prepared statistical data.
          */
         prepareStatisticsData (features, statistics, regions, dates, dateAttribute, regionAttribute, differenceMode) {
-            const regionKey = regionAttribute.attrName,
+            const regionKey = regionAttribute,
                   dateKey = dateAttribute.attrName,
                   refRegionValues = {},
                   refDateValues = {},
@@ -1437,7 +1440,7 @@ export default {
             }
 
             statistics.forEach(stat => {
-                const statsKey = StatisticsHandler.getStatsKeysByName(this.statisticsByCategory, [stat])[0];
+                const statsKey = StatisticsHandler.getStatsKeysByName(this.statisticsByCategory, [stat]);
 
                 data[stat] = {};
                 refRegionValues[stat] = {};
@@ -1514,7 +1517,7 @@ export default {
          * @returns {Object} The prepared statistical data.
          */
         getChartDataOutOfDifference (features, statistics, regions, dates, dateAttribute, regionAttribute, differenceMode) {
-            const regionKey = regionAttribute.attrName,
+            const regionKey = regionAttribute,
                   dateKey = dateAttribute.attrName,
                   refRegionValues = {},
                   refDateValues = {},
@@ -1740,14 +1743,14 @@ export default {
             }
 
             this.setLevelTitle(selectedLevel.levelTitle
-                ?? this.getRawLayerByLayerId(selectedLevel.layerId)?.datasets?.[0]?.md_name);
+                ?? this.getRawLayerByLayerId(selectedLevel.layerId?.[0])?.datasets?.[0]?.md_name);
 
             const uniqueValues = await this.getUniqueValuesForLevel(selectedLevel),
                   selectedLevelDateAttribute = this.getSelectedLevelDateAttribute(selectedLevel);
 
             this.selectedLevelRegionNameAttribute = this.getSelectedLevelRegionNameAttribute(selectedLevel);
-            if (uniqueValues[this.selectedLevelRegionNameAttribute?.attrName] && uniqueValues[selectedLevelDateAttribute?.attrName]) {
-                this.regions = Object.keys(uniqueValues[this.selectedLevelRegionNameAttribute.attrName]).sort((a, b) => b - a);
+            if (uniqueValues[this.selectedLevelRegionNameAttribute?.attrName?.[0]] && uniqueValues[selectedLevelDateAttribute?.attrName]) {
+                this.regions = Object.keys(uniqueValues[this.selectedLevelRegionNameAttribute.attrName[0]]).sort((a, b) => b - a);
                 this.selectedLevelRegionNameAttribute.values = this.regions.map(val => {
                     return {
                         value: val,
@@ -1780,25 +1783,27 @@ export default {
          * @returns {void}
          */
         async prepareLayer () {
-            if (this.getRawLayerByLayerId(this.selectedLevel.layerId).typ === "WFS") {
+            if (this.getRawLayerByLayerId(this.selectedLevel.layerId?.[0]).typ === "WFS") {
                 return;
             }
 
             this.layer.getSource().clear();
             this.layer.setStyle(null);
 
-            const regionKey = this.getSelectedLevelRegionNameAttributeInDepth(
-                      this.selectedLevel.mappingFilter.regionNameAttribute
-                  ).attrName,
-                  rawLayer = this.getRawLayerByLayerId(this.selectedLevel.layerId),
-                  featureStream = getOAFFeature.getOAFFeatureStream(`${rawLayer.url}/collections/${rawLayer.collection}/items`, {
-                      crs: this.selectedLevel.oafRequestCRS,
-                      properties: `${regionKey},${this.selectedLevel.geometryAttribute}`,
-                      ...this.selectedLevel.geomRequestParams
-                  });
+            for (const [index, layerId] of this.selectedLevel.layerId.entries()) {
+                const regionKey = this.getSelectedLevelRegionNameAttributeInDepth(
+                          this.selectedLevel.mappingFilter.regionNameAttribute
+                      ).attrName?.[index],
+                      rawLayer = this.getRawLayerByLayerId(layerId),
+                      featureStream = getOAFFeature.getOAFFeatureStream(`${rawLayer.url}/collections/${rawLayer.collection}/items`, {
+                          crs: this.selectedLevel.oafRequestCRS,
+                          properties: `${regionKey},${this.selectedLevel.geometryAttribute[index]}`,
+                          ...this.selectedLevel.geomRequestParams
+                      });
 
-            for await (const feature of featureStream) {
-                this.layer.getSource().addFeature(feature);
+                for await (const feature of featureStream) {
+                    this.layer.getSource().addFeature(feature);
+                }
             }
         },
 

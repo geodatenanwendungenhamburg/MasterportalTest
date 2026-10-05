@@ -345,9 +345,9 @@ describe("src/modules/statisticDashboard/components/StatisticDashboard.vue", () 
                 });
 
                 await wrapper.vm.$nextTick();
-                wrapper.vm.setSelectedLevel({mappingFilter: {}});
+                wrapper.vm.setSelectedLevel({layerId: ["33162"], mappingFilter: {}, geometryAttribute: ["geom"]});
 
-                sinon.stub(wrapper.vm, "getSelectedLevelRegionNameAttributeInDepth").returns({attrName: "ort"});
+                sinon.stub(wrapper.vm, "getSelectedLevelRegionNameAttributeInDepth").returns({attrName: ["ort"]});
                 getOAFFeatureStreamStub.callsFake(async function* () {
                     yield {id: 1, properties: {name: "Feature 1"}};
                     yield {id: 2, properties: {name: "Feature 2"}};
@@ -474,28 +474,41 @@ describe("src/modules/statisticDashboard/components/StatisticDashboard.vue", () 
                     mappingFilter: {}
                 })).to.be.an("object").that.is.empty;
             });
-            it("should call expected function with expected params", async () => {
+            it("should fetch and merge unique values for every layer", async () => {
                 wrapper = createWrapper();
-                const layerId = "1234",
-                    attrNames = [
+                const layerIds = ["1234", "5678"],
+                    attrNamesFirstLayer = [
                         "fooBAR",
                         "fowWaw"
+                    ],
+                    attrNamesSecondLayer = [
+                        "fooBAR",
+                        "otherRegion"
                     ];
 
-                sinon.stub(fetchData, "getUniqueValues");
-                await wrapper.vm.getUniqueValuesForLevel({
-                    layerId,
+                sinon.stub(fetchData, "getUniqueValues")
+                    .onCall(0).resolves({fooBAR: {"2024": true}, fowWaw: {"Hamburg": true}})
+                    .onCall(1).resolves({fooBAR: {"2025": true}, otherRegion: {"Bremen": true}});
+                const uniqueValues = await wrapper.vm.getUniqueValuesForLevel({
+                    layerId: layerIds,
                     mappingFilter: {
                         timeAttribute: {
                             attrName: "fooBAR"
                         },
                         regionNameAttribute: {
-                            attrName: "fowWaw"
+                            attrName: ["fowWaw", "otherRegion"]
                         }
                     }
                 });
 
-                expect(fetchData.getUniqueValues.calledWith(layerId, attrNames, undefined, undefined)).to.be.true;
+                expect(fetchData.getUniqueValues.calledTwice).to.be.true;
+                expect(fetchData.getUniqueValues.firstCall.calledWith(layerIds[0], attrNamesFirstLayer, undefined, undefined)).to.be.true;
+                expect(fetchData.getUniqueValues.secondCall.calledWith(layerIds[1], attrNamesSecondLayer, undefined, undefined)).to.be.true;
+                expect(uniqueValues).to.deep.equal({
+                    fooBAR: {"2024": true, "2025": true},
+                    fowWaw: {Hamburg: true},
+                    otherRegion: {Bremen: true}
+                });
             });
         });
         describe("getTimestepsMerged", () => {
@@ -559,6 +572,8 @@ describe("src/modules/statisticDashboard/components/StatisticDashboard.vue", () 
 
                 wrapper.vm.categories = [{name: "Beschäftigte"}, {name: "Bevölkerung"}];
                 wrapper.vm.setSelectedLevel({
+                    "layerId": ["33162"],
+                    "geometryAttribute": ["geom"],
                     "mappingFilter": {
                         "statisticsAttributes": {
                             "beschaeftigte": {
@@ -592,6 +607,8 @@ describe("src/modules/statisticDashboard/components/StatisticDashboard.vue", () 
 
                 wrapper.vm.categories = [{name: "Beschäftigte"}, {name: "Bevölkerung"}];
                 wrapper.vm.setSelectedLevel({
+                    "layerId": ["33162"],
+                    "geometryAttribute": ["geom"],
                     "mappingFilter": {
                         "statisticsAttributes": {
                             "beschaeftigte": {
@@ -624,9 +641,11 @@ describe("src/modules/statisticDashboard/components/StatisticDashboard.vue", () 
                 wrapper.vm.regions = regions;
                 wrapper.vm.dates = dates;
                 wrapper.vm.setSelectedLevel({
+                    "layerId": ["33162"],
+                    "geometryAttribute": ["geom"],
                     mappingFilter: {
                         regionNameAttribute: {
-                            attrName: "bar"
+                            attrName: ["bar"]
                         }
                     }
                 });
@@ -644,9 +663,11 @@ describe("src/modules/statisticDashboard/components/StatisticDashboard.vue", () 
 
                 wrapper.vm.dates = ["01.01.1999"];
                 wrapper.vm.setSelectedLevel({
+                    "layerId": ["33162"],
+                    "geometryAttribute": ["geom"],
                     mappingFilter: {
                         regionNameAttribute: {
-                            attrName: "bar"
+                            attrName: ["bar"]
                         }
                     }
                 });
@@ -665,16 +686,18 @@ describe("src/modules/statisticDashboard/components/StatisticDashboard.vue", () 
 
                 wrapper.vm.dates = dates;
                 wrapper.vm.setSelectedLevel({
+                    "layerId": ["33162"],
+                    "geometryAttribute": ["geom"],
                     mappingFilter: {
                         regionNameAttribute: {
-                            attrName: "bar"
+                            attrName: ["bar"]
                         }
                     }
                 });
                 wrapper.vm.setFlattenedRegions([{
                     values: ["foo"]
                 }]);
-                wrapper.vm.getFilter(regions, dates);
+                wrapper.vm.getFilter(regions, dates, "bar");
 
                 expect(getFilterForListSpy.calledWith(regions, "bar")).to.be.true;
             });
@@ -688,12 +711,14 @@ describe("src/modules/statisticDashboard/components/StatisticDashboard.vue", () 
 
                 wrapper.vm.dates = [...dates, "01.01.2001"];
                 wrapper.vm.setSelectedLevel({
+                    "layerId": ["33162"],
+                    "geometryAttribute": ["geom"],
                     mappingFilter: {
                         timeAttribute: {
                             attrName: "bow"
                         },
                         regionNameAttribute: {
-                            attrName: "bar"
+                            attrName: ["bar"]
                         }
                     }
                 });
@@ -701,7 +726,7 @@ describe("src/modules/statisticDashboard/components/StatisticDashboard.vue", () 
                     values: ["foo", "faw"]
                 }]);
 
-                expect(wrapper.vm.getFilter(regions, dates)).to.deep.equal(expected);
+                expect(wrapper.vm.getFilter(regions, dates, "bar")).to.deep.equal(expected);
             });
             it("should call andFilter if given regions are all regions and more than one region level is defined and not parent regions have all selected", () => {
                 wrapper = createWrapper();
@@ -711,9 +736,11 @@ describe("src/modules/statisticDashboard/components/StatisticDashboard.vue", () 
 
                 wrapper.vm.dates = ["01.01.1999"];
                 wrapper.vm.setSelectedLevel({
+                    "layerId": ["33162"],
+                    "geometryAttribute": ["geom"],
                     mappingFilter: {
                         regionNameAttribute: {
-                            attrName: "bar"
+                            attrName: ["bar"]
                         },
                         timeAttribute: {
                             attrName: "date"
@@ -721,9 +748,9 @@ describe("src/modules/statisticDashboard/components/StatisticDashboard.vue", () 
                     }
                 });
                 wrapper.vm.setFlattenedRegions([
-                    {attrName: "foo", selectedValues: ["foo"], values: ["foo"], child: "foo"},
-                    {attrName: "bar", selectedValues: [{label: "bar"}], values: ["bar", "baz"], child: "foo"},
-                    {attrName: "baz", selectedValues: [{label: "modules.statisticDashboard.button.all"}], values: ["bar", "baz"]}
+                    {attrName: ["foo"], selectedValues: ["foo"], values: ["foo"], child: "foo"},
+                    {attrName: ["bar"], selectedValues: [{label: "bar"}], values: ["bar", "baz"], child: "foo"},
+                    {attrName: ["baz"], selectedValues: [{label: "modules.statisticDashboard.button.all"}], values: ["bar", "baz"]}
                 ]);
                 wrapper.vm.getFilter(regions, dates);
 
@@ -779,7 +806,7 @@ describe("src/modules/statisticDashboard/components/StatisticDashboard.vue", () 
                 wrapper = createWrapper();
                 const spySetSelectedReferenceValueTag = sinon.stub(wrapper.vm, "setSelectedReferenceValueTag"),
                     selectedLevel = {
-                        "layerId": "28992",
+                        "layerId": ["28992"],
                         "geometryAttribute": "geom",
                         "timeStepsFilter": {
                             "5": "Die letzten 5 Jahre",
@@ -803,7 +830,7 @@ describe("src/modules/statisticDashboard/components/StatisticDashboard.vue", () 
                 store.commit("Modules/StatisticDashboard/setSelectedReferenceData", {});
                 wrapper = createWrapper();
                 const selectedLevel = {
-                        "layerId": "28992",
+                        "layerId": ["28992"],
                         "geometryAttribute": "geom",
                         "timeStepsFilter": {
                             "5": "Die letzten 5 Jahre",
@@ -842,115 +869,6 @@ describe("src/modules/statisticDashboard/components/StatisticDashboard.vue", () 
                 expect(stubGetStepValue.calledWith({}, 5, "2022")).to.be.true;
             });
         });
-        describe("prepareData", () => {
-            it("should return undefined, wenn loadedFeatures is not correct", async () => {
-                store.commit("Modules/StatisticDashboard/setSelectedReferenceData", {});
-                wrapper = createWrapper();
-
-                wrapper.vm.statisticsByCategory = [{
-                    "bev_maennlich": {
-                        "name": "Bevölkerung maennlich"
-                    },
-                    "bev_weiblich": {
-                        "name": "Bevölkerung weiblich"
-                    }
-                }];
-
-                expect(await wrapper.vm.prepareData(null)).to.be.undefined;
-                expect(await wrapper.vm.prepareData({})).to.be.undefined;
-                expect(await wrapper.vm.prepareData([])).to.be.undefined;
-                expect(await wrapper.vm.prepareData(false)).to.be.undefined;
-                expect(await wrapper.vm.prepareData("str")).to.be.undefined;
-                expect(await wrapper.vm.prepareData(123)).to.be.undefined;
-            });
-            it("should return undefined, if selectedStatisticsNames is not an array", async () => {
-                store.commit("Modules/StatisticDashboard/setSelectedReferenceData", {});
-                wrapper = createWrapper();
-
-                wrapper.vm.statisticsByCategory = [{
-                    "bev_maennlich": {
-                        "name": "Bevölkerung maennlich"
-                    },
-                    "bev_weiblich": {
-                        "name": "Bevölkerung weiblich"
-                    }
-                }];
-
-                expect(await wrapper.vm.prepareData(featureList, null)).to.be.undefined;
-                expect(await wrapper.vm.prepareData(featureList, {})).to.be.undefined;
-                expect(await wrapper.vm.prepareData(featureList, false)).to.be.undefined;
-                expect(await wrapper.vm.prepareData(featureList, "str")).to.be.undefined;
-                expect(await wrapper.vm.prepareData(featureList, 123)).to.be.undefined;
-            });
-            it("should return undefined, if regions is not an array", async () => {
-                store.commit("Modules/StatisticDashboard/setSelectedReferenceData", {});
-                wrapper = createWrapper();
-
-                wrapper.vm.statisticsByCategory = [{
-                    "bev_maennlich": {
-                        "name": "Bevölkerung maennlich"
-                    },
-                    "bev_weiblich": {
-                        "name": "Bevölkerung weiblich"
-                    }
-                }];
-
-                expect(await wrapper.vm.prepareData(featureList, ["Bevölkerung maennlich", "Bevölkerung weiblich"], null)).to.be.undefined;
-                expect(await wrapper.vm.prepareData(featureList, ["Bevölkerung maennlich", "Bevölkerung weiblich"], {})).to.be.undefined;
-                expect(await wrapper.vm.prepareData(featureList, ["Bevölkerung maennlich", "Bevölkerung weiblich"], false)).to.be.undefined;
-                expect(await wrapper.vm.prepareData(featureList, ["Bevölkerung maennlich", "Bevölkerung weiblich"], "str")).to.be.undefined;
-                expect(await wrapper.vm.prepareData(featureList, ["Bevölkerung maennlich", "Bevölkerung weiblich"], 123)).to.be.undefined;
-            });
-            it("should return undefined, if dates is not an array", async () => {
-                store.commit("Modules/StatisticDashboard/setSelectedReferenceData", {});
-                wrapper = createWrapper();
-
-                wrapper.vm.statisticsByCategory = [{
-                    "bev_maennlich": {
-                        "name": "Bevölkerung maennlich"
-                    },
-                    "bev_weiblich": {
-                        "name": "Bevölkerung weiblich"
-                    }
-                }];
-
-                expect(await wrapper.vm.prepareData(featureList, ["Bevölkerung maennlich", "Bevölkerung weiblich"], ["Hamburg"], null)).to.be.undefined;
-                expect(await wrapper.vm.prepareData(featureList, ["Bevölkerung maennlich", "Bevölkerung weiblich"], ["Hamburg"], {})).to.be.undefined;
-                expect(await wrapper.vm.prepareData(featureList, ["Bevölkerung maennlich", "Bevölkerung weiblich"], ["Hamburg"], false)).to.be.undefined;
-                expect(await wrapper.vm.prepareData(featureList, ["Bevölkerung maennlich", "Bevölkerung weiblich"], ["Hamburg"], 123)).to.be.undefined;
-                expect(await wrapper.vm.prepareData(featureList, ["Bevölkerung maennlich", "Bevölkerung weiblich"], ["Hamburg"], "str")).to.be.undefined;
-            });
-            it("should return undefined, if selectedLevelDateAttribute is not defined", async () => {
-                store.commit("Modules/StatisticDashboard/setSelectedReferenceData", {});
-                wrapper = createWrapper();
-
-                wrapper.vm.statisticsByCategory = [{
-                    "bev_maennlich": {
-                        "name": "Bevölkerung maennlich"
-                    },
-                    "bev_weiblich": {
-                        "name": "Bevölkerung weiblich"
-                    }
-                }];
-
-                expect(await wrapper.vm.prepareData(featureList, ["Bevölkerung maennlich", "Bevölkerung weiblich"], ["Hamburg"], ["1890", "1990"], null)).to.be.undefined;
-            });
-            it("should return undefined, if selectedLevelRegionNameAttribute is not an array", async () => {
-                store.commit("Modules/StatisticDashboard/setSelectedReferenceData", {});
-                wrapper = createWrapper();
-
-                wrapper.vm.statisticsByCategory = [{
-                    "bev_maennlich": {
-                        "name": "Bevölkerung maennlich"
-                    },
-                    "bev_weiblich": {
-                        "name": "Bevölkerung weiblich"
-                    }
-                }];
-
-                expect(await wrapper.vm.prepareData(featureList, ["Bevölkerung maennlich", "Bevölkerung weiblich"], ["Hamburg"], ["1890", "1990"], {outputFormat: "YYYY", attrName: "jahr"}, null)).to.be.undefined;
-            });
-        });
         describe("prepareStatisticsData", () => {
             it("should return an object representing the statistics from the features", () => {
                 store.commit("Modules/StatisticDashboard/setSelectedReferenceData", {});
@@ -979,7 +897,7 @@ describe("src/modules/statisticDashboard/components/StatisticDashboard.vue", () 
                     }
                 }];
 
-                expect(wrapper.vm.prepareStatisticsData(featureList, ["Bevölkerung maennlich", "Bevölkerung weiblich"], ["Hamburg"], ["1890", "1990"], {outputFormat: "YYYY", attrName: "jahr"}, {attrName: "ort"})).to.deep.equal(statistics);
+                expect(wrapper.vm.prepareStatisticsData(featureList, ["Bevölkerung maennlich", "Bevölkerung weiblich"], ["Hamburg"], ["1890", "1990"], {outputFormat: "YYYY", attrName: "jahr"}, "ort")).to.deep.equal(statistics);
             });
         });
         describe("addHoverInteraction", () => {
@@ -1079,7 +997,7 @@ describe("src/modules/statisticDashboard/components/StatisticDashboard.vue", () 
                     }
                 }];
 
-                expect(wrapper.vm.getChartDataOutOfDifference(featureList, ["Bevölkerung maennlich", "Bevölkerung weiblich"], ["Hamburg"], ["1890", "1990"], {outputFormat: "YYYY", attrName: "jahr"}, {attrName: "ort"})).to.deep.equal(statistics);
+                expect(wrapper.vm.getChartDataOutOfDifference(featureList, ["Bevölkerung maennlich", "Bevölkerung weiblich"], ["Hamburg"], ["1890", "1990"], {outputFormat: "YYYY", attrName: "jahr"}, "ort")).to.deep.equal(statistics);
             });
         });
         describe("getTableData", () => {
@@ -1541,13 +1459,13 @@ describe("src/modules/statisticDashboard/components/StatisticDashboard.vue", () 
             it("should", () => {
                 wrapper = createWrapper();
                 const obj = {
-                        "attrName": "bundesland",
+                        "attrName": ["bundesland"],
                         "name": "Bundesland",
                         "child": {
-                            "attrName": "statistisches_gebiet",
+                            "attrName": ["statistisches_gebiet"],
                             "name": "Kreise und Städte",
                             "child": {
-                                "attrName": "statistisches_gebiet",
+                                "attrName": ["statistisches_gebiet"],
                                 "name": "Gemeinden"
                             }
                         }
@@ -1559,7 +1477,7 @@ describe("src/modules/statisticDashboard/components/StatisticDashboard.vue", () 
             it("should", () => {
                 wrapper = createWrapper();
                 const obj = {
-                        "attrName": "bundesland",
+                        "attrName": ["bundesland"],
                         "name": "Bundesland"
                     },
                     nameAttribute = wrapper.vm.getSelectedLevelRegionNameAttributeInDepth(obj);
@@ -1571,10 +1489,10 @@ describe("src/modules/statisticDashboard/components/StatisticDashboard.vue", () 
             it("should flatten the given object", () => {
                 wrapper = createWrapper();
                 const obj = {
-                    "attrName": "bundesland",
+                    "attrName": ["bundesland"],
                     "name": "Bundesland",
                     "child": {
-                        "attrName": "statistisches_gebiet",
+                        "attrName": ["statistisches_gebiet"],
                         "name": "Kreise und Städte"
                     }
                 };

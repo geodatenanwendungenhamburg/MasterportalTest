@@ -26,17 +26,17 @@ function filterFeaturesByKeyValue (features, key, value) {
  * @param {Object} statisticData - The statistic whose values are visualized.
  * @param {Number[][]} colorScheme - The color scheme used for styling.
  * @param {String} date - The date for which the values are visualized
- * @param {String} regionKey - The key to the region in the feature.
+ * @param {String[]} regionKeys - The keys to the region in the feature.
  * @param {Number[]} stepValues - The step values used as thresholds for classification.
  * @param {String} [refRegion=null] - The reference region in difference mode, or null.
  * @param {*} [refColor=null] - The color for the reference region, or null.
  * @returns {Function} An OpenLayers style function for the layer.
  */
-function getStyleFunction (statisticData, colorScheme, date, regionKey, stepValues, refRegion = null, refColor = null) {
+function getStyleFunction (statisticData, colorScheme, date, regionKeys, stepValues, refRegion = null, refColor = null) {
     const styleCache = {};
 
     return function (feature) {
-        const region = feature.get(regionKey),
+        const region = feature.get(regionKeys.find(key => feature.get(key))),
             value = statisticData[region]?.[date],
             index = stepValues.findLastIndex(e => value >= e),
             color = colorScheme[index] || [255, 255, 255, 0.9],
