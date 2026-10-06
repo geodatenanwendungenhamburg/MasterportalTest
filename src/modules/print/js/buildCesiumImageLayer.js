@@ -64,7 +64,7 @@ function createFakeExtent (view, pixels) {
 /**
  * Creates the print image layer for mapfish from the given 3dmap
  * @param {olcs.OLCesium} ol3d The 3d map
- * @param {Object} options Options; see takeOl3DScreenshot for the downscale/crop fields.
+ * @param {Object} options Options
  * @returns {Promise<Object>} the promise
  */
 async function createMapfishPrintImageLayerFromCesium (ol3d, options) {
