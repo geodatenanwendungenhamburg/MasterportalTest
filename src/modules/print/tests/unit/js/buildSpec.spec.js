@@ -22,9 +22,9 @@ import {createStore} from "vuex";
 import {vi} from "vitest";
 
 import store from "@appstore/index.js";
-import {buildWmtsImage} from "@modules/print/utils/buildWmtsImage.js";
+import {buildWmtsImage} from "@modules/print/js/buildWmtsImage.js";
 
-vi.mock("@modules/print/utils/buildWmtsImage.js", () => ({
+vi.mock("@modules/print/js/buildWmtsImage.js", () => ({
     buildWmtsImage: vi.fn()
 }));
 

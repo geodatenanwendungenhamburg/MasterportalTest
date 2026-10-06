@@ -6,7 +6,7 @@ import TileLayer from "ol/layer/Tile.js";
 import WMTS from "ol/source/WMTS.js";
 import WMTSTileGrid from "ol/tilegrid/WMTS.js";
 import {get as getProjection} from "ol/proj.js";
-import {buildWmtsImage, cloneSourceForRendering} from "@modules/print/utils/buildWmtsImage.js";
+import {buildWmtsImage, cloneSourceForRendering} from "@modules/print/js/buildWmtsImage.js";
 
 /**
  * Creates a WMTS source for testing.
@@ -31,7 +31,7 @@ function createSource (options = {}) {
     });
 }
 
-describe("src/modules/print/utils/buildWmtsImage.js", () => {
+describe("src/modules/print/js/buildWmtsImage.js", () => {
     describe("cloneSourceForRendering", () => {
         let clock,
             source;

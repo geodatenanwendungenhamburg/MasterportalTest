@@ -22,8 +22,8 @@ import createStyle from "@masterportal/masterportalapi/src/vectorStyle/createSty
 import {getRulesForFeature} from "@masterportal/masterportalapi/src/vectorStyle/lib/getRuleForIndex.js";
 import layerCollection from "@core/layers/js/layerCollection.js";
 import {uniqueId} from "@shared/js/utils/uniqueId.js";
-import {buildHeatmapPng} from "../utils/buildHeatmapPng.js";
-import {buildWmtsImage} from "../utils/buildWmtsImage.js";
+import {buildHeatmapPng} from "./buildHeatmapPng.js";
+import {buildWmtsImage} from "./buildWmtsImage.js";
 
 const BuildSpecModel = {
     defaults: {
