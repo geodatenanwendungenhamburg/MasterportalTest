@@ -62,6 +62,8 @@
 - The following packages have been updated:
     - dependencies:
         - @masterportal/masterportalapi: 2.63.0 to 2.64.0 (This also raised ol to version 10.10.0)
+    - devDependencies:
+        - jsdom: ^29.1.1 to ^30.1.2
 
 ### Fixed
 - Issue \#1655: Menu modules now keep their own configuration when multiple modules of the same type are defined in config.json. LayerSlider and Filter no longer reuse the last configured instance.
