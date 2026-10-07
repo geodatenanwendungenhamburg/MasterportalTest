@@ -4,8 +4,7 @@
 
 [Semantic versioning](https://semver.org/spec/v2.0.0.html) is used.
 
-## Unreleased - in development
-### __Breaking Changes__
+## 2026-10-07 v3.27.0 (LTS)
 
 ### Added
 - CustomMenuElement: Added HTML sanitation with DOMPurify to prevent XSS vulnerabilities.
