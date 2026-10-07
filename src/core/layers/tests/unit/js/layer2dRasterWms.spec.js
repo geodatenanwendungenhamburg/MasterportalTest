@@ -83,7 +83,9 @@ describe("src/core/js/layers/layer2dRasterWms.js", () => {
                 transparent: true,
                 url: "http://test.url",
                 version: "1.3.0",
-                isSecured: false
+                isSecured: false,
+                sld: "sld",
+                gfi_template: "gfi_template"
             };
         });
 
@@ -103,7 +105,9 @@ describe("src/core/js/layers/layer2dRasterWms.js", () => {
                 transparent: "true",
                 url: "http://test.url",
                 version: "1.3.0",
-                extent: undefined
+                extent: undefined,
+                SLD: "sld",
+                GFI_TEMPLATE: "gfi_template"
             });
         });
 
@@ -112,7 +116,9 @@ describe("src/core/js/layers/layer2dRasterWms.js", () => {
                 styles: [
                     "geofox_stations"
                 ],
-                extent: [10, 20, 11, 22]
+                extent: [10, 20, 11, 22],
+                sld: undefined,
+                gfi_template: undefined
             });
             const wmsLayer = new Layer2dRasterWms(localAttributes);
 
