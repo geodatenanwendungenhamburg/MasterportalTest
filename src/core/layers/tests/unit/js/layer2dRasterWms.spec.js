@@ -85,7 +85,7 @@ describe("src/core/js/layers/layer2dRasterWms.js", () => {
                 version: "1.3.0",
                 isSecured: false,
                 sld: "sld",
-                gfi_template: "gfi_template"
+                gfiTemplate: "gfi_template"
             };
         });
 
@@ -118,7 +118,7 @@ describe("src/core/js/layers/layer2dRasterWms.js", () => {
                 ],
                 extent: [10, 20, 11, 22],
                 sld: undefined,
-                gfi_template: undefined
+                gfiTemplate: undefined
             });
             const wmsLayer = new Layer2dRasterWms(localAttributes);
 

@@ -19,7 +19,7 @@ A layer based on the OGC's [Web Map Service](https://www.ogc.org/standard/wms/) 
 |fitCapabilitiesExtent|no|Boolean|false|When set to `true` and a `capabilitiesUrl` is specified in the configuration, the application will fit the map extent based on the bounding box information retrieved from the GetCapabilities document.|`true`|
 |format|yes|String||Image format of tiles requested via *GetMap*. Must match one of the service's formats listed in *Capability/Request/GetMap/Format*.|`"image/jpeg"`|
 |gfiAttributes|yes|String/**[gfiAttributes](#gfi-attributes)**||GFI attributes to be shown|`"ignore"`|
-|gfi_template|no|String||A deegree Vendor-Specific Parameter, `"GFI_TEMPLATE"` is send as key in request.|`"gfiTemplate"`|
+|gfiTemplate|no|String||A deegree Vendor-Specific Parameter, `"GFI_TEMPLATE"` is send as key in request.|`"gfiTemplate"`|
 |gfiTheme|yes|String/Object||Display style of GFI information for this layer. Unless `"default"` is chosen, custom templates may be used to show GFI information in another format than the default table style.|`"default"`|
 |gfiTitleAttribute|no|String||Optional. Specifies which feature attribute should be used as the GFI title instead of the layer name. If the specified attribute is missing, empty, null, or undefined in a feature, the layer name is used as fallback. **Important:** The fallback to layer name also occurs if the attribute value is an empty string or zero (0 is treated as empty). See **[GFI Title Attribute](#gfi-title-attribute)** for detailed behavior and examples.|`"stationName"`|
 |gutter|no|String|`"0"`|Additionally loaded tile contents in border pixel width. Serves to avoid cut symbols on tile borders.|`"0"`|
