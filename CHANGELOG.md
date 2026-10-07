@@ -8,6 +8,20 @@
 ### __Breaking Changes__
 
 ### Added
+
+### Changed
+
+### Deprecated
+
+### Removed
+
+### Fixed
+
+---
+
+## 2026-10-07 v3.27.0 (LTS)
+
+### Added
 - LinechartItem: Added possibility to configure custom plugins to extend Chart.js default behaviour.
 - WFS-T: Added configurable per-field input validation on single insert and update, configurable in the layer's `gfiAttributes`.
 - Login: Added the `openLoginWindowOnLoad` config option to open the login popup automatically for unauthenticated users.
@@ -22,10 +36,6 @@
 - The following packages have been updated:
     - dependencies:
         - @masterportal/masterportalapi: 2.63.0 to 2.64.0 (This also raised ol to version 10.10.0)
-
-### Deprecated
-
-### Removed
 
 ### Fixed
 - Issue \#1655: Menu modules now keep their own configuration when multiple modules of the same type are defined in config.json. LayerSlider and Filter no longer reuse the last configured instance.
