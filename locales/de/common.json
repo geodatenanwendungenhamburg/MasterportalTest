@@ -1347,7 +1347,9 @@
         "showMore": "weitere anzeigen...",
         "showLess": "weniger anzeigen...",
         "done": "Fertig",
-        "all": "Alle",
+        "allStatistics": "Alle statistischen Daten",
+        "allAreas": "Alle Gebiete",
+        "selectAllAreas": "Alle Gebiete auswählen",
         "statistics": "Statistiken",
         "geographical": "Geografische Filter",
         "timeBased": "Zeitbezogene Filter"

@@ -647,7 +647,7 @@ export default {
         setStatisticsByCategories (categories) {
             const statistics = [];
 
-            if (categories.some(category => category.name === i18next.t("common:modules.statisticDashboard.button.all"))) {
+            if (categories.some(category => category.name === i18next.t("common:modules.statisticDashboard.button.allStatistics"))) {
                 this.categories.forEach(category => {
                     statistics.push(StatisticsHandler.getStatisticsByCategory(category.name, this.getSelectedLevelStatisticsAttributes(this.selectedLevel)));
                 });
@@ -1337,7 +1337,7 @@ export default {
                 for (let i = 0; i < tmpFlattenedRegions.length; i++) {
                     const nextRegion = tmpFlattenedRegions[i];
 
-                    if (!nextRegion.selectedValues.some(selectedValue => selectedValue.label === i18next.t("common:modules.statisticDashboard.button.all"))) {
+                    if (!nextRegion.selectedValues.some(selectedValue => selectedValue.label === i18next.t("common:modules.statisticDashboard.button.allAreas"))) {
                         return andFilter(this.getFilterForList(dates, dateAttrName), this.getFilterForList(nextRegion.selectedValues.map(selectedValue => selectedValue.label), nextRegion.attrName[0]));
                     }
                 }

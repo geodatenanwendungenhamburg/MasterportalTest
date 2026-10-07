@@ -120,7 +120,7 @@ export default {
                 return [...selectedRegions, ...notSelectedRegions];
             }
 
-            return [...selectedRegions, {label: i18next.t("common:modules.statisticDashboard.button.all")}, ...notSelectedRegions];
+            return [...selectedRegions, {label: i18next.t("common:modules.statisticDashboard.button.allAreas")}, ...notSelectedRegions];
         },
 
         /**
@@ -376,7 +376,7 @@ export default {
          * @returns {Boolean} true if all tag was found, false otherwise.
          */
         containsAllTag (values) {
-            return values.some(val => val.label === i18next.t("common:modules.statisticDashboard.button.all"));
+            return values.some(val => val.label === i18next.t("common:modules.statisticDashboard.button.allAreas"));
         }
     }
 };
@@ -407,7 +407,7 @@ export default {
                     @click="selectAll(region)"
                 >
                     <i class="bi bi-toggles" />
-                    {{ $t("common:modules.statisticDashboard.button.all") }}
+                    {{ $t("common:modules.statisticDashboard.button.selectAllAreas") }}
                 </button>
                 <button
                     v-for="(value, idx) in region.values"

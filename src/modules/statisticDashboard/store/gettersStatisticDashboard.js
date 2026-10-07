@@ -45,7 +45,7 @@ const getters = {
 
         let regions = selectedRegions;
 
-        if (selectedRegions.some(val => val.label === i18next.t("common:modules.statisticDashboard.button.all")) && typeof state?.flattenedRegions !== "undefined") {
+        if (selectedRegions.some(val => val.label === i18next.t("common:modules.statisticDashboard.button.allAreas")) && typeof state?.flattenedRegions !== "undefined") {
             regions = sortBy(state?.flattenedRegions.find(region => {
                 return !Object.prototype.hasOwnProperty.call(region, "child");
             })?.values, "label");

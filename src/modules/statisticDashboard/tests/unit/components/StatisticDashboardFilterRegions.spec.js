@@ -188,7 +188,7 @@ describe("src/modules/statiscticDashboard/components/StatisticDashboardFilterReg
                         {value: "Schwerin", label: "Schwerin"}
                     ],
                     expectedRegions = [
-                        {label: "modules.statisticDashboard.button.all"},
+                        {label: "modules.statisticDashboard.button.allAreas"},
                         {value: ["Harburg", "Lübeck", "Schwerin"], label: "Alle Gebiete"},
                         {value: "Harburg", label: "Harburg"},
                         {value: "Lübeck", label: "Lübeck"},
@@ -225,7 +225,7 @@ describe("src/modules/statiscticDashboard/components/StatisticDashboardFilterReg
 
                 expect(wrapper.vm.getRegionsSorted(regions, [{value: ["Harburg", "Lübeck", "Schwerin"], label: "Alle Gebiete"}])).to.deep.equal([
                     {value: ["Harburg", "Lübeck", "Schwerin"], label: "Alle Gebiete"},
-                    {label: "modules.statisticDashboard.button.all"},
+                    {label: "modules.statisticDashboard.button.allAreas"},
                     {value: "Harburg", label: "Harburg"},
                     {value: "Lübeck", label: "Lübeck"},
                     {value: "Schwerin", label: "Schwerin"}
