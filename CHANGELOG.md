@@ -16,6 +16,8 @@
 - The following packages have been updated:
     -devDependencies:
         - sass: "1.77.2" to "^1.105.1"
+    - dependencies:
+        - axios: ^1.19.0 to ^1.20.0
 
 ### Deprecated
 
