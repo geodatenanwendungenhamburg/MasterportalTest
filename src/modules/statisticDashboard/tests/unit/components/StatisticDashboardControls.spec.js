@@ -726,7 +726,7 @@ describe("src/modules/statiscticDashboard/components/StatisticDashboardControls.
                     }
                 });
 
-                wrapper.vm.setSelectedCategories([{name: "Kategorie 1"}, {name: "alle"}]);
+                wrapper.vm.setSelectedCategories([{name: "Kategorie 1"}, {name: i18next.t("common:modules.statisticDashboard.button.allStatistics")}]);
                 wrapper.vm.setSelectedStatistics({"stat1": {
                     category: "Kategorie 1",
                     name: "Stat eins"
@@ -764,7 +764,7 @@ describe("src/modules/statiscticDashboard/components/StatisticDashboardControls.
                     }
                 });
 
-                wrapper.vm.setSelectedCategories([{name: "Kategorie 1"}, {name: "alle"}]);
+                wrapper.vm.setSelectedCategories([{name: "Kategorie 1"}, {name: i18next.t("common:modules.statisticDashboard.button.allStatistics")}]);
                 wrapper.vm.setSelectedStatistics({
                     "stat1": {
                         category: "Kategorie 1",
@@ -777,7 +777,7 @@ describe("src/modules/statiscticDashboard/components/StatisticDashboardControls.
                         name: "Stat zwei"
                     }
                 });
-                wrapper.vm.removeSelectedStatsByCategory({name: "alle"});
+                wrapper.vm.removeSelectedStatsByCategory({name: i18next.t("common:modules.statisticDashboard.button.allStatistics")});
                 expect(wrapper.vm.selectedStatistics).to.deep.equal({"stat1": {
                     category: "Kategorie 1",
                     name: "Stat eins"

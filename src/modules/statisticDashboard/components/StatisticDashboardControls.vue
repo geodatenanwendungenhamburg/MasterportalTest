@@ -84,10 +84,6 @@ export default {
             switchValue: "",
             referenceTag: undefined,
             indexSelectedStatistics: 0,
-            sortedCategories: [],
-            sortedStatisticNames: [],
-            sortedSelectedStatistics: [],
-            sortedDates: [],
             openStates: {
                 categoryfilter: false,
                 statisticfilter: false,
@@ -110,10 +106,43 @@ export default {
             "selectedReferenceData",
             "selectedRegions",
             "selectedRegionsValues",
-            "selectedDatesValues",
-            "selectedRegionsValues"
+            "selectedDatesValues"
         ]),
-
+        /**
+         * Gets the categories sorted with the selected ones first.
+         * @returns {Object[]} The sorted list of categories.
+         */
+        sortedCategories () {
+            return this.getCategoriesSorted(this.categories, this.selectedCategories);
+        },
+        /**
+         * Gets all statistic names sorted with the selected ones first.
+         * @returns {Object[]} The sorted list of statistic names.
+         */
+        sortedStatisticNames () {
+            return this.getSortedStatisticNames(this.statistics, this.selectedStatistics);
+        },
+        /**
+         * Gets the selected statistics as an array of objects.
+         * @returns {Object[]} The list of selected statistics objects.
+         */
+        sortedSelectedStatistics () {
+            return this.getSelectedStatisticNames(this.selectedStatistics);
+        },
+        /**
+         * Gets the dates sorted with the selected ones first.
+         * @returns {Object[]} The sorted list of dates.
+         */
+        sortedDates () {
+            return this.getSortedDates(this.timeStepsFilter, this.selectedDates);
+        },
+        /**
+         * Gets the total count of selected statistics.
+         * @returns {Number} The count of selected statistics.
+         */
+        selectedStatisticsCount () {
+            return this.getSelectedStatisticNames(this.selectedStatistics).length;
+        },
         /**
          * Checks if there is at least one description
          * @returns {Boolean} True if there is one otherwise false.
@@ -176,6 +205,10 @@ export default {
         }
     },
     watch: {
+        /**
+         * Emits an event to toggle between chart and table view.
+         * @returns {void}
+         */
         switchValue () {
             this.$emit("showChartTable");
         },
@@ -190,63 +223,71 @@ export default {
                     this.setSelectedStatistics({});
                 }
                 this.$emit("changeCategory", newValue);
-                this.sortedCategories = this.getCategoriesSorted(this.categories, newValue);
             },
             deep: true
         },
-        selectedReferenceData (val) {
-            this.differenceModalContainer?.hide();
-            this.handleReferenceTag(val);
-            this.$emit("setTableSubtitle", this.referenceSubTitle);
-        },
-        selectedReferenceValueTag (val) {
-            if (typeof this.referenceTag !== "undefined") {
-                if (this.referenceTag.split(":").length - 1 === 1) {
-                    this.referenceTag = this.referenceTag.split(":")[0];
-                }
-                if (typeof val === "number" && !isNaN(val)) {
-                    this.referenceTag = this.referenceTag + ": " + val;
-                }
-            }
-        },
-        statistics: {
-            handler (val) {
-                this.sortedStatisticNames = this.getSortedStatisticNames(val, this.selectedStatistics);
-                this.sortedSelectedStatistics = this.getSelectedStatisticNames(this.selectedStatistics);
-            },
-            deep: true
-        },
-
+        /**
+         * Emits the updated filter settings when the selected statistics change.
+         * @param {Object} newValue - The updated selected statistics.
+         * @returns {void}
+         */
         selectedStatistics: {
             handler (newValue) {
                 this.emitFilterSettings(newValue, this.selectedRegionsValues, this.selectedDatesValues);
-                this.sortedStatisticNames = this.getSortedStatisticNames(this.statistics, this.selectedStatistics);
-                this.sortedSelectedStatistics = this.getSelectedStatisticNames(this.selectedStatistics);
             },
             deep: true
         },
+        /**
+         * Emits the updated filter settings when the selected dates change.
+         * @returns {void}
+         */
         selectedDates: {
             handler () {
                 this.emitFilterSettings(this.selectedStatistics, this.selectedRegionsValues, this.selectedDatesValues);
-                this.sortedDates = this.getSortedDates(this.timeStepsFilter, this.selectedDates);
             },
             deep: true
         },
+        /**
+         * Emits the updated filter settings when the selected regions change.
+         * @returns {void}
+         */
         selectedRegions: {
             handler () {
                 this.emitFilterSettings(this.selectedStatistics, this.selectedRegionsValues, this.selectedDatesValues);
             },
             deep: true
+        },
+        /**
+         * Handles changes to the selected reference data.
+         * @param {Object} val - The new selected reference data.
+         * @returns {void}
+         */
+        selectedReferenceData (val) {
+            this.differenceModalContainer?.hide();
+            this.handleReferenceTag(val);
+            this.$emit("setTableSubtitle", this.referenceSubTitle);
+        },
+
+        /**
+         * Updates the reference tag label with the numeric reference value tag.
+         * @param {Number} val - The selected reference value tag.
+         * @returns {void}
+         */
+        selectedReferenceValueTag (val) {
+            if (typeof val !== "number" || isNaN(val) || typeof this.referenceTag === "undefined") {
+                return;
+            }
+
+            if (this.referenceTag.includes(":")) {
+                this.referenceTag = this.referenceTag.split(":")[0];
+            }
+            this.referenceTag = this.referenceTag + ": " + val;
         }
     },
     mounted () {
         const container = document.getElementById("difference-modal-container");
 
         this.emitFilterSettings(this.selectedStatistics, this.selectedRegionsValues, this.selectedDatesValues);
-        this.sortedCategories = this.getCategoriesSorted(this.categories, this.selectedCategories);
-        this.sortedStatisticNames = this.getSortedStatisticNames(this.statistics, this.selectedStatistics);
-        this.sortedSelectedStatistics = this.getSelectedStatisticNames(this.selectedStatistics);
-        this.sortedDates = this.getSortedDates(this.timeStepsFilter, this.selectedDates);
 
         if (container) {
             this.differenceModalContainer = new Dropdown(container);
@@ -619,10 +660,10 @@ export default {
                         <i class="bi bi-bar-chart me-1" />
                         {{ $t("common:modules.statisticDashboard.button.statistics") }}
                         <span
-                            v-if="getSelectedStatisticNames(selectedStatistics).length !== 0"
+                            v-if="selectedStatisticsCount !== 0"
                             class="mx-1 filter badge text-bg-secondary"
                         >
-                            {{ getSelectedStatisticNames(selectedStatistics).length }}
+                            {{ selectedStatisticsCount }}
                         </span>
                         <i class="toolbar-button-icon bi bi-caret-down-fill" />
                     </button>
