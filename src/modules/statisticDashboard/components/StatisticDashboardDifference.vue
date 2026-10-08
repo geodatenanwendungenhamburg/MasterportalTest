@@ -128,16 +128,18 @@ export default {
                 return [];
             }
             const lastChild = flattenedRegions[flattenedRegions.length - 1],
-                  selectedLayer = rawLayerList.getLayerWhere({id: this.selectedLevel?.layerId});
-            let uniqueObject = {};
+                  selectedLayers = this.selectedLevel?.layerId?.map(id => rawLayerList.getLayerWhere({id})).filter(isObject),
+                  uniqueObject = {};
 
             if (lastChild?.values?.length) {
                 return lastChild.values;
             }
-            if (!isObject(selectedLayer)) {
+            if (!Array.isArray(selectedLayers)) {
                 return [];
             }
-            uniqueObject = await getOAFFeature.getUniqueValuesByScheme(selectedLayer.url, selectedLayer.collection, [lastChild.attrName]);
+            for (const selectedLayer of selectedLayers) {
+                Object.assign(uniqueObject, await getOAFFeature.getUniqueValuesByScheme(selectedLayer.url, selectedLayer.collection, [lastChild.attrName]));
+            }
 
             return !isObject(uniqueObject[lastChild.attrName]) ? [] : Object.keys(uniqueObject[lastChild.attrName]);
         }

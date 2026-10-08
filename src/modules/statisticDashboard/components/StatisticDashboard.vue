@@ -1,4 +1,8 @@
 <script>
+/**
+ * @import {StatisticDashboardMapGetters, StatisticDashboardMapMutations} from "../types/helpers.js"
+ */
+
 import AccordionItem from "@shared/modules/accordion/components/AccordionItem.vue";
 import {and as andFilter, equalTo as equalToFilter, or as orFilter} from "ol/format/filter.js";
 import ButtonGroup from "@shared/modules/buttons/components/ButtonGroup.vue";
@@ -103,7 +107,7 @@ export default {
         };
     },
     computed: {
-        ...mapGetters("Modules/StatisticDashboard", [
+        .../** @type {StatisticDashboardMapGetters} */ (mapGetters)("Modules/StatisticDashboard", [
             "selectedRegions",
             "selectedDates",
             "selectedStatistics",
@@ -435,7 +439,7 @@ export default {
         }
     },
     methods: {
-        ...mapMutations("Modules/StatisticDashboard", [
+        .../** @type {StatisticDashboardMapMutations} */ (mapMutations)("Modules/StatisticDashboard", [
             "setLegendData",
             "setDescriptionsOfSelectedStatistics",
             "setChosenStatisticName",
@@ -912,7 +916,7 @@ export default {
                 }
                 this.statisticsData = Object.assign({}, this.statisticsData, this.prepareStatisticsData(statFeatures, statsValues, regions, dates, selectedLevelDateAttribute, selectedLevelRegionNameAttribute.attrName[index], differenceMode));
                 if (typeof differenceMode === "string") {
-                    this.chartData.push(...this.getChartDataOutOfDifference(statFeatures, this.selectedStatisticsNames, regions, dates, selectedLevelDateAttribute, selectedLevelRegionNameAttribute.attrName[index], differenceMode));
+                    this.chartData = this.getChartDataOutOfDifference(statFeatures, this.selectedStatisticsNames, regions, dates, selectedLevelDateAttribute, selectedLevelRegionNameAttribute.attrName[index], differenceMode);
                 }
                 else {
                     this.chartData = this.statisticsData;

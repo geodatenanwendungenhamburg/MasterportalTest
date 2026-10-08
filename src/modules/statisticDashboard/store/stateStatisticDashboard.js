@@ -1,6 +1,6 @@
 /**
- * Shadow tool state definition.
- * @typedef {Object} ContactState
+ * Statistic dashboard tool state definition.
+ * @typedef {Object} StatisticDashboardState
  * @property {Boolean} active If true, SaveSelection will be rendered.
  * @property {String} id Id of the Contact component.
  * @property {String} name Displayed as the title. (config-param)
@@ -34,6 +34,8 @@
  * @property {String} chosenStatisticName the clicked chosen statistic name.
  * @property {Boolean} isFeatureLoaded If true, the features of layer will be loaded.
  */
+
+/**  @type {StatisticDashboardState} */
 const state = {
     id: "statisticDashboard",
     name: "common:modules.statisticDashboard.name",

@@ -206,9 +206,23 @@ describe("src/modules/statiscticDashboard/components/StatisticDashboardDifferenc
                     }
                 });
 
+                store.commit("Modules/StatisticDashboard/setSelectedLevel", {layerId: ["1234"]});
                 sinon.stub(rawLayerList, "getLayerWhere").returns(undefined);
                 await wrapper.vm.$nextTick();
-                expect(await wrapper.vm.getRegionsOptionsForLastChild([{}])).to.be.an("array").that.is.empty;
+                expect(await wrapper.vm.getRegionsOptionsForLastChild([{}, {attrName: "foo"}])).to.be.an("array").that.is.empty;
+            });
+            it("should return an empty array if selectedLevel has no layerId", async () => {
+                const wrapper = shallowMount(StatisticDashboardDifference, {
+                    propsData: propsData,
+                    global: {
+                        plugins: [store]
+                    }
+                });
+
+                store.commit("Modules/StatisticDashboard/setSelectedLevel", {});
+                sinon.stub(rawLayerList, "getLayerWhere").returns({});
+                await wrapper.vm.$nextTick();
+                expect(await wrapper.vm.getRegionsOptionsForLastChild([{}, {attrName: "foo"}])).to.be.an("array").that.is.empty;
             });
             it("should return an empty array if no unique object for the last child is given", async () => {
                 const wrapper = shallowMount(StatisticDashboardDifference, {
@@ -218,6 +232,7 @@ describe("src/modules/statiscticDashboard/components/StatisticDashboardDifferenc
                     }
                 });
 
+                store.commit("Modules/StatisticDashboard/setSelectedLevel", {layerId: ["1234"]});
                 sinon.stub(rawLayerList, "getLayerWhere").returns({});
                 sinon.stub(getOAFFeature, "getUniqueValuesByScheme").resolves({});
                 await wrapper.vm.$nextTick();
@@ -231,10 +246,30 @@ describe("src/modules/statiscticDashboard/components/StatisticDashboardDifferenc
                     }
                 });
 
+                store.commit("Modules/StatisticDashboard/setSelectedLevel", {layerId: ["1234"]});
                 sinon.stub(rawLayerList, "getLayerWhere").returns({});
                 sinon.stub(getOAFFeature, "getUniqueValuesByScheme").resolves({foo: {bar: true, fob: true}});
                 await wrapper.vm.$nextTick();
                 expect(await wrapper.vm.getRegionsOptionsForLastChild([{}, {attrName: "foo"}])).to.deep.equal(["bar", "fob"]);
+            });
+            it("should request the unique values for every layer of the selected level", async () => {
+                const wrapper = shallowMount(StatisticDashboardDifference, {
+                        propsData: propsData,
+                        global: {
+                            plugins: [store]
+                        }
+                    }),
+                    getLayerWhereStub = sinon.stub(rawLayerList, "getLayerWhere"),
+                    getUniqueValuesStub = sinon.stub(getOAFFeature, "getUniqueValuesByScheme").resolves({foo: {bar: true, fob: true}});
+
+                getLayerWhereStub.withArgs({id: "1234"}).returns({url: "url1", collection: "col1"});
+                getLayerWhereStub.withArgs({id: "5678"}).returns({url: "url2", collection: "col2"});
+                store.commit("Modules/StatisticDashboard/setSelectedLevel", {layerId: ["1234", "5678"]});
+                await wrapper.vm.$nextTick();
+
+                expect(await wrapper.vm.getRegionsOptionsForLastChild([{}, {attrName: "foo"}])).to.deep.equal(["bar", "fob"]);
+                expect(getUniqueValuesStub.calledWith("url1", "col1", ["foo"])).to.be.true;
+                expect(getUniqueValuesStub.calledWith("url2", "col2", ["foo"])).to.be.true;
             });
         });
     });
