@@ -240,7 +240,14 @@ export default defineConfig(({mode}) => {
             devSourcemap: false,
             preprocessorOptions: {
                 scss: {
-                    additionalData: "@import \"@/assets/css/global.scss\";"
+                    additionalData: "@import \"@/assets/css/global.scss\";",
+                    quietDeps: true,
+                    silenceDeprecations: [
+                        "import",
+                        "global-builtin",
+                        "color-functions",
+                        "if-function"
+                    ]
                 }
             }
         },

@@ -13,6 +13,9 @@
 - WMS-Layer: Added additional request parameter `sld` and `gfi_template`.
 
 ### Changed
+- The following packages have been updated:
+    -devDependencies:
+        - sass: "1.77.2" to "^1.105.1"
 
 ### Deprecated
 
