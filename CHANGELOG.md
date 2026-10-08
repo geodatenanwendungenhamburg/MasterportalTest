@@ -4,6 +4,24 @@
 
 [Semantic versioning](https://semver.org/spec/v2.0.0.html) is used.
 
+## Unreleased - in development
+### __Breaking Changes__
+
+### Added
+
+### Changed
+- The following packages have been updated:
+    -devDependencies:
+        - sass: "1.77.2" to "^1.105.1"
+
+### Deprecated
+
+### Removed
+
+### Fixed
+
+---
+
 ## 2026-10-07 v3.27.0 (LTS)
 
 ### Added
