@@ -8,6 +8,7 @@
 ### __Breaking Changes__
 
 ### Added
+- CustomMenuElement: Added HTML sanitation with DOMPurify to prevent XSS vulnerabilities.
 - Draw: Added new draw module to replace draw_old (type="draw").
 
 ### Changed
@@ -31,7 +32,6 @@
     - dependencies:
         - "dompurify": "^3.4.15"
 - AlertingItem: Added HTML sanitation via DOMPurify to prevent Cross-Site Scripting when rendering alerts.
-- CustomMenuElement: Added HTML sanitation with DOMPurify to prevent XSS vulnerabilities.
 
 ### Changed
 - Issue \#1654: Relaxed the strict ISO8601 unit validation for WMS-Time layers to a console warning. This enables support for alternative time units.
