@@ -4,15 +4,16 @@
 
 [Semantic versioning](https://semver.org/spec/v2.0.0.html) is used.
 
-## Unreleased - in development
-### __Breaking Changes__
-
-### Added
+## 2026-10-09 v3.27.1 (LTS)
 
 ### Changed
 - The following packages have been updated:
     -devDependencies:
         - sass: "1.77.2" to "^1.105.1"
+    - dependencies:
+        - axios: ^1.19.0 to ^1.20.0
+        - mqtt: "^5.15.1" to "^5.16.0"
+- Security: Added a temporary override for `ip-address` (transitive dependency of `mqtt`) to enforce version `^10.7.3`, addressing reported vulnerabilities. The override will be removed once a secure version is resolved without it.
 
 ### Deprecated
 
@@ -30,13 +31,6 @@
 - WMS-Layer: Added additional request parameter `sld` and `gfi_template`.
 
 ### Changed
-- The following packages have been updated:
-    -devDependencies:
-        - sass: "1.77.2" to "^1.105.1"
-    - dependencies:
-        - axios: ^1.19.0 to ^1.20.0
-        - mqtt: "^5.15.1" to "^5.16.0"
-- Security: Added a temporary override for `ip-address` (transitive dependency of `mqtt`) to enforce version `^10.7.3`, addressing reported vulnerabilities. The override will be removed once a secure version is resolved without it.
 
 ### Deprecated
 
