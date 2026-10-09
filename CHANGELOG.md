@@ -4,26 +4,8 @@
 
 [Semantic versioning](https://semver.org/spec/v2.0.0.html) is used.
 
-## 2026-10-09 v3.27.1 (LTS)
-
-### Changed
-- The following packages have been updated:
-    -devDependencies:
-        - sass: "1.77.2" to "^1.105.1"
-    - dependencies:
-        - axios: ^1.19.0 to ^1.20.0
-        - mqtt: "^5.15.1" to "^5.16.0"
-- Security: Added a temporary override for `ip-address` (transitive dependency of `mqtt`) to enforce version `^10.7.3`, addressing reported vulnerabilities. The override will be removed once a secure version is resolved without it.
-
-### Deprecated
-
-### Removed
-
-### Fixed
-
----
-
-## 2026-10-07 v3.27.0 (LTS)
+## Unreleased - in development
+### __Breaking Changes__
 
 ### Added
 - CustomMenuElement: Added HTML sanitation with DOMPurify to prevent XSS vulnerabilities.
@@ -42,27 +24,16 @@
 
 ---
 
-## 2026-10-07 v3.27.0 (LTS)
-
-### Added
-- LinechartItem: Added possibility to configure custom plugins to extend Chart.js default behaviour.
-- WFS-T: Added configurable per-field input validation on single insert and update, configurable in the layer's `gfiAttributes`.
-- Login: Added the `openLoginWindowOnLoad` config option to open the login popup automatically for unauthenticated users.
-- The following packages have been added:
-    - dependencies:
-        - "dompurify": "^3.4.15"
-- AlertingItem: Added HTML sanitation via DOMPurify to prevent Cross-Site Scripting when rendering alerts.
-- CustomMenuElement: Added HTML sanitation with DOMPurify to prevent XSS vulnerabilities.
+## 2026-10-09 v3.27.1 (LTS)
 
 ### Changed
-- Issue \#1654: Relaxed the strict ISO8601 unit validation for WMS-Time layers to a console warning. This enables support for alternative time units.
 - The following packages have been updated:
+    -devDependencies:
+        - sass: "1.77.2" to "^1.105.1"
     - dependencies:
-        - @masterportal/masterportalapi: 2.63.0 to 2.64.0 (This also raised ol to version 10.10.0)
-
-### Fixed
-- Draw: Fixed an error when editing imported multi geometries (e.g. from KML files), which prevented the measurement tooltip from being positioned.
-- FileImport: Fixed CRS mapping for GeoJSON and added support for fill and fill-opacity properties to style imported features correctly.
+        - axios: ^1.19.0 to ^1.20.0
+        - mqtt: "^5.15.1" to "^5.16.0"
+- Security: Added a temporary override for `ip-address` (transitive dependency of `mqtt`) to enforce version `^10.7.3`, addressing reported vulnerabilities. The override will be removed once a secure version is resolved without it.
 
 ---
 
