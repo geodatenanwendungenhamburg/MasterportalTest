@@ -360,7 +360,9 @@ describe("src/modules/statisticDashboard/components/StatisticDashboard.vue", () 
                 };
 
                 await wrapper.vm.prepareLayer();
-                expect(sourceStub.addFeature.callCount).to.equal(3);
+
+                expect(sourceStub.addFeatures.calledOnce).to.be.true;
+                expect(sourceStub.addFeatures.firstCall.args[0]).to.have.lengthOf(3);
             });
         });
         describe("downloadData", () => {

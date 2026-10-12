@@ -68,7 +68,6 @@ export default {
             statisticsByCategory: false,
             loadedFilterData: false,
             loadedReferenceData: false,
-            loadedFeatures: [],
             timeStepsFilter: [],
             regions: [],
             allRegions: [],
@@ -160,16 +159,6 @@ export default {
             return this.statisticsData[this.chosenStatisticName];
         },
 
-        /**
-         * Gets the names of the selected filters.
-         * @returns {String[]} The names.
-         */
-        selectedFilters () {
-            const selectedRegions = this.selectedRegions.map(region => region.label),
-                  selectedDates = this.selectedDates.map(dates => dates.label);
-
-            return [...new Set([...this.selectedStatisticsNames, ...selectedRegions, ...selectedDates])];
-        },
         /**
          * Gets the names of the selected statistics.
          * @returns {String[]} The names.
@@ -437,6 +426,21 @@ export default {
         else if (this.numberOfClasses > this.maxNumberOfClasses) {
             this.setNumberOfClasses(this.maxNumberOfClasses);
         }
+    },
+    beforeUnmount () {
+        const map = mapCollection.getMap("2D");
+
+        if (map) {
+            if (this.hoverInteraction) {
+                map.removeInteraction(this.hoverInteraction);
+                this.hoverInteraction = null;
+            }
+            if (this.overlay) {
+                map.removeOverlay(this.overlay);
+                this.overlay = null;
+            }
+        }
+        this.abortController.abort();
     },
     methods: {
         .../** @type {StatisticDashboardMapMutations} */ (mapMutations)("Modules/StatisticDashboard", [
@@ -886,9 +890,10 @@ export default {
                     response = await getFeature.getFeaturePOST(selectedLayer.url, payload, error => {
                         console.error(error);
                     });
-                    this.loadedFeatures = new WFS().readFeatures(response);
-                    this.layer.getSource().addFeatures(this.loadedFeatures);
-                    statFeatures = new GeoJSON().writeFeaturesObject(this.loadedFeatures).features;
+                    const loadedFeatures = new WFS().readFeatures(response);
+
+                    this.layer.getSource().addFeatures(loadedFeatures);
+                    statFeatures = new GeoJSON().writeFeaturesObject(loadedFeatures).features;
                 }
                 else if (selectedLayer.typ === "OAF") {
                     payload.propertyNames.splice(payload.propertyNames.indexOf(this.selectedLevel.geometryAttribute[index]), 1);
@@ -930,6 +935,7 @@ export default {
             this.prepareData(regions, dates, differenceMode);
 
         },
+
         /**
          * Prepares and sets the data.
          * @param {String[]} regions - The regions of the statistic wanted.
@@ -1803,11 +1809,13 @@ export default {
                           crs: this.selectedLevel.oafRequestCRS,
                           properties: `${regionKey},${this.selectedLevel.geometryAttribute[index]}`,
                           ...this.selectedLevel.geomRequestParams
-                      });
+                      }),
+                      features = [];
 
                 for await (const feature of featureStream) {
-                    this.layer.getSource().addFeature(feature);
+                    features.push(feature);
                 }
+                this.layer.getSource().addFeatures(features);
             }
         },
 
