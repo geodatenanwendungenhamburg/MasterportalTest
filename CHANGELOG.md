@@ -26,6 +26,30 @@
 ### Removed
 
 ### Fixed
+- Issue \#1629: Fetch legendUrl with authorization header where needed.
+- Draw: Fixed an error when editing imported multi geometries (e.g. from KML files), which prevented the measurement tooltip from being positioned.
+
+---
+
+## 2026-10-07 v3.27.0 (LTS)
+
+### Added
+- LinechartItem: Added possibility to configure custom plugins to extend Chart.js default behaviour.
+- WFS-T: Added configurable per-field input validation on single insert and update, configurable in the layer's `gfiAttributes`.
+- Login: Added the `openLoginWindowOnLoad` config option to open the login popup automatically for unauthenticated users.
+- The following packages have been added:
+    - dependencies:
+        - "dompurify": "^3.4.15"
+- AlertingItem: Added HTML sanitation via DOMPurify to prevent Cross-Site Scripting when rendering alerts.
+- CustomMenuElement: Added HTML sanitation with DOMPurify to prevent XSS vulnerabilities.
+
+### Changed
+- Issue \#1654: Relaxed the strict ISO8601 unit validation for WMS-Time layers to a console warning. This enables support for alternative time units.
+- The following packages have been updated:
+    - dependencies:
+        - @masterportal/masterportalapi: 2.63.0 to 2.64.0 (This also raised ol to version 10.10.0)
+
+### Fixed
 - Draw: Fixed an error when editing imported multi geometries (e.g. from KML files), which prevented the measurement tooltip from being positioned.
 - FileImport: Fixed CRS mapping for GeoJSON and added support for fill and fill-opacity properties to style imported features correctly.
 
