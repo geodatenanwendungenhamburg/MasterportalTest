@@ -215,9 +215,13 @@ function setupModifyInteraction ({currentModifyInteraction, source, layer, undoF
 
         tooltipElement.innerHTML = "";
         tooltipElement.style.display = "none";
-        tooltipOverlay.setPosition(undefined);
 
-        map.removeOverlay(tooltipOverlay);
+        const overlayToRemove = tooltipOverlay;
+
+        setTimeout(() => {
+            map.removeOverlay(overlayToRemove);
+        }, 0);
+
         modifyFeature = null;
     }
 

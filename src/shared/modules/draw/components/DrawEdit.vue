@@ -315,7 +315,11 @@ export default {
             }
             else {
                 if (this.modifyTooltipOverlay) {
-                    this.map2D?.removeOverlay(this.modifyTooltipOverlay);
+                    const overlayToRemove = this.modifyTooltipOverlay;
+
+                    setTimeout(() => {
+                        this.map2D?.removeOverlay(overlayToRemove);
+                    }, 0);
                 }
                 if (this.featureClickHandler) {
                     this.map2D?.un("singleclick", this.featureClickHandler);
