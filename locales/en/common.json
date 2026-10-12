@@ -1700,6 +1700,10 @@
           "saveDrawing": "Save drawing"
         }
       },
+      "dropdown": {
+        "more": "(+{{count}} more)",
+        "selectAll": "Select all"
+      },
       "graphicalSelect": {
         "alert": {
           "notSupportedElement": "Template element of the graphical selection is not supported! Available elements:",

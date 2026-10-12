@@ -1702,6 +1702,10 @@
           "saveDrawing": "Zeichnung speichern"
         }
       },
+      "dropdown": {
+        "more": "(+{{count}} weitere)",
+        "selectAll": "Alle auswählen"
+      },
       "graphicalSelect": {
         "alert": {
           "notSupportedElement": "Template-Element der graphischen Auswahl wird nicht unterstützt! Verfügbar sind:",

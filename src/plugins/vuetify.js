@@ -1,26 +1,40 @@
+import {aliases, mdi} from "vuetify/iconsets/mdi-svg";
+import {createVuetify} from "vuetify";
+import "vuetify/styles";
+
 /**
- * loads vuetify from the path specified in the config.js
- * Unlike webpack, vite does not allow dynamic imports with fully dynamic paths.
- * Therefore, vuetify setup must be made from `addons/${Config.vuetifyFolder}/plugins/vuetify/index.js`
- * Thus custom themes and parameters can be set portal specifically
- * Returns undefined if vuetify is not configured in the config
- * @returns {module:Vuetify | undefined} the vuetify instance to use or undefined
+ * Uses a vuetify instance configured in an addon or creates one.
+ * @returns {Promise<any>} The vuetify instance for app.use().
  */
 export async function instantiateVuetify () {
-    if (!Config.vuetifyFolder) {
-        console.error("Vuetify: Plugin folder name must be provided. Please check your config.js");
-        return undefined;
+
+    if (Config.vuetifyFolder) {
+        try {
+            const vuetify = await import(
+                `../../addons/${Config.vuetifyFolder}/plugins/vuetify/index.js`
+            );
+
+            return vuetify.default;
+        }
+        catch (e) {
+            console.error(`Vuetify cannot be loaded from file ${Config.vuetifyFolder}. Please check the file name set in the portal's config.js and try again.`, e);
+            return undefined;
+        }
     }
 
-    try {
-        const vuetify = await import(
-            `../../addons/${Config.vuetifyFolder}/plugins/vuetify/index.js`
-        );
+    const vuetify = createVuetify({
+        components: {},
+        directives: {},
+        icons: {
+            defaultSet: "mdi",
+            aliases,
+            sets: {mdi}
+        },
+        theme: {
+            layers: true
+        }
 
-        return vuetify.default;
-    }
-    catch (e) {
-        console.error(`Vuetify cannot be loaded from file ${Config.vuetifyFolder}. Please check the file name set in the portal's config.js and try again.`, e);
-        return undefined;
-    }
+    });
+
+    return vuetify;
 }
