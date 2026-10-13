@@ -11,6 +11,8 @@
 - CustomMenuElement: Added HTML sanitation with DOMPurify to prevent XSS vulnerabilities.
 - Draw: Added new draw module to replace draw_old (type="draw").
 - WMS-Layer: Added additional request parameter `sld` and `gfi_template`.
+- Utils: 4 new function to convert geoJson to feature and geometry.
+
 
 ### Changed
 - The following packages have been updated:

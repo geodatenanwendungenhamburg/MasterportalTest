@@ -10,7 +10,7 @@ import isObject from "@shared/js/utils/isObject.js";
  * @param {String} [targetCrs="EPSG:4326"] - The CRS of the output.
  * @returns {GeoJSON|String|Boolean} The converted feature as GeoJSON Feature or as string. False if the converting fails.
  */
-function featureToGeoJson (feature, asString = false, sourceCrs = "EPSG:25832", targetCrs = "EPSG:4326") {
+function featureToGeoJson (feature, asString = false, sourceCrs = "", targetCrs = "") {
     if (!isObject(feature) || !(feature instanceof Feature)) {
         console.error("utils/convertFeatureToGeoJSON: The first parameter must be an ol feature object, but got " + typeof feature);
         return false;
@@ -23,7 +23,7 @@ function featureToGeoJson (feature, asString = false, sourceCrs = "EPSG:25832", 
         console.error("utils/convertFeatureToGeoJSON: The third and the fourth parameter must both be a string, but got " + typeof sourceCrs + " and " + typeof targetCrs);
         return false;
     }
-    const parser = new GeoJSON({
+    const parser = sourceCrs === "" || targetCrs === "" ? new GeoJSON() : new GeoJSON({
         dataProjection: targetCrs,
         featureProjection: sourceCrs
     });
@@ -39,7 +39,7 @@ function featureToGeoJson (feature, asString = false, sourceCrs = "EPSG:25832", 
  * @param {String} [targetCrs="EPSG:4326"] - The CRS of the output.
  * @returns {GeoJSON|String|Boolean} The converted features as GeoJSON FeatureCollection or as string. False if the converting fails.
  */
-function featuresToGeoJsonCollection (features, asString = false, sourceCrs = "EPSG:25832", targetCrs = "EPSG:4326") {
+function featuresToGeoJsonCollection (features, asString = false, sourceCrs = "", targetCrs = "") {
     if (!Array.isArray(features)) {
         console.error("utils/convertFeatureToGeoJSON: The first parameter must be an array, but got " + typeof features);
         return false;
@@ -53,7 +53,7 @@ function featuresToGeoJsonCollection (features, asString = false, sourceCrs = "E
         return false;
     }
 
-    const parser = new GeoJSON({
+    const parser = sourceCrs === "" || targetCrs === "" ? new GeoJSON() : new GeoJSON({
         dataProjection: targetCrs,
         featureProjection: sourceCrs
     });
