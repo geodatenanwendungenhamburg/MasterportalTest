@@ -22,19 +22,28 @@ export async function instantiateVuetify () {
         }
     }
 
-    const vuetify = createVuetify({
-        components: {},
-        directives: {},
-        icons: {
-            defaultSet: "mdi",
-            aliases,
-            sets: {mdi}
-        },
-        theme: {
-            layers: true
-        }
-
-    });
+    const menuProps = {contentClass: "mp-dropdown-menu"},
+        vuetify = createVuetify({
+            components: {},
+            directives: {},
+            defaults: {
+                VAutocomplete: {
+                    hideDetails: true,
+                    menuProps,
+                    VChip: {closeIcon: "$close"}
+                },
+                VSelect: {
+                    hideDetails: true,
+                    menuProps,
+                    VChip: {closeIcon: "$close"}
+                }
+            },
+            icons: {
+                defaultSet: "mdi",
+                aliases,
+                sets: {mdi}
+            }
+        });
 
     return vuetify;
 }

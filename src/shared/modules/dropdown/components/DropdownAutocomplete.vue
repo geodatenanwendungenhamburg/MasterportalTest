@@ -1,4 +1,5 @@
 <script>
+import "../css/dropdownMenu.scss";
 
 export default {
     name: "DropdownAutocomplete",
@@ -137,7 +138,6 @@ export default {
                     v-if="index < maxChipCount"
                     v-bind="props"
                     closable
-                    close-icon="$close"
                 >
                     {{ internalItem.value }}
                 </v-chip>
@@ -179,11 +179,10 @@ export default {
             :item-title="itemTitle"
             :label
             :multiple
-            chips
+            :chips="multiple"
             :clearable
             :closable-chips="multiple"
             :disabled
-            hide-details
             @update:modelValue="$emit('update:modelValue', $event)"
         >
             <template
@@ -205,15 +204,12 @@ export default {
             </template>
             <template
                 v-if="multiple"
-                #chip="{ item, index, props }"
+                #chip="{ index, props }"
             >
                 <v-chip
                     v-if="index < maxChipCount"
                     v-bind="props"
-                    close-icon="$close"
-                >
-                    {{ item }}
-                </v-chip>
+                />
                 <span v-if="multiple && index === maxChipCount">
                     <small>{{ $t('common:shared.modules.dropdown.more', {count: modelValue.length - maxChipCount}) }}</small>
                 </span>
@@ -244,19 +240,24 @@ export default {
         }
         .v-chip {
             background-color: $light_blue;
+        }
+        .v-chip__underlay {
+            background-color: unset;
+        }
+        .v-chip__close {
+            border-radius: 50%;
+            i {
+                font-size: 1rem;
+            }
             &:hover {
                 background-color: $dark_blue;
                 color: white;
                 cursor: pointer;
             }
         }
-        .v-chip__underlay {
-            background-color: unset;
-        }
-        .v-chip__close {
-            i {
-                font-size: 1rem;
-            }
+        .v-chip__content {
+            position: relative;
+            top: 2px;
         }
         .v-field__outline {
             --v-field-border-width: 0;
@@ -271,20 +272,6 @@ export default {
             .v-field-label--floating {
                 color: $secondary;
             }
-        }
-    }
-    .v-autocomplete__content {
-        .v-list-item {
-            &:hover {
-                background-color: $secondary;
-                color: white;
-            }
-        }
-        .v-list-item__overlay {
-            background-color: unset;
-        }
-        .v-list-item--active {
-            background-color: $light_blue;
         }
     }
 
