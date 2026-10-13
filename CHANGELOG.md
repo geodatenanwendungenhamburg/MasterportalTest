@@ -13,6 +13,11 @@
 - WMS-Layer: Added additional request parameter `sld` and `gfi_template`.
 
 ### Changed
+- The following packages have been updated:
+    -devDependencies:
+      - vitest: "^4.0.16" to "4.1.11"
+      - @vitest/ui: "^4.0.16" to "4.1.11"
+      - @vitest/web-worker: "^4.0.16" to "4.1.11"
 
 ### Deprecated
 - WMTS: The `services.json` parameter `transparent` is deprecated and has no effect. Use `transparency` instead.
