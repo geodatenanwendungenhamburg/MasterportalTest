@@ -1,3 +1,5 @@
+/** @import { StatisticDashboardLevel } from "../types/typesStatisticDashboard" */
+
 /**
  * Statistic dashboard tool state definition.
  * @typedef {Object} StatisticDashboardState
@@ -9,8 +11,9 @@
  * @property {Boolean} renderToWindow If true, tool is rendered in a window, else in the sidebar. (config-param)
  * @property {Boolean} resizableWindow If true, window is resizable. (config-param)
  * @property {Boolean} isVisibleInMenu If true, tool is selectable in menu. (config-param)
+ * @property {StatisticDashboardLevel[]} data The configured levels with their data sources. (config-param)
  * @property {Object} selectedReferenceData the selected reference data
- * @property {Object} selectedLevel - The selected level (district, county, ...).
+ * @property {StatisticDashboardLevel} selectedLevel - The selected level (district, county, ...).
  * @property {Object[]} flattenedRegions - An array in which the region hierarchy is flattened.
  * @property {Object[]} selectedRegions - The selected regions.
  * @property {Object[]} selectedDates - The selected dates.
