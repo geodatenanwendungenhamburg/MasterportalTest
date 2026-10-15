@@ -14,8 +14,10 @@
 - Utils: 
     - 4 new functions to convert geoJson to feature and geometry.
     - New function to safely open popups without XSS-risk, replacing and utilizing native window.open.
-- New shared component `DropdownAutocomplete`: Based on vuetify's VAutocomplete, it extends the usual select input with the ability to enter a search text and thus filter the shown values. As a consequence, vuetify is imported globally, but configuring custom vuetify instances is still supported.
-- New shared component `DropdownSelect`: Based on vuetify's VSelect. Similar to DropdownAutocomplete, but without the ability to enter a search text.
+- Shared Component: 
+    - Accordion: Add sub title and border style into accordion.
+    - DropdownSelect: Based on vuetify's VSelect. Similar to DropdownAutocomplete, but without the ability to enter a search text.
+    - DropdownAutocomplete: Based on vuetify`s VAutocomplete, it extends the usual select input with the ability to enter a search text and thus filter the shown values. As a consequence, vuetify is imported globally, but configuring custom vuetify instances is still supported.
 
 ### Changed
 - The following packages have been updated:

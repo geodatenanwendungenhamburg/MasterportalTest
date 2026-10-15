@@ -23,6 +23,13 @@ describe("src/shared/modules/accordion/components/AccordionItem.vue", () => {
 
         expect(wrapper.find(".accordion-button").text()).to.be.equal("My Title");
     });
+    it("should render a sub title", async () => {
+        const wrapper = shallowMount(AccordionItem, {
+            props: {id: "id", title, icon: iconString, subTitle: "My Sub Title"}
+        });
+
+        expect(wrapper.find(".accordion-button").text()).to.be.equal("My TitleMy Sub Title");
+    });
     it("should render an icon", async () => {
         const wrapper = shallowMount(AccordionItem, {
             props: {id: "id", title, icon: iconString}
