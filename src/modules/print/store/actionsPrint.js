@@ -246,17 +246,19 @@ const actions = {
             }, {root: true});
         }
         else {
+            const publisherOrOwner = metadata.getPublisher() || metadata.getOwner();
+
             cswObj.parsedData = {};
-            cswObj.parsedData.orgaOwner = metadata.getPublisher().name || "n.N.";
+            cswObj.parsedData.orgaOwner = publisherOrOwner?.name || "n.N.";
             cswObj.parsedData.address = {
-                street: metadata.getPublisher().street || "",
+                street: publisherOrOwner?.street || "",
                 housenr: "",
-                postalCode: metadata.getPublisher().postalCode || "",
-                city: metadata.getPublisher().city || ""
+                postalCode: publisherOrOwner?.postalCode || "",
+                city: publisherOrOwner?.city || ""
             };
-            cswObj.parsedData.email = metadata.getPublisher().email || "n.N.";
-            cswObj.parsedData.tel = metadata.getPublisher().phone || "n.N.";
-            cswObj.parsedData.url = metadata.getPublisher().link || "n.N.";
+            cswObj.parsedData.email = publisherOrOwner?.email || "n.N.";
+            cswObj.parsedData.tel = publisherOrOwner?.phone || "n.N.";
+            cswObj.parsedData.url = publisherOrOwner?.link || "n.N.";
 
             if (typeof metadata.getRevisionDate() !== "undefined") {
                 cswObj.parsedData.date = metadata.getRevisionDate();

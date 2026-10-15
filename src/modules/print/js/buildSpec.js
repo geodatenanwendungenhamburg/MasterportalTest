@@ -620,7 +620,7 @@ const BuildSpecModel = {
      * @param {ol.feature[]} features Array of features.
      * @param {Object[]} geojsonList Array of geojsons.
      * @param {ol.extent} extent  Extent uses to filter the feature by extent.
-     * @returns {Object} - style for mapfish print.
+     * @returns {Object|undefined} - style for mapfish print.
      */
     buildStyle: function (layer, features, geojsonList, extent) {
         const mapfishStyleObject = {
@@ -761,6 +761,10 @@ const BuildSpecModel = {
                 }
             });
         });
+        if (Object.keys(mapfishStyleObject).length < 2) {
+            // if no style rule is set, mapfish expects no style object at all to be set (instead of an object without rules)
+            return undefined;
+        }
         return mapfishStyleObject;
     },
     /**
@@ -779,8 +783,11 @@ const BuildSpecModel = {
                 styles = feature.getStyleFunction().call(this, feature);
             }
         }
-        else {
+        else if (typeof layer.getStyleFunction() === "function") {
             styles = layer.getStyleFunction().call(layer, feature);
+        }
+        else {
+            styles = [];
         }
 
         return !Array.isArray(styles) ? [styles] : styles;
