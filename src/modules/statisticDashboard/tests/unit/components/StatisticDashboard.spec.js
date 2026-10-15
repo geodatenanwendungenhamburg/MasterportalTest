@@ -2,6 +2,7 @@ Error.stackTraceLimit = 50;
 import {shallowMount} from "@vue/test-utils";
 import {expect} from "chai";
 import {createStore} from "vuex";
+import dayjs from "dayjs";
 import StatisticDashboard from "@modules/statisticDashboard/components/StatisticDashboard.vue";
 import FeatureHandler from "@modules/statisticDashboard/js/handleFeatures.js";
 import indexStatisticDashboard from "@modules/statisticDashboard/store/indexStatisticDashboard.js";
@@ -247,6 +248,15 @@ describe("src/modules/statisticDashboard/components/StatisticDashboard.vue", () 
             await wrapper.setData({tableData: [{foo: {}}], referenceSubTitle: "title"});
 
             expect(wrapper.find(".statistic-name-subtitle").exists()).to.be.true;
+        });
+
+        it("should render none IconButton", async () => {
+            wrapper = createWrapper();
+
+            await wrapper.setData({showGrid: false});
+            await wrapper.vm.$nextTick();
+
+            expect(wrapper.findAllComponents({name: "IconButton"}).length).to.equal(1);
         });
     });
 
@@ -1504,6 +1514,16 @@ describe("src/modules/statisticDashboard/components/StatisticDashboard.vue", () 
                 wrapper.vm.flattenRegionHierarchy(obj);
 
                 expect(wrapper.vm.flattenedRegions).to.deep.equal([obj, obj.child]);
+            });
+        });
+        describe("generateDownloadName", () => {
+            it("should return a donwload name", () => {
+                wrapper = createWrapper();
+                wrapper.vm.setChosenStatisticName("statName");
+
+                const date = dayjs().format("YYYY-MM-DD");
+
+                expect(wrapper.vm.generateDownloadName()).to.equal(`statName-${date}.png`);
             });
         });
     });

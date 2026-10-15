@@ -471,6 +471,35 @@ export default {
         thousandsSeparator,
 
         /**
+         * Downloads the currently rendered chart as a PNG file.
+         * @returns {void}
+         */
+        downloadCurrentChart () {
+            const canvas = this.$el.querySelector("canvas");
+
+            canvas.toBlob((blob) => {
+                const link = document.createElement("a");
+
+                link.href = URL.createObjectURL(blob);
+                link.download = this.generateDownloadName();
+                link.click();
+
+                URL.revokeObjectURL(link.href);
+            }, "image/png");
+        },
+
+        /**
+         * Generates a filename based on the chart title and current date.
+         * @returns {string} The filename.
+         */
+        generateDownloadName () {
+            const title = this.statisticNameOfChart[0],
+                  date = dayjs().format("YYYY-MM-DD");
+
+            return `${title}-${date}.png`;
+        },
+
+        /**
          * Loads the exportable table data by processing the statistics data using the downloadData function.
          * @returns {void}
          */
@@ -2133,7 +2162,10 @@ export default {
                     @column-selected="setSelectedColumn"
                 />
             </div>
-            <div v-show="showChart">
+            <div
+                v-show="showChart"
+                class="position-relative"
+            >
                 <div
                     v-if="showLimitView"
                     class="filtered-areas"
@@ -2189,6 +2221,17 @@ export default {
                             </template>
                         </Multiselect>
                     </div>
+                </div>
+                <div
+                    v-if="!showGrid"
+                    class="position-absolute donwload-icon end-0 mt-2 me-2"
+                >
+                    <IconButton
+                        :aria="$t('common:modules.statisticDashboard.downloadDiagram')"
+                        icon="bi bi-download"
+                        :interaction="() => downloadCurrentChart()"
+                        :class-array="['btn-light', 'mb-0']"
+                    />
                 </div>
                 <div
                     v-if="!showGrid"
@@ -2297,5 +2340,9 @@ img {
     position: absolute;
     top: 12px;
     left:20px;
+}
+
+.donwload-icon {
+    top: -50px;
 }
 </style>
