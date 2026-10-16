@@ -9,10 +9,12 @@ spec:
         - deploy_mkdocs
         - validate_mkdocs
         - build_examples
+        - mirror_tag_to_github
+        - update_latest_tag_to_github
       default: npm_audit
     
     deploy_tag:
-      description: "Tag to deploy (e.g., v3.1.0) - required for deploy_mkdocs and build_examples"
+      description: "Tag to deploy or mirror to GitHub (e.g., v3.1.0) - required for deploy_mkdocs, build_examples, and GitHub mirror jobs"
       type: string
       default: ""
 
@@ -289,3 +291,40 @@ build_examples_manual:
         "${PACKAGE_URL}"
 
       echo "Package uploaded successfully: ${PACKAGE_URL}"
+
+mirror_tag_to_github_manual:
+  stage: release
+  image: alpine:3.20
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "web" && $PIPELINE_ACTION == "mirror_tag_to_github"'
+  script:
+    - TAG=$[[ inputs.deploy_tag ]]
+    - '[ -n "$TAG" ] || { echo "ERROR: deploy_tag input is required"; exit 1; }'
+    - apk add --no-cache git
+    - git config --global user.name "$GIT_USER_NAME"
+    - git config --global user.email "$GIT_USER_EMAIL"
+    - git fetch --unshallow --tags origin || git fetch --depth=10000 --tags origin
+    - git checkout "$TAG"
+    - git remote add github https://x-access-token:${GITHUB_TOKEN}@github.com/geodatenanwendungenhamburg/MasterportalTest.git
+    - git push github "refs/tags/$TAG:refs/tags/$TAG"
+
+update_latest_tag_to_github_manual:
+  stage: release
+  image: alpine:3.20
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "web" && $PIPELINE_ACTION == "update_latest_tag_to_github"'
+  script:
+    - TAG=$[[ inputs.deploy_tag ]]
+    - '[ -n "$TAG" ] || { echo "ERROR: deploy_tag input is required"; exit 1; }'
+    - apk add --no-cache git
+    - git config --global user.name "$GIT_USER_NAME"
+    - git config --global user.email "$GIT_USER_EMAIL"
+    - git fetch --unshallow --tags origin || git fetch --depth=10000 --tags origin
+    - git checkout "$TAG"
+    - git remote add github https://x-access-token:${GITHUB_TOKEN}@github.com/geodatenanwendungenhamburg/MasterportalTest.git
+    - |
+      if git ls-remote --exit-code --tags github "refs/tags/latest" >/dev/null 2>&1; then
+        git push github --delete latest || true
+      fi
+      git tag -f latest "$TAG"
+      git push github "refs/tags/latest:refs/tags/latest" --force
