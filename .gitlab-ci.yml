@@ -38,25 +38,34 @@ build_examples_zip:
   cache:
     paths:
       - node_modules/
-  artifacts:
-    paths:
-      - examples.zip
   script:
     - export NODE_OPTIONS=--openssl-legacy-provider
     - npm install
     - npm run buildExamples
-    - apt-get update && apt-get install -y zip
+    - apt-get update && apt-get install -y zip curl
     - cd dist
     - zip -r ../examples.zip .
+    - cd ..
+
+    # Upload examples.zip to GitLab Generic Package Registry
+    - |
+      PACKAGE_URL="${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/packages/generic/examples/${CI_COMMIT_TAG}/examples.zip"
+
+      echo "Uploading examples.zip for release ${CI_COMMIT_TAG}"
+
+      curl --fail --show-error --location \
+        --header "JOB-TOKEN: ${CI_JOB_TOKEN}" \
+        --upload-file examples.zip \
+        "${PACKAGE_URL}"
+
+      echo "Package uploaded successfully: ${PACKAGE_URL}"
   rules:
     - if: '$CI_COMMIT_TAG && $CI_COMMIT_TAG !~ /^(lts|latest)$/'
+
 
 create_release:
   stage: release
   image: registry.gitlab.com/gitlab-org/cli:latest
-  needs:
-    - job: build_examples_zip
-      artifacts: true
 
   script:
     - echo "Creating release $CI_COMMIT_TAG"
@@ -68,12 +77,10 @@ create_release:
           found = 0
         }
 
-        # Start of the requested release
         $0 ~ "^## .*" tag "([[:space:]]|$)" {
           found = 1
         }
 
-        # Start of the next release -> stop
         found && /^## / && $0 !~ "^## .*" tag "([[:space:]]|$)" {
           exit
         }
@@ -94,6 +101,7 @@ create_release:
 
     - echo "Release description:"
     - cat release-description.md
+
   release:
     tag_name: $CI_COMMIT_TAG
     name: "Release $CI_COMMIT_TAG"
@@ -101,8 +109,9 @@ create_release:
     assets:
       links:
         - name: examples.zip
-          url: "$CI_PROJECT_URL/-/jobs/artifacts/$CI_COMMIT_TAG/raw/examples.zip?job=build_examples_zip"
-          link_type: other
+          url: "$CI_API_V4_URL/projects/$CI_PROJECT_ID/packages/generic/examples/$CI_COMMIT_TAG/examples.zip"
+          link_type: package
+
   rules:
     - if: '$CI_COMMIT_TAG && $CI_COMMIT_TAG !~ /^(lts|latest)$/'
 
@@ -250,7 +259,6 @@ build_examples_manual:
   artifacts:
     paths:
       - dist/**
-    expire_in: 7 days
   rules:
     - if: '$CI_PIPELINE_SOURCE == "web" && $PIPELINE_ACTION == "build_examples"'
   script:

@@ -4,7 +4,7 @@
 
 [Semantic versioning](https://semver.org/spec/v2.0.0.html) is used.
 
-## 2026-09-11 v3.180.0
+## 2026-09-11 v3.181.1
 
 ### Added
 - NavTab: Added styleVariant prop for more styling options.
