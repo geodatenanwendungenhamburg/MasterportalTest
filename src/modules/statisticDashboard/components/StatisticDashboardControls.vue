@@ -1,27 +1,30 @@
 <script>
-import isObject from "@shared/js/utils/isObject.js";
 import {mapGetters, mapMutations} from "vuex";
-import IconButton from "@shared/modules/buttons/components/IconButton.vue";
 import NavTab from "@shared/modules/tabs/components/NavTab.vue";
+import StatisticDashboardCarousel from "./StatisticDashboardCarousel.vue";
 
 export default {
     name: "StatisticDashboardControls",
     components: {
-        IconButton,
-        NavTab
+        NavTab,
+        StatisticDashboardCarousel
     },
     props: {
         descriptions: {
             type: Array,
             required: false,
             default: () => []
+        },
+        showGrid: {
+            type: Boolean,
+            required: false,
+            default: false
         }
     },
     emits: ["showChartTable", "showChartsInGrid"],
     data () {
         return {
             currentDescriptionIndex: 0,
-            indexSelectedStatistics: 0,
             tabs: [
                 {id: "tab-table", view: "table", label: "common:modules.statisticDashboard.tabs.table", icon: "bi-table", target: "#table-pane"},
                 {id: "tab-diagram", view: "chart", label: "common:modules.statisticDashboard.tabs.diagram", icon: "bi-bar-chart", target: "#diagram-pane"},
@@ -68,32 +71,8 @@ export default {
         isStatisticsSelected () {
             return this.selectedDatesValues.length > 0 && this.selectedRegionsValues.length > 0 && Object.keys(this.selectedStatistics)?.length > 1;
         },
-        /**
-         * Gets the reference subtitle.
-         * @returns {String} The subtitle of reference.
-         */
-        referenceSubTitle () {
-            if (typeof this.selectedReferenceData === "undefined") {
-                return "";
-            }
-
-            let value = "";
-
-            if (this.selectedReferenceData?.type === "region") {
-                value = this.selectedReferenceData.value;
-
-                return i18next.t("common:modules.statisticDashboard.reference.region", {value});
-            }
-
-            value = this.selectedReferenceData?.value?.label;
-
-            return i18next.t("common:modules.statisticDashboard.reference.year", {value});
-        },
         showStatisticnameInChart () {
             return this.isStatisticsSelected && typeof this.chosenStatisticName === "string" && this.chosenStatisticName !== "" && this.chartTableToggle === "chart";
-        },
-        showStatisticnameInTable () {
-            return this.isStatisticsSelected && this.chartTableToggle === "table";
         }
     },
     methods: {
@@ -125,34 +104,6 @@ export default {
             else {
                 this.currentDescriptionIndex = this.descriptions.length - 1;
             }
-        },
-        /**
-         * Sets indexSelectedStatistics after clicking previous arrow.
-         * @param {Number} index - The current indexSelectedStatistics.
-         * @param {Object} selectedStatistics - The selected statistics.
-         * @returns {void}
-         */
-        prevStatistic (index, selectedStatistics) {
-            if (!isObject(selectedStatistics) || !Object.keys(selectedStatistics).length) {
-                return;
-            }
-
-            this.indexSelectedStatistics = index - 1 >= 0 ? index - 1 : Object.keys(selectedStatistics).length + index - 1;
-            this.setChosenStatisticName(selectedStatistics[Object.keys(selectedStatistics)[this.indexSelectedStatistics]]?.name);
-        },
-        /**
-         * Sets indexSelectedStatistics after clicking next arrow.
-         * @param {Number} index - The current indexSelectedStatistics.
-         * @param {Object} selectedStatistics - The selected statistics.
-         * @returns {void}
-         */
-        nextStatistic (index, selectedStatistics) {
-            if (!isObject(selectedStatistics) || !Object.keys(selectedStatistics).length) {
-                return;
-            }
-
-            this.indexSelectedStatistics = index + 1 < Object.keys(selectedStatistics).length ? index + 1 : index - Object.keys(selectedStatistics).length + 1;
-            this.setChosenStatisticName(selectedStatistics[Object.keys(selectedStatistics)[this.indexSelectedStatistics]]?.name);
         }
     }
 };
@@ -225,36 +176,7 @@ export default {
                 {{ $t('common:modules.statisticDashboard.backToOverview') }}
             </span>
         </div>
-        <div
-            v-if="showStatisticnameInTable"
-            class="container static-name"
-        >
-            <div class="row justify-content-center align-items-center">
-                <IconButton
-                    class="slider-control col col-1 btn-light bg-transparent"
-                    :aria="$t('common:modules.statisticDashboard.button.arrowLeft')"
-                    icon="bi bi-chevron-left"
-                    :interaction="() => prevStatistic(indexSelectedStatistics, selectedStatistics)"
-                />
-                <div class="statistic-name col col-auto">
-                    <span>{{ chosenStatisticName }}</span>
-                    <span
-                        v-if="referenceSubTitle !== ''"
-                        class="text-center"
-                    >
-                        <span> - {{ $t('common:modules.statisticDashboard.reference.difference') }}</span>
-                        <br>
-                        <span class="statistic-name-subtitle col col-auto">{{ referenceSubTitle }}</span>
-                    </span>
-                </div>
-                <IconButton
-                    class="slider-control col col-1 btn-light bg-transparent"
-                    :aria="$t('common:modules.statisticDashboard.button.arrowRight')"
-                    icon="bi bi-chevron-right"
-                    :interaction="() => nextStatistic(indexSelectedStatistics, selectedStatistics)"
-                />
-            </div>
-        </div>
+        <StatisticDashboardCarousel v-if="!showGrid && chartTableToggle !== 'map'" />
     </div>
 </template>
 
@@ -336,23 +258,6 @@ export default {
     --bs-badge-padding-x: 0.7rem;
  }
 
- .static-name {
-    margin-top: -60px;
-    margin-bottom: 40px;
- }
-
-.statistic-name {
-    font-family: $font_family_accent;
-    font-size: $font_size_big;
-    max-width: calc(100% - 360px);
-    text-align: center;
-}
-
-.statistic-name-subtitle {
-    font-family: $font_family_accent;
-    font-size: $font_size_sm;
-    display: block;
-}
 .back-overview {
     font-size: 12px;
     cursor: pointer;

@@ -2078,6 +2078,7 @@ export default {
             <Controls
                 v-if="loadedReferenceData"
                 :descriptions="controlDescription"
+                :show-grid="showGrid"
                 class="mb-3"
                 @show-chart-table="toggleChartTable"
                 @set-table-subtitle="setTableSubtitle"
@@ -2349,6 +2350,6 @@ img {
 }
 
 .donwload-icon {
-    top: -50px;
+    top: -10px;
 }
 </style>

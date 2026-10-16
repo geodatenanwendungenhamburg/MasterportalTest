@@ -18,8 +18,7 @@ describe("src/modules/statiscticDashboard/components/StatisticDashboardControls.
             title: "TitleThree",
             content: "ContentThree"
         }],
-        referenceData = {},
-        enableButtons = false;
+        showGrid = false;
 
     let store;
 
@@ -67,10 +66,6 @@ describe("src/modules/statiscticDashboard/components/StatisticDashboardControls.
     describe("Component DOM", () => {
         it("should exist", () => {
             const wrapper = shallowMount(StatisticDashboardControls, {
-                propsData: {
-                    referenceData,
-                    enableButtons
-                },
                 global: {
                     plugins: [store]
                 }
@@ -82,8 +77,7 @@ describe("src/modules/statiscticDashboard/components/StatisticDashboardControls.
         it("should find no description", () => {
             const wrapper = shallowMount(StatisticDashboardControls, {
                 propsData: {
-                    referenceData,
-                    enableButtons
+                    showGrid
                 },
                 global: {
                     plugins: [store]
@@ -97,8 +91,7 @@ describe("src/modules/statiscticDashboard/components/StatisticDashboardControls.
             const wrapper = shallowMount(StatisticDashboardControls, {
                 propsData: {
                     descriptions,
-                    referenceData,
-                    enableButtons
+                    showGrid
                 },
                 global: {
                     plugins: [store]
@@ -113,8 +106,7 @@ describe("src/modules/statiscticDashboard/components/StatisticDashboardControls.
             const wrapper = shallowMount(StatisticDashboardControls, {
                 propsData: {
                     descriptions,
-                    referenceData,
-                    enableButtons
+                    showGrid
                 },
                 global: {
                     plugins: [store]
@@ -128,8 +120,7 @@ describe("src/modules/statiscticDashboard/components/StatisticDashboardControls.
             const wrapper = shallowMount(StatisticDashboardControls, {
                 propsData: {
                     descriptions,
-                    referenceData,
-                    enableButtons
+                    showGrid
                 },
                 global: {
                     plugins: [store]
@@ -144,51 +135,11 @@ describe("src/modules/statiscticDashboard/components/StatisticDashboardControls.
             expect(wrapper.find(".back-overview").exists()).to.be.true;
         });
 
-        it("should not find a static-name container", async () => {
-            const wrapper = shallowMount(StatisticDashboardControls, {
-                propsData: {
-                    descriptions,
-                    referenceData,
-                    enableButtons
-                },
-                global: {
-                    plugins: [store]
-                }
-            });
-
-            wrapper.vm.setChosenStatisticName("");
-            store.commit("Modules/StatisticDashboard/setChartTableToggle", "chart");
-            await wrapper.vm.$nextTick();
-
-            expect(wrapper.find(".static-name").exists()).to.be.false;
-        });
-
-        it("should find a static-name container", async () => {
-            const wrapper = shallowMount(StatisticDashboardControls, {
-                propsData: {
-                    descriptions,
-                    referenceData,
-                    enableButtons
-                },
-                global: {
-                    plugins: [store]
-                }
-            });
-
-            wrapper.vm.setChosenStatisticName("name");
-            store.commit("Modules/StatisticDashboard/setChartTableToggle", "table");
-            setSelectedStatistics();
-            await wrapper.vm.$nextTick();
-
-            expect(wrapper.find(".static-name").exists()).to.be.true;
-        });
-
         it("should not find a statistic-name-subtitle element", async () => {
             const wrapper = shallowMount(StatisticDashboardControls, {
                 propsData: {
                     descriptions,
-                    referenceData,
-                    enableButtons
+                    showGrid
                 },
                 global: {
                     plugins: [store]
@@ -200,24 +151,32 @@ describe("src/modules/statiscticDashboard/components/StatisticDashboardControls.
             expect(wrapper.find(".statistic-name-subtitle").exists()).to.be.false;
         });
 
-        it("should find a statistic-name-subtitle element", async () => {
+        it("should find a StatisticDashboardCarousel component", () => {
             const wrapper = shallowMount(StatisticDashboardControls, {
                 propsData: {
                     descriptions,
-                    referenceData,
-                    enableButtons
+                    showGrid
                 },
                 global: {
                     plugins: [store]
                 }
             });
 
-            store.commit("Modules/StatisticDashboard/setSelectedReferenceData", {type: "date", value: {label: "test"}});
-            store.commit("Modules/StatisticDashboard/setChartTableToggle", "table");
-            setSelectedStatistics();
-            await wrapper.vm.$nextTick();
+            expect(wrapper.find(".description p").text()).to.be.equal("TitleOneContentOne");
+        });
 
-            expect(wrapper.find(".statistic-name-subtitle").exists()).to.be.true;
+        it("should not find a StatisticDashboardCarousel component", () => {
+            const wrapper = shallowMount(StatisticDashboardControls, {
+                propsData: {
+                    descriptions,
+                    showGrid
+                },
+                global: {
+                    plugins: [store]
+                }
+            });
+
+            expect(wrapper.find(".description p").text()).to.be.equal("TitleOneContentOne");
         });
     });
 
@@ -225,8 +184,7 @@ describe("src/modules/statiscticDashboard/components/StatisticDashboardControls.
         it("should set hasDescription to false", () => {
             const wrapper = shallowMount(StatisticDashboardControls, {
                 propsData: {
-                    referenceData,
-                    enableButtons
+                    showGrid
                 },
                 global: {
                     plugins: [store]
@@ -239,9 +197,8 @@ describe("src/modules/statiscticDashboard/components/StatisticDashboardControls.
         it("should set hasDescription to true", () => {
             const wrapper = shallowMount(StatisticDashboardControls, {
                 propsData: {
-                    referenceData,
                     descriptions,
-                    enableButtons
+                    showGrid
                 },
                 global: {
                     plugins: [store]
@@ -254,9 +211,8 @@ describe("src/modules/statiscticDashboard/components/StatisticDashboardControls.
         it("should set init description content and title", () => {
             const wrapper = shallowMount(StatisticDashboardControls, {
                 propsData: {
-                    referenceData,
                     descriptions,
-                    enableButtons
+                    showGrid
                 },
                 global: {
                     plugins: [store]
@@ -270,9 +226,8 @@ describe("src/modules/statiscticDashboard/components/StatisticDashboardControls.
         it("should set description content and title by the current index", async () => {
             const wrapper = shallowMount(StatisticDashboardControls, {
                 propsData: {
-                    referenceData,
                     descriptions,
-                    enableButtons
+                    showGrid
                 },
                 global: {
                     plugins: [store]
@@ -289,9 +244,8 @@ describe("src/modules/statiscticDashboard/components/StatisticDashboardControls.
         it("should set showStatisticnameInChart to be false", () => {
             const wrapper = shallowMount(StatisticDashboardControls, {
                 propsData: {
-                    referenceData,
                     descriptions,
-                    enableButtons
+                    showGrid
                 },
                 global: {
                     plugins: [store]
@@ -305,9 +259,8 @@ describe("src/modules/statiscticDashboard/components/StatisticDashboardControls.
         it("should set showStatisticnameInChart to be false", () => {
             const wrapper = shallowMount(StatisticDashboardControls, {
                 propsData: {
-                    referenceData,
                     descriptions,
-                    enableButtons
+                    showGrid
                 },
                 global: {
                     plugins: [store]
@@ -324,9 +277,8 @@ describe("src/modules/statiscticDashboard/components/StatisticDashboardControls.
         it("should set showStatisticnameInChart to be true", async () => {
             const wrapper = shallowMount(StatisticDashboardControls, {
                 propsData: {
-                    referenceData,
                     descriptions,
-                    enableButtons
+                    showGrid
                 },
                 global: {
                     plugins: [store]
@@ -338,51 +290,6 @@ describe("src/modules/statiscticDashboard/components/StatisticDashboardControls.
             setSelectedStatistics();
             expect(wrapper.vm.showStatisticnameInChart).to.be.true;
         });
-        it("should set referenceSubTitle to be an empty string", async () => {
-            const wrapper = shallowMount(StatisticDashboardControls, {
-                propsData: {
-                    referenceData,
-                    descriptions,
-                    enableButtons
-                },
-                global: {
-                    plugins: [store]
-                }
-            });
-
-            store.commit("Modules/StatisticDashboard/setSelectedReferenceData", undefined);
-            expect(wrapper.vm.referenceSubTitle).to.be.equal("");
-        });
-        it("should set referenceSubTitle to be a string with region", async () => {
-            const wrapper = shallowMount(StatisticDashboardControls, {
-                propsData: {
-                    referenceData,
-                    descriptions,
-                    enableButtons
-                },
-                global: {
-                    plugins: [store]
-                }
-            });
-
-            store.commit("Modules/StatisticDashboard/setSelectedReferenceData", {type: "region", value: ""});
-            expect(wrapper.vm.referenceSubTitle).to.be.equal("modules.statisticDashboard.reference.region");
-        });
-        it("should set referenceSubTitle to be a string with year", async () => {
-            const wrapper = shallowMount(StatisticDashboardControls, {
-                propsData: {
-                    referenceData,
-                    descriptions,
-                    enableButtons
-                },
-                global: {
-                    plugins: [store]
-                }
-            });
-
-            store.commit("Modules/StatisticDashboard/setSelectedReferenceData", {type: "date", value: {label: ""}});
-            expect(wrapper.vm.referenceSubTitle).to.be.equal("modules.statisticDashboard.reference.year");
-        });
     });
 
     describe("Methods", () => {
@@ -390,9 +297,8 @@ describe("src/modules/statiscticDashboard/components/StatisticDashboardControls.
             it("should set currentDescriptionIndex always to 0 if only one description is available", () => {
                 const wrapper = shallowMount(StatisticDashboardControls, {
                     propsData: {
-                        referenceData,
                         descriptions: [descriptions[0]],
-                        enableButtons
+                        showGrid
                     },
                     global: {
                         plugins: [store]
@@ -409,9 +315,8 @@ describe("src/modules/statiscticDashboard/components/StatisticDashboardControls.
             it("should set currentDescriptionIndex in the correct order", () => {
                 const wrapper = shallowMount(StatisticDashboardControls, {
                     propsData: {
-                        referenceData,
                         descriptions,
-                        enableButtons
+                        showGrid
                     },
                     global: {
                         plugins: [store]
@@ -432,9 +337,8 @@ describe("src/modules/statiscticDashboard/components/StatisticDashboardControls.
             it("should set currentDescriptionIndex always to 0 if only one description is available", () => {
                 const wrapper = shallowMount(StatisticDashboardControls, {
                     propsData: {
-                        referenceData,
                         descriptions: [descriptions[0]],
-                        enableButtons
+                        showGrid
                     },
                     global: {
                         plugins: [store]
@@ -451,9 +355,8 @@ describe("src/modules/statiscticDashboard/components/StatisticDashboardControls.
             it("should set currentDescriptionIndex in the correct order", () => {
                 const wrapper = shallowMount(StatisticDashboardControls, {
                     propsData: {
-                        referenceData,
                         descriptions,
-                        enableButtons
+                        showGrid
                     },
                     global: {
                         plugins: [store]
@@ -470,79 +373,14 @@ describe("src/modules/statiscticDashboard/components/StatisticDashboardControls.
 
             });
         });
-        describe("prevStatistic", () => {
-            it("should set the chosenStatisticName to the previous name", async () => {
-                const wrapper = shallowMount(StatisticDashboardControls, {
-                        propsData: {
-                            referenceData,
-                            enableButtons
-                        },
-                        global: {
-                            plugins: [store]
-                        }
-                    }),
-                    statistics = {
-                        "arbeitnehmer_inland_tausend": {
-                            "key": "arbeitnehmer_inland_tausend",
-                            "name": "Arbeitnehmer (Inland) in 1.000",
-                            "category": "Beschäftigte",
-                            "selectedOrder": 0
-                        },
-                        "arbeitslose_jahresdurchschnitt": {
-                            "key": "arbeitslose_jahresdurchschnitt",
-                            "name": "Arbeitslose",
-                            "category": "Beschäftigte",
-                            "selectedOrder": 1
-                        }
-                    };
-
-                wrapper.vm.prevStatistic(1, statistics);
-                await wrapper.vm.$nextTick();
-
-                expect(wrapper.vm.chosenStatisticName).to.be.equal("Arbeitnehmer (Inland) in 1.000");
-            });
-        });
-        describe("nextStatistic", () => {
-            it("should set the chosenStatisticName to the next name", async () => {
-                const wrapper = shallowMount(StatisticDashboardControls, {
-                        propsData: {
-                            referenceData,
-                            enableButtons
-                        },
-                        global: {
-                            plugins: [store]
-                        }
-                    }),
-                    statistics = {
-                        "arbeitnehmer_inland_tausend": {
-                            "key": "arbeitnehmer_inland_tausend",
-                            "name": "Arbeitnehmer (Inland) in 1.000",
-                            "category": "Beschäftigte",
-                            "selectedOrder": 0
-                        },
-                        "arbeitslose_jahresdurchschnitt": {
-                            "key": "arbeitslose_jahresdurchschnitt",
-                            "name": "Arbeitslose",
-                            "category": "Beschäftigte",
-                            "selectedOrder": 1
-                        }
-                    };
-
-                wrapper.vm.nextStatistic(0, statistics);
-                await wrapper.vm.$nextTick();
-
-                expect(wrapper.vm.chosenStatisticName).to.be.equal("Arbeitslose");
-            });
-        });
     });
 
     describe("User Interaction", () => {
         it("should set the description index if the user click the left chevron button", async () => {
             const wrapper = shallowMount(StatisticDashboardControls, {
                     propsData: {
-                        referenceData,
                         descriptions,
-                        enableButtons
+                        showGrid
                     },
                     global: {
                         plugins: [store]
@@ -557,9 +395,8 @@ describe("src/modules/statiscticDashboard/components/StatisticDashboardControls.
         it("should set the description index if the user click the right chevron button ", async () => {
             const wrapper = shallowMount(StatisticDashboardControls, {
                     propsData: {
-                        referenceData,
                         descriptions,
-                        enableButtons
+                        showGrid
                     },
                     global: {
                         plugins: [store]
@@ -569,80 +406,6 @@ describe("src/modules/statiscticDashboard/components/StatisticDashboardControls.
 
             await chevronRightButton.trigger("click");
             expect(wrapper.vm.currentDescriptionIndex).to.be.equal(1);
-        });
-
-        it("should set the chosenStatisticName to the previous name", async () => {
-            const wrapper = shallowMount(StatisticDashboardControls, {
-                propsData: {
-                    referenceData,
-                    enableButtons
-                },
-                global: {
-                    plugins: [store]
-                }
-            });
-            let prevStatisticButton = "";
-
-            wrapper.setData({indexSelectedStatistics: 0});
-            setSelectedStatistics({
-                "arbeitnehmer_inland_tausend": {
-                    "key": "arbeitnehmer_inland_tausend",
-                    "name": "Arbeitnehmer (Inland) in 1.000",
-                    "category": "Beschäftigte",
-                    "selectedOrder": 0
-                },
-                "arbeitslose_jahresdurchschnitt": {
-                    "key": "arbeitslose_jahresdurchschnitt",
-                    "name": "Arbeitslose",
-                    "category": "Beschäftigte",
-                    "selectedOrder": 1
-                }
-            });
-            store.commit("Modules/StatisticDashboard/setChartTableToggle", "table");
-
-            await wrapper.vm.$nextTick();
-            wrapper.setData({indexSelectedStatistics: 1});
-            prevStatisticButton = wrapper.findAll(".slider-control").at(0);
-            prevStatisticButton.trigger("click");
-            await wrapper.vm.$nextTick();
-
-            expect(wrapper.vm.chosenStatisticName).to.be.equal("Arbeitslose");
-        });
-
-        it("should set the chosenStatisticName to the next name", async () => {
-            const wrapper = shallowMount(StatisticDashboardControls, {
-                    propsData: {
-                        referenceData,
-                        enableButtons
-                    },
-                    global: {
-                        plugins: [store]
-                    }
-                }),
-                nextStatisticButton = wrapper.findAll(".slider-control").at(1);
-
-            wrapper.setData({indexSelectedStatistics: 0});
-            setSelectedStatistics({
-                "arbeitnehmer_inland_tausend": {
-                    "key": "arbeitnehmer_inland_tausend",
-                    "name": "Arbeitnehmer (Inland) in 1.000",
-                    "category": "Beschäftigte",
-                    "selectedOrder": 0
-                },
-                "arbeitslose_jahresdurchschnitt": {
-                    "key": "arbeitslose_jahresdurchschnitt",
-                    "name": "Arbeitslose",
-                    "category": "Beschäftigte",
-                    "selectedOrder": 1
-                }
-            });
-            store.commit("Modules/StatisticDashboard/setChartTableToggle", "table");
-
-            await wrapper.vm.$nextTick();
-            nextStatisticButton.trigger("click");
-            await wrapper.vm.$nextTick();
-
-            expect(wrapper.vm.chosenStatisticName).to.be.equal("Arbeitslose");
         });
     });
 });

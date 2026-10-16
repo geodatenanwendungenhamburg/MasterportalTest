@@ -1409,7 +1409,8 @@
         "tagLabel": "Reference",
         "year": "Reference year {{value}}",
         "region": "Reference region {{value}}",
-        "difference": "Difference"
+        "difference": "Difference",
+        "active": "Difference Mode active"
       },
       "tabs": {
           "table": "Table",
@@ -1449,7 +1450,8 @@
       "backToOverview": "Overview of Diagrams",
       "downloadDiagram": "Download Diagram",
       "filterHint": "All fields must be completed in order to display the filter results.",
-      "backToStatisticDashboard": "Back to Overview"
+      "backToStatisticDashboard": "Back to Overview",
+      "carouselStatistics": "Statistic {{index}} of {{total}}"
     },
     "shadow": {
       "name": "Shadows",

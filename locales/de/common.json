@@ -1414,7 +1414,8 @@
         "tagLabel": "Referenz",
         "year": "Referenzjahr {{value}}",
         "region": "Referenzgebiet {{value}}",
-        "difference": "Differenz"
+        "difference": "Differenz",
+        "active": "Differenzmodus aktiv"
       },
       "tabs": {
         "table": "Tabelle",
@@ -1452,7 +1453,8 @@
       "filterHint": "Alle Felder müssen vollständig ausgefüllt sein, um die Filterergebnisse anzuzeigen.",
       "backToOverview": "Diagrammübersicht",
       "downloadDiagram": "Diagramm herunterladen",
-      "backToStatisticDashboard": "Zurück zur Übersicht"
+      "backToStatisticDashboard": "Zurück zur Übersicht",
+      "carouselStatistics": "Statistik {{index}} von {{total}}"
     },
     "shadow": {
       "name": "Schatten",
