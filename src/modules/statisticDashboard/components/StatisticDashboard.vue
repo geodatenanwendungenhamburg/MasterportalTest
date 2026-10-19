@@ -27,6 +27,7 @@ import isObject from "@shared/js/utils/isObject.js";
 import {rawLayerList} from "@masterportal/masterportalapi/src/index.js";
 import sortBy from "@shared/js/utils/sortBy.js";
 import SpinnerItem from "@shared/modules/spinner/components/SpinnerItem.vue";
+import StatisticDashboardDataSelection from "./StatisticDashboardDataSelection.vue";
 import StatisticsHandler from "../js/handleStatistics.js";
 import thousandsSeparator from "@shared/js/utils/thousandsSeparator.js";
 import WFS from "ol/format/WFS.js";
@@ -51,6 +52,7 @@ export default {
         LegendComponent,
         Multiselect,
         SpinnerItem,
+        StatisticDashboardDataSelection,
         TableComponent
     },
     data () {
@@ -1969,6 +1971,7 @@ export default {
         id="modules-statisticDashboard"
         class="static-dashboard"
     >
+        <StatisticDashboardDataSelection />
         <template v-if="showLegendView">
             <div v-if="classificationMode !== 'custom'">
                 <h5 class="mb-3 mt-3">

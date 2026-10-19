@@ -56,6 +56,11 @@ export default {
             type: String,
             default: null,
             required: false
+        },
+        labelClassArray: {
+            type: Array,
+            default: null,
+            required: false
         }
     },
     emits: ["click"],
@@ -103,6 +108,7 @@ export default {
         <label
             v-if="label"
             class="text-center btn-label"
+            :class="labelClassArray"
             :for="id"
             :aria-label="label"
         >
@@ -120,6 +126,9 @@ export default {
 
 .btn-wrapper > .btn-label {
     font-size: 0.9rem;
+}
+.btn-wrapper > .btn-label-smaller {
+    font-size: 0.8rem;
 }
 
  .btn {
