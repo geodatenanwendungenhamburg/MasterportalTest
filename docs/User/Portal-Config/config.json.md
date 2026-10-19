@@ -1779,6 +1779,7 @@ Searching all topic selection tree layers.
 
 |Name|Required|Type|Default|Description|Expert|
 |----|--------|----|-------|-----------|------|
+|foldersFirst|no|Boolean|false|If set to true the searchresult category folder is listed before the category layer.|false|
 |hitTemplate|no|String|"default"|Template in which the search results (`show all`) are displayed. Possible values are "default" and "layer".|false|
 |resultEvents|no|**[resultEvents](#portalconfigmenusearchbarsearchinterfacesresultevents)**|{"onClick": ["activateLayerInTopicTree"], "buttons": ["showInTree", "showLayerInfo"]}|Actions that are executed when an interaction, such as hover or click, is performed with a result list item. The following events are possible: "activateLayerInTopicTree", "showInTree", "showLayerInfo".|false|
 |searchInterfaceId|no|String|"topicTree"|Id, which is used to link to the searchbar in the topic search.|false|

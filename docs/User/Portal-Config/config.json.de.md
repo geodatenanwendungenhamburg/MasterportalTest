@@ -1774,6 +1774,7 @@ Alle Layer, die im Themenbaum des Portals sind, werden durchsucht.
 
 |Name|Verpflichtend|Typ|Default|Beschreibung|Expert|
 |----|-------------|---|-------|------------|------|
+|foldersFirst|nein|Boolean|false|Wenn der Parameter auf true gesetzt wird, werden Ergebnisse der Kategorie Ordner vor Ergebnissen der Kategorie Layer geliefert.|false|
 |hitTemplate|nein|String|"default"|Template in dem die Suchergebnisse (`alle anzeigen`) angezeigt werden. Möglich sind die Werte "default" und "layer".|false|
 |resultEvents|nein|**[resultEvents](#portalconfigmenusearchbarsearchinterfacesresultevents)**|{"onClick": ["activateLayerInTopicTree"], "buttons": ["showInTree", "showLayerInfo"]}|Aktionen, die ausgeführt werden, wenn eine Interaktion, z. B. ein Hover oder ein Klick, mit einem Element der Ergebnisliste erfolgt. Folgende events sind möglich: "activateLayerInTopicTree", "showInTree", "showLayerInfo".|false|
 |searchInterfaceId|nein|String|"topicTree"|Id, die zur Verknüpfung mit der searchbar in der Themensuche dient.|false|

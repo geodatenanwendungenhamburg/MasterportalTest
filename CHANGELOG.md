@@ -20,6 +20,8 @@
     - Accordion: Add sub title and border style into accordion.
     - DropdownSelect: Based on vuetify's VSelect. Similar to DropdownAutocomplete, but without the ability to enter a search text.
     - DropdownAutocomplete: Based on vuetify`s VAutocomplete, it extends the usual select input with the ability to enter a search text and thus filter the shown values. As a consequence, vuetify is imported globally, but configuring custom vuetify instances is still supported.
+- SearchInterfaceTopicTree: Added parameter `foldersFirst` to control the order of the result categories.
+
 
 ### Changed
 - The following packages have been updated:
