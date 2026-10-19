@@ -18,6 +18,7 @@ describe("src/shared/modules/draw/components/DrawEdit.vue", () => {
     let addInteractionSpy,
         createModifyInteractionSpy,
         createSelectInteractionSpy,
+        editActionPerformedSpy,
         layer,
         removeInteractionSpy,
         removeSelectedFeatureSpy,
@@ -28,9 +29,10 @@ describe("src/shared/modules/draw/components/DrawEdit.vue", () => {
         addInteractionSpy = sinon.spy();
         createModifyInteractionSpy = sinon.spy(modifyInteraction, "createModifyInteraction");
         createSelectInteractionSpy = sinon.spy(selectInteraction, "createSelectInteraction");
+        editActionPerformedSpy = sinon.spy();
         layer = new VectorLayer({source: new VectorSource()});
-        removeSelectedFeatureSpy = sinon.spy(selectInteraction, "removeSelectedFeature");
         removeInteractionSpy = sinon.spy();
+        removeSelectedFeatureSpy = sinon.spy(selectInteraction, "removeSelectedFeature");
 
         mapCollection.clear();
         mapCollection.addMap({
@@ -61,6 +63,9 @@ describe("src/shared/modules/draw/components/DrawEdit.vue", () => {
                     modules: {
                         Draw: {
                             namespaced: true,
+                            actions: {
+                                editActionPerformed: editActionPerformedSpy
+                            },
                             mutations: {
                                 setButtonsDisabled: sinon.stub()
                             }
@@ -88,6 +93,80 @@ describe("src/shared/modules/draw/components/DrawEdit.vue", () => {
 
         expect(wrapper.find("#draw-edit-redo").exists()).to.be.true;
         expect(wrapper.find("#draw-edit-redo").attributes().aria).to.equals("common:shared.modules.draw.drawEdit.redo");
+    });
+
+    describe("tracking deletion of single features", () => {
+        let feature;
+
+        beforeEach(() => {
+            feature = new Feature({geometry: new Point([0, 0])});
+            layer.getSource().addFeature(feature);
+        });
+
+        it("positive: dispatches editActionPerformed when a feature is removed in delete mode", () => {
+            wrapper = shallowMount(DrawEditComponent, {
+                propsData: {layer, selectedInteraction: "delete"},
+                global: {plugins: [store]}
+            });
+
+            layer.getSource().removeFeature(feature);
+
+            expect(editActionPerformedSpy.calledOnce).to.be.true;
+            expect(editActionPerformedSpy.firstCall.args[1]).to.deep.equal({action: "deleteFeature"});
+        });
+
+        it("negative: does not dispatch when a feature is removed outside of delete mode", () => {
+            wrapper = shallowMount(DrawEditComponent, {
+                propsData: {layer, selectedInteraction: "draw"},
+                global: {plugins: [store]}
+            });
+
+            layer.getSource().removeFeature(feature);
+
+            expect(editActionPerformedSpy.notCalled).to.be.true;
+        });
+
+        it("negative: does not dispatch when a removal is part of undo/redo", () => {
+            wrapper = shallowMount(DrawEditComponent, {
+                propsData: {layer, selectedInteraction: "delete"},
+                global: {plugins: [store]}
+            });
+            wrapper.vm.redoing = true;
+
+            layer.getSource().removeFeature(feature);
+
+            expect(editActionPerformedSpy.notCalled).to.be.true;
+        });
+    });
+
+    describe("regulateEditInteraction", () => {
+        const event = {
+            target: {
+                closest: () => null,
+                getBoundingClientRect: () => ({left: 0, width: 0})
+            }
+        };
+
+        it("positive: dispatches editActionPerformed with the clicked edit action", () => {
+            wrapper = shallowMount(DrawEditComponent, {
+                propsData: {layer},
+                global: {plugins: [store]}
+            });
+
+            wrapper.vm.regulateEditInteraction("undo", event);
+
+            expect(editActionPerformedSpy.calledOnce).to.be.true;
+            expect(editActionPerformedSpy.firstCall.args[1]).to.deep.equal({action: "undo"});
+        });
+
+        it("negative: does not dispatch editActionPerformed before an edit action is clicked", () => {
+            wrapper = shallowMount(DrawEditComponent, {
+                propsData: {layer},
+                global: {plugins: [store]}
+            });
+
+            expect(editActionPerformedSpy.notCalled).to.be.true;
+        });
     });
 
     describe("regulateDelete", () => {

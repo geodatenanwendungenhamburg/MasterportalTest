@@ -8,7 +8,15 @@ import {mapConfigStyleSettingsToLayout} from "@modules/draw/js/drawConfigSetting
 
 
 describe("src/modules/draw/components/DrawModule.vue", () => {
-    let selectedDrawType,
+    let setCircleOptionsStub,
+        setCurrentLayoutStub,
+        setCurrentLayoutOuterCircleStub,
+        setSelectedDrawTypeStub,
+        setSelectedDrawTypeMainStub,
+        setSelectedInteractionStub,
+        setSelectedSymbolStub,
+        selectedSymbol,
+        selectedDrawType,
         selectedDrawTypeMain,
         enableAttributesSelector,
         preSelectedDownloadFormat,
@@ -38,6 +46,14 @@ describe("src/modules/draw/components/DrawModule.vue", () => {
         enableAttributesSelector = true;
         preSelectedDownloadFormat = "KML";
         semicolonCSVDelimiter = false;
+        setCircleOptionsStub = sinon.stub();
+        setCurrentLayoutStub = sinon.stub();
+        setCurrentLayoutOuterCircleStub = sinon.stub();
+        setSelectedDrawTypeStub = sinon.stub();
+        setSelectedDrawTypeMainStub = sinon.stub();
+        setSelectedInteractionStub = sinon.stub();
+        setSelectedSymbolStub = sinon.stub();
+        selectedSymbol = null;
 
         store = createStore({
             actions: {
@@ -113,20 +129,21 @@ describe("src/modules/draw/components/DrawModule.vue", () => {
                                 selectedDrawType: () => selectedDrawType,
                                 selectedDrawTypeMain: () => selectedDrawTypeMain,
                                 selectedInteraction: () => "draw",
+                                selectedSymbol: () => selectedSymbol,
                                 strokeRange: () => [1, 16],
                                 units: sinon.stub().returns(["m", "km"])
                             },
                             mutations: {
                                 addDrawTypeSymbol: sinon.stub(),
                                 incrementIdCounter: sinon.stub(),
-                                setCircleOptions: sinon.stub(),
-                                setCurrentLayout: sinon.stub(),
-                                setCurrentLayoutOuterCircle: sinon.stub(),
+                                setCircleOptions: setCircleOptionsStub,
+                                setCurrentLayout: setCurrentLayoutStub,
+                                setCurrentLayoutOuterCircle: setCurrentLayoutOuterCircleStub,
                                 setLineLength: sinon.stub(),
-                                setSelectedDrawType: sinon.stub(),
-                                setSelectedDrawTypeMain: sinon.stub(),
-                                setSelectedInteraction: sinon.stub(),
-                                setSelectedSymbol: sinon.stub()
+                                setSelectedDrawType: setSelectedDrawTypeStub,
+                                setSelectedDrawTypeMain: setSelectedDrawTypeMainStub,
+                                setSelectedInteraction: setSelectedInteractionStub,
+                                setSelectedSymbol: setSelectedSymbolStub
                             }
                         }
                     }
@@ -330,6 +347,123 @@ describe("src/modules/draw/components/DrawModule.vue", () => {
             });
 
             expect(wrapper.findComponent({name: "DrawEdit"}).props("semicolonCsvDelimiter")).to.equal(false);
+        });
+    });
+
+    describe("guarded mutations", () => {
+        beforeEach(() => {
+            wrapper = shallowMount(DrawModuleComponent, {
+                global: {
+                    plugins: [store]
+                }
+            });
+        });
+
+        describe("setCurrentLayout", () => {
+            it("positive: commits only the changed entries", () => {
+                wrapper.vm.setCurrentLayout({strokeWidth: 5, fillColor: [55, 126, 184]});
+
+                expect(setCurrentLayoutStub.calledOnce).to.be.true;
+                expect(setCurrentLayoutStub.firstCall.args[1]).to.deep.equal({strokeWidth: 5});
+            });
+
+            it("negative: does not commit if all entries are unchanged", () => {
+                wrapper.vm.setCurrentLayout({strokeWidth: 1, strokeColor: [0, 0, 0]});
+
+                expect(setCurrentLayoutStub.notCalled).to.be.true;
+            });
+        });
+
+        describe("setCurrentLayoutOuterCircle", () => {
+            it("positive: commits only the changed entries", () => {
+                wrapper.vm.setCurrentLayoutOuterCircle({fillTransparency: 50, strokeWidth: 1});
+
+                expect(setCurrentLayoutOuterCircleStub.calledOnce).to.be.true;
+                expect(setCurrentLayoutOuterCircleStub.firstCall.args[1]).to.deep.equal({fillTransparency: 50});
+            });
+
+            it("negative: does not commit if all entries are unchanged", () => {
+                wrapper.vm.setCurrentLayoutOuterCircle({fillColor: [0, 0, 0], strokeWidth: 1});
+
+                expect(setCurrentLayoutOuterCircleStub.notCalled).to.be.true;
+            });
+        });
+
+        describe("setCircleOptions", () => {
+            it("positive: commits only the changed entries", () => {
+                wrapper.vm.setCircleOptions({innerRadius: 100, outerRadius: 800});
+
+                expect(setCircleOptionsStub.calledOnce).to.be.true;
+                expect(setCircleOptionsStub.firstCall.args[1]).to.deep.equal({outerRadius: 800});
+            });
+
+            it("negative: does not commit if all entries are unchanged", () => {
+                wrapper.vm.setCircleOptions({innerRadius: 100, interactive: true});
+
+                expect(setCircleOptionsStub.notCalled).to.be.true;
+            });
+        });
+
+        describe("setSelectedDrawType", () => {
+            it("positive: commits a different draw type", () => {
+                wrapper.vm.setSelectedDrawType("line");
+
+                expect(setSelectedDrawTypeStub.calledOnce).to.be.true;
+                expect(setSelectedDrawTypeStub.firstCall.args[1]).to.equal("line");
+            });
+
+            it("negative: does not commit the current draw type", () => {
+                wrapper.vm.setSelectedDrawType("");
+
+                expect(setSelectedDrawTypeStub.notCalled).to.be.true;
+            });
+        });
+
+        describe("setSelectedDrawTypeMain", () => {
+            it("positive: commits a different main draw type", () => {
+                wrapper.vm.setSelectedDrawTypeMain("pen");
+
+                expect(setSelectedDrawTypeMainStub.calledOnce).to.be.true;
+                expect(setSelectedDrawTypeMainStub.firstCall.args[1]).to.equal("pen");
+            });
+
+            it("negative: does not commit the current main draw type", () => {
+                wrapper.vm.setSelectedDrawTypeMain("");
+
+                expect(setSelectedDrawTypeMainStub.notCalled).to.be.true;
+            });
+        });
+
+        describe("setSelectedInteraction", () => {
+            it("positive: commits a different interaction", () => {
+                wrapper.vm.setSelectedInteraction("modify");
+
+                expect(setSelectedInteractionStub.calledOnce).to.be.true;
+                expect(setSelectedInteractionStub.firstCall.args[1]).to.equal("modify");
+            });
+
+            it("negative: does not commit the current interaction", () => {
+                wrapper.vm.setSelectedInteraction("draw");
+
+                expect(setSelectedInteractionStub.notCalled).to.be.true;
+            });
+        });
+
+        describe("setSelectedSymbol", () => {
+            it("positive: commits a symbol if none is selected", () => {
+                const symbol = {id: "iconPoint"};
+
+                wrapper.vm.setSelectedSymbol(symbol);
+
+                expect(setSelectedSymbolStub.calledOnce).to.be.true;
+                expect(setSelectedSymbolStub.firstCall.args[1]).to.equal(symbol);
+            });
+
+            it("negative: does not commit null if no symbol is selected", () => {
+                wrapper.vm.setSelectedSymbol(null);
+
+                expect(setSelectedSymbolStub.notCalled).to.be.true;
+            });
         });
     });
 });

@@ -3,13 +3,19 @@ import {expect} from "chai";
 import Feature from "ol/Feature.js";
 import Point from "ol/geom/Point.js";
 import sinon from "sinon";
+import {createStore} from "vuex";
 
 import DrawEditStyleComponent from "@shared/modules/draw/components/DrawEditStyle.vue";
 
 config.global.mocks.$t = key => key;
 
 describe("src/shared/modules/draw/components/DrawEditStyle.vue", () => {
-    let wrapper;
+    let featureStyleChanged,
+        wrapper;
+
+    beforeEach(() => {
+        featureStyleChanged = sinon.stub();
+    });
 
     afterEach(() => {
         sinon.restore();
@@ -37,6 +43,21 @@ describe("src/shared/modules/draw/components/DrawEditStyle.vue", () => {
      */
     function mountComponent (props = {}) {
         wrapper = shallowMount(DrawEditStyleComponent, {
+            global: {
+                plugins: [createStore({
+                    modules: {
+                        Modules: {
+                            namespaced: true,
+                            modules: {
+                                Draw: {
+                                    namespaced: true,
+                                    actions: {featureStyleChanged}
+                                }
+                            }
+                        }
+                    }
+                })]
+            },
             props
         });
         return wrapper;
@@ -243,6 +264,33 @@ describe("src/shared/modules/draw/components/DrawEditStyle.vue", () => {
             const attrs = feature.get("masterportal_attributes");
 
             expect(attrs.drawState.strokeWidth).to.equal(5);
+        });
+
+        it("should dispatch featureStyleChanged with key and value", async () => {
+            const feature = createFeatureWithDrawState({
+                drawType: {id: "drawArea", geometry: "Polygon"},
+                color: [0, 128, 255, 0.5],
+                colorContour: [0, 0, 0, 1],
+                strokeWidth: 2,
+                zIndex: 0
+            });
+
+            mountComponent({selectedFeature: feature});
+            await wrapper.vm.$nextTick();
+
+            wrapper.vm.updateStyle("strokeWidth", 5);
+
+            expect(featureStyleChanged.calledOnce).to.be.true;
+            expect(featureStyleChanged.firstCall.args[1]).to.deep.equal({key: "strokeWidth", value: 5});
+        });
+
+        it("should not dispatch featureStyleChanged without a selected feature", async () => {
+            mountComponent({selectedFeature: null});
+            await wrapper.vm.$nextTick();
+
+            wrapper.vm.updateStyle("strokeWidth", 5);
+
+            expect(featureStyleChanged.notCalled).to.be.true;
         });
     });
 

@@ -240,6 +240,7 @@ export default {
     },
     methods: {
         ...mapActions("Maps", ["addInteraction", "removeInteraction"]),
+        ...mapActions("Modules/Draw", ["editActionPerformed"]),
         ...mapMutations("Modules/Draw", ["setButtonsDisabled"]),
         isDeleteAllMode,
         createSelectInteractions,
@@ -267,6 +268,10 @@ export default {
                         mode: "delete"
                     });
                     this.syncUndoRedoCounts();
+
+                    if (this.selectedInteraction === "delete") {
+                        this.editActionPerformed({action: "deleteFeature"});
+                    }
                 }
                 this.sourceFeatureRevision++;
             };
@@ -456,6 +461,7 @@ export default {
 
             this.iconPosition = wrapperRect.left + wrapperRect.width / 2 - containerRect.left;
             this.mappingEditInteractions[drawEdit]();
+            this.editActionPerformed({action: drawEdit});
         },
 
         /**

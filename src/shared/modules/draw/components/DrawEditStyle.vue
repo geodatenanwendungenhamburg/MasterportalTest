@@ -1,4 +1,5 @@
 <script>
+import {mapActions} from "vuex";
 import SliderItem from "@shared/modules/slider/components/SliderItem.vue";
 import InputText from "@shared/modules/inputs/components/InputText.vue";
 import {extractEditableState, applyStyleChange} from "../js/editStyleInteractions.js";
@@ -101,6 +102,8 @@ export default {
         }
     },
     methods: {
+        ...mapActions("Modules/Draw", ["featureStyleChanged"]),
+
         /**
          * Applies a single style property change to the feature and updates local state.
          * @param {String} key The property key to change.
@@ -113,6 +116,7 @@ export default {
             }
             this.editState[key] = value;
             applyStyleChange(this.selectedFeature, {[key]: value});
+            this.featureStyleChanged({key, value});
         },
 
         /**

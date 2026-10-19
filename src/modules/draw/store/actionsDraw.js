@@ -43,5 +43,30 @@ export default {
         }
 
         return existingLayer || null;
+    },
+
+    /**
+     * Does not change the state. Lets tools like userTracking observe style changes of drawn features,
+     * which are applied directly to the features and therefore trigger no mutation.
+     * @param {Object} context Vuex action context.
+     * @param {Object} payload The style change.
+     * @param {String} payload.key The changed style property, e.g. "strokeWidth".
+     * @param {*} payload.value The new value of the style property.
+     * @returns {void}
+     */
+    featureStyleChanged () {
+        // intentionally empty: only dispatched so that store subscribers are notified
+    },
+
+    /**
+     * Does not change the state. Lets tools like userTracking observe clicks on the edit toolbar
+     * (e.g. undo, redo, deleteAll), which only affect the features and therefore trigger no mutation.
+     * @param {Object} context Vuex action context.
+     * @param {Object} payload The edit action.
+     * @param {String} payload.action The name of the clicked edit button, e.g. "undo".
+     * @returns {void}
+     */
+    editActionPerformed () {
+        // intentionally empty: only dispatched so that store subscribers are notified
     }
 };

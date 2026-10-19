@@ -10,6 +10,7 @@ import DrawSettingsCircle from "@shared/modules/draw/components/DrawSettingsCirc
 import DrawTypes from "@shared/modules/draw/components/DrawTypes.vue";
 import LayoutFrame from "@shared/modules/layoutFrame/components/LayoutFrame.vue";
 import stateDraw from "@modules/draw/store/stateDraw.js";
+import {getChangedEntries} from "@modules/draw/js/getChangedEntries.js";
 import {
     getConfigSettingsByDrawType,
     getTooltipStyleFromConfigSettings,
@@ -44,9 +45,7 @@ export default {
     },
     computed: {
         ...mapGetters("Modules/Draw", [
-            "buttonsDisabled"
-        ]),
-        ...mapGetters("Modules/Draw", [
+            "buttonsDisabled",
             "circleOptions",
             "currentLayout",
             "currentLayoutOuterCircle",
@@ -71,6 +70,7 @@ export default {
             "selectedDrawType",
             "selectedDrawTypeMain",
             "selectedInteraction",
+            "selectedSymbol",
             "strokeRange",
             "units"
         ]),
@@ -138,15 +138,101 @@ export default {
         ...mapMutations("Modules/Draw", [
             "addDrawTypeSymbol",
             "incrementIdCounter",
-            "setCircleOptions",
-            "setCurrentLayout",
-            "setCurrentLayoutOuterCircle",
-            "setLineLength",
-            "setSelectedDrawType",
-            "setSelectedDrawTypeMain",
-            "setSelectedInteraction",
-            "setSelectedSymbol"
+            "setLineLength"
         ]),
+        ...mapMutations("Modules/Draw", {
+            commitCircleOptions: "setCircleOptions",
+            commitCurrentLayout: "setCurrentLayout",
+            commitCurrentLayoutOuterCircle: "setCurrentLayoutOuterCircle",
+            commitSelectedDrawType: "setSelectedDrawType",
+            commitSelectedDrawTypeMain: "setSelectedDrawTypeMain",
+            commitSelectedInteraction: "setSelectedInteraction",
+            commitSelectedSymbol: "setSelectedSymbol"
+        }),
+
+        /**
+         * Commits the circle options, but only the entries that differ from the current state.
+         * @param {Object} options The circle options to set.
+         * @returns {void}
+         */
+        setCircleOptions (options) {
+            const changes = getChangedEntries(this.circleOptions, options);
+
+            if (changes) {
+                this.commitCircleOptions(changes);
+            }
+        },
+
+        /**
+         * Commits the current layout, but only the entries that differ from the current state.
+         * @param {Object} options The layout options to set.
+         * @returns {void}
+         */
+        setCurrentLayout (options) {
+            const changes = getChangedEntries(this.currentLayout, options);
+
+            if (changes) {
+                this.commitCurrentLayout(changes);
+            }
+        },
+
+        /**
+         * Commits the outer circle layout, but only the entries that differ from the current state.
+         * @param {Object} options The layout options to set.
+         * @returns {void}
+         */
+        setCurrentLayoutOuterCircle (options) {
+            const changes = getChangedEntries(this.currentLayoutOuterCircle, options);
+
+            if (changes) {
+                this.commitCurrentLayoutOuterCircle(changes);
+            }
+        },
+
+        /**
+         * Commits the selected draw type if it differs from the current one.
+         * @param {String} value The draw type to select.
+         * @returns {void}
+         */
+        setSelectedDrawType (value) {
+            if (value !== this.selectedDrawType) {
+                this.commitSelectedDrawType(value);
+            }
+        },
+
+        /**
+         * Commits the selected main draw type if it differs from the current one.
+         * @param {String} value The main draw type to select.
+         * @returns {void}
+         */
+        setSelectedDrawTypeMain (value) {
+            if (value !== this.selectedDrawTypeMain) {
+                this.commitSelectedDrawTypeMain(value);
+            }
+        },
+
+        /**
+         * Commits the selected interaction if it differs from the current one.
+         * @param {String} value The interaction to select.
+         * @returns {void}
+         */
+        setSelectedInteraction (value) {
+            if (value !== this.selectedInteraction) {
+                this.commitSelectedInteraction(value);
+            }
+        },
+
+        /**
+         * Commits the selected symbol if it differs from the current one.
+         * @param {Object|null} value The symbol to select.
+         * @returns {void}
+         */
+        setSelectedSymbol (value) {
+            if (value !== this.selectedSymbol) {
+                this.commitSelectedSymbol(value);
+            }
+        },
+
         /**
          * Stores a snapshot of the current layout (and circle options, for circle/doubleCircle) for the
          * given draw type, so it can be restored unaffected by style changes made while another draw type
