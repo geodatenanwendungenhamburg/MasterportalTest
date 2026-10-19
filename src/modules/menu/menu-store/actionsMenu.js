@@ -1,4 +1,5 @@
 import {nextTick} from "vue";
+import {openSecuredPopup} from "@shared/js/utils/openSecuredPopup.js";
 import changeCase from "@shared/js/utils/changeCase.js";
 import {getPiniaModuleStore, isPiniaModule} from "../../modules-store/piniaModules.js";
 
@@ -125,7 +126,7 @@ export default {
         if (type) {
             if (type === "customMenuElement") {
                 if (properties.openURL !== undefined) {
-                    window.open(properties.openURL);
+                    openSecuredPopup(properties.openURL, "_blank", "");
                 }
                 if (properties.execute !== undefined) {
                     dispatch(properties.execute.action, properties.execute.payload, {root: true});

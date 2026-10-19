@@ -33,6 +33,7 @@ import {pointerMove} from "ol/events/condition.js";
 import Overlay from "ol/Overlay.js";
 import debounce from "@shared/js/utils/debounce.js";
 import {GeoJSON} from "ol/format.js";
+import {openSecuredPopup} from "@shared/js/utils/openSecuredPopup.js";
 
 export default {
     name: "StatisticDashboard",
@@ -1726,7 +1727,7 @@ export default {
             if (!metadataUrl) {
                 return;
             }
-            window.open(metadataUrl, "_blank");
+            openSecuredPopup(metadataUrl, "_blank", "");
         },
         /**
          * Initializes the data from selected level.
