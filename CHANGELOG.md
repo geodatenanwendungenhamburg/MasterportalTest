@@ -12,8 +12,8 @@
 - Draw: Added new draw module to replace draw_old (type="draw").
 - WMS-Layer: Added additional request parameter `sld` and `gfi_template`.
 - Utils: 
-    - 4 new function to convert geoJson to feature and geometry.
-    - new function to safely open Popups without XSS-risk, replacing and utilizing native window.open.
+    - 4 new functions to convert geoJson to feature and geometry.
+    - New function to safely open popups without XSS-risk, replacing and utilizing native window.open.
 
 
 ### Changed
