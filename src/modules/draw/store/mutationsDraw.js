@@ -60,6 +60,30 @@ export default {
     },
 
     /**
+     * Applies the style of a draw type at once, e.g. when the draw type changes.
+     * Separate from the setters for user input so that tools like userTracking can tell them apart.
+     * @param {Object} state store state.
+     * @param {Object} styles The style parts to merge into the state.
+     * @param {Object} [styles.circleOptions] The circle options.
+     * @param {Object} [styles.currentLayout] The current layout.
+     * @param {Object} [styles.currentLayoutOuterCircle] The current layout of the outer circle.
+     * @returns {void}
+     */
+    applyDrawTypeStyle (state, {circleOptions, currentLayout, currentLayoutOuterCircle}) {
+        if (currentLayout) {
+            state.currentLayout = {...state.currentLayout, ...currentLayout};
+        }
+
+        if (circleOptions) {
+            state.circleOptions = {...state.circleOptions, ...circleOptions};
+        }
+
+        if (currentLayoutOuterCircle) {
+            state.currentLayoutOuterCircle = {...state.currentLayoutOuterCircle, ...currentLayoutOuterCircle};
+        }
+    },
+
+    /**
      * Fill the draw type symbols with an iconList from the config, if present.
      * @param {Object} state store state.
      * @param {String} id The ID of the draw type symbol to add.

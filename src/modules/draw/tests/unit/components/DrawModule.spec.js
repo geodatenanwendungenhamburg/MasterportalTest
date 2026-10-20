@@ -8,7 +8,8 @@ import {mapConfigStyleSettingsToLayout} from "@modules/draw/js/drawConfigSetting
 
 
 describe("src/modules/draw/components/DrawModule.vue", () => {
-    let setCircleOptionsStub,
+    let applyDrawTypeStyleStub,
+        setCircleOptionsStub,
         setCurrentLayoutStub,
         setCurrentLayoutOuterCircleStub,
         setSelectedDrawTypeStub,
@@ -46,6 +47,7 @@ describe("src/modules/draw/components/DrawModule.vue", () => {
         enableAttributesSelector = true;
         preSelectedDownloadFormat = "KML";
         semicolonCSVDelimiter = false;
+        applyDrawTypeStyleStub = sinon.stub();
         setCircleOptionsStub = sinon.stub();
         setCurrentLayoutStub = sinon.stub();
         setCurrentLayoutOuterCircleStub = sinon.stub();
@@ -135,6 +137,7 @@ describe("src/modules/draw/components/DrawModule.vue", () => {
                             },
                             mutations: {
                                 addDrawTypeSymbol: sinon.stub(),
+                                applyDrawTypeStyle: applyDrawTypeStyleStub,
                                 incrementIdCounter: sinon.stub(),
                                 setCircleOptions: setCircleOptionsStub,
                                 setCurrentLayout: setCurrentLayoutStub,
@@ -347,6 +350,47 @@ describe("src/modules/draw/components/DrawModule.vue", () => {
             });
 
             expect(wrapper.findComponent({name: "DrawEdit"}).props("semicolonCsvDelimiter")).to.equal(false);
+        });
+    });
+
+    describe("applyDrawTypeState", () => {
+        beforeEach(() => {
+            wrapper = shallowMount(DrawModuleComponent, {
+                global: {
+                    plugins: [store]
+                }
+            });
+        });
+
+        it("positive: commits the changed style of the draw type with one dedicated mutation", () => {
+            wrapper.vm.applyDrawTypeState("line");
+
+            expect(applyDrawTypeStyleStub.calledOnce).to.be.true;
+            expect(applyDrawTypeStyleStub.firstCall.args[1]).to.have.property("currentLayout");
+            expect(applyDrawTypeStyleStub.firstCall.args[1]).to.not.have.property("circleOptions");
+            expect(setCurrentLayoutStub.notCalled).to.be.true;
+        });
+
+        it("positive: includes the circle options for circle draw types", () => {
+            wrapper.vm.applyDrawTypeState("circle");
+
+            expect(applyDrawTypeStyleStub.calledOnce).to.be.true;
+            expect(applyDrawTypeStyleStub.firstCall.args[1]).to.have.property("circleOptions");
+            expect(setCircleOptionsStub.notCalled).to.be.true;
+        });
+
+        it("negative: does not commit if the restored snapshot equals the current layout", () => {
+            wrapper.vm.layoutSnapshots.set("line", {...wrapper.vm.currentLayout});
+
+            wrapper.vm.applyDrawTypeState("line");
+
+            expect(applyDrawTypeStyleStub.notCalled).to.be.true;
+        });
+
+        it("negative: does not commit without a draw type", () => {
+            wrapper.vm.applyDrawTypeState("");
+
+            expect(applyDrawTypeStyleStub.notCalled).to.be.true;
         });
     });
 

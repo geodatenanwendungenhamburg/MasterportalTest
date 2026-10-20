@@ -137,6 +137,7 @@ export default {
         ]),
         ...mapMutations("Modules/Draw", [
             "addDrawTypeSymbol",
+            "applyDrawTypeStyle",
             "incrementIdCounter",
             "setLineLength"
         ]),
@@ -266,9 +267,9 @@ export default {
             }
 
             const configSettings = getConfigSettingsByDrawType(selectedDrawType, this),
-                  nextLayout = this.layoutSnapshots.get(selectedDrawType) ?? {...stateDraw.currentLayout, ...mapConfigStyleSettingsToLayout(configSettings)};
+                  nextLayout = this.layoutSnapshots.get(selectedDrawType) ?? {...stateDraw.currentLayout, ...mapConfigStyleSettingsToLayout(configSettings)},
+                  changes = {currentLayout: getChangedEntries(this.currentLayout, nextLayout)};
 
-            this.setCurrentLayout(nextLayout);
             this.layoutSnapshots.set(selectedDrawType, nextLayout);
 
             const isCircle = selectedDrawType === "circle",
@@ -279,15 +280,33 @@ export default {
                     const doubleCircleConfigSettings = this.drawDoubleCircleSettings && typeof this.drawDoubleCircleSettings === "object" ? this.drawDoubleCircleSettings : null,
                           nextOuterCircleLayout = {...stateDraw.currentLayoutOuterCircle, ...mapConfigOuterCircleSettings(doubleCircleConfigSettings)};
 
-                    this.setCurrentLayoutOuterCircle(nextOuterCircleLayout);
+                    changes.currentLayoutOuterCircle = getChangedEntries(this.currentLayoutOuterCircle, nextOuterCircleLayout);
                     this.outerCircleInitialized = true;
                 }
 
                 const nextCircleOptions = this.circleOptionsSnapshots.get(selectedDrawType) ?? {...stateDraw.circleOptions, ...mapConfigCircleOptions(selectedDrawType, configSettings)};
 
-                this.setCircleOptions(nextCircleOptions);
+                changes.circleOptions = getChangedEntries(this.circleOptions, nextCircleOptions);
                 this.circleOptionsSnapshots.set(selectedDrawType, nextCircleOptions);
             }
+
+            this.applyDrawTypeStyleChanges(changes);
+        },
+
+        /**
+         * Commits the style changes of a draw type at once and skips the commit if nothing differs.
+         * Uses a dedicated mutation so that changes made by the module itself are not mistaken for user input.
+         * @param {Object} changes The changed entries per style part, null for unchanged parts.
+         * @returns {void}
+         */
+        applyDrawTypeStyleChanges (changes) {
+            const definedChanges = Object.entries(changes).filter(([, value]) => value !== null);
+
+            if (definedChanges.length < 1) {
+                return;
+            }
+
+            this.applyDrawTypeStyle(Object.fromEntries(definedChanges));
         },
 
         /**
