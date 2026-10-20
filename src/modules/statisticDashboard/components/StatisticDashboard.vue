@@ -1727,7 +1727,7 @@ export default {
             if (!metadataUrl) {
                 return;
             }
-            openSecuredPopup(metadataUrl, "_blank", "");
+            openSecuredPopup(metadataUrl, "_blank");
         },
         /**
          * Initializes the data from selected level.

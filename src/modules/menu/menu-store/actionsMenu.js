@@ -126,7 +126,7 @@ export default {
         if (type) {
             if (type === "customMenuElement") {
                 if (properties.openURL !== undefined) {
-                    openSecuredPopup(properties.openURL, "_blank", "");
+                    openSecuredPopup(properties.openURL, "_blank");
                 }
                 if (properties.execute !== undefined) {
                     dispatch(properties.execute.action, properties.execute.payload, {root: true});

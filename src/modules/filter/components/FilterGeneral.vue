@@ -578,7 +578,7 @@ export default {
          * @returns {void}
          */
         openLink (url) {
-            openSecuredPopup(url, "_blank", "");
+            openSecuredPopup(url, "_blank");
         },
 
         /**
