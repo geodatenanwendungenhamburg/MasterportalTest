@@ -26,6 +26,7 @@
 
 ### Deprecated
 - WMTS: The `services.json` parameter `transparent` is deprecated and has no effect. Use `transparency` instead.
+- Draw: All functions and files of draw_old have been marked deprecated and are to be removed in November 2027.
 
 ### Removed
 
