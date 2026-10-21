@@ -41,6 +41,7 @@
 - Draw: Fixed an error when editing imported multi geometries (e.g. from KML files), which prevented the measurement tooltip from being positioned.
 - Legend: Legend images of secured services are now loaded with the auth token of the login module, so that no 401 error occurs.
 - GetFeatureInfo: A gfiTheme addon that is configured at a layer but missing in `Config.addons` of config.js is now loaded on demand instead of falling back to the default theme. This also applies to layers added via search.
+- AddWMS: If the root layer of a WMS capabilities has no `BoundingBox`, the bounding box of the first child layer is now used to check whether the service is within the portal extent. If no bounding box is found at all, the WMS is imported without an error.
 
 ---
 
@@ -106,7 +107,7 @@
 - Readme: Information and link to issues in opencode added.
 - Security: Updated SECURITY.md to direct vulnerability reports to a private email address instead of the public issue tracker, and added a corresponding note in the README.
 - Alerting: Added first-open alerts for modules via `config.js` (`alerting.moduleOpenAlerts`).
-- WFS-T: 
+- WFS-T:
     - Added a loading spinner while fetching features (disabling interactions). The selected layer can automatically activate in the layer tree and restore on exit. Configurable via `showLayerLoader` and `activateLayerInTree`.
     - Added new config `lockedFields` to disable the edit capability for specific fields via config.json.
 
@@ -165,7 +166,7 @@
         - @masterportal/masterportalapi: 2.62.0 to 2.63.0
     - devDependencies:
         - vite: 8.0.14 to 8.1.4
-- Tests: 
+- Tests:
     - Tests now fail on vue warnings.
     - Excluded barchart and piechart tests due to issues with the prePushHook.
 - ResizeHandle: Simplified component by removing multi-directional resize infrastructure to support menu width resizing only (left/right positions).
@@ -235,7 +236,7 @@
 - Issue \#1601: Improve attribute extraction in `getDescribeFeature` to handle mixed xml2json node shapes.
 - Issue \#1608: Fixed autoRefresh by reading source from OL Layer instead of cached layerSource to prevent stale source.
 - Issue \#1610: Menu/PortalFooter: Fixed navigation behavior for secondary GFI without a configured secondary menu and corrected footer layout offsets for small desktop breakpoints.
-- Issue \#1613: LayerSlider: Fixed layers not being hidden when moving the slider handle past them, causing previously active layers to remain visible. 
+- Issue \#1613: LayerSlider: Fixed layers not being hidden when moving the slider handle past them, causing previously active layers to remain visible.
 - Issue \#1614: MenuContainerBodyRoot: Horizontal separators in menu sections now only render when sections contain items.
 - Issue \#1619: GetFeatureInfo: Fixed case where GFI with iframe content did not reopen after being closed.
 - Issue \#1620: Adapted vite build to respect new created heads (clone with --branch).
@@ -284,9 +285,9 @@
   - Fixed WMS-Time layers not working with legacy URL parameters.
   - ZOOMTOFEATUREID: Features that are always at the top of the map are now displayed again.
   - Links to other config files have been corrected in the `urlParameter` documentation.
-- GFI: In the gfiTheme `Default`, line breaks have been optimised and the size of the content changes when the sidebar is resized.  
+- GFI: In the gfiTheme `Default`, line breaks have been optimised and the size of the content changes when the sidebar is resized.
 - Print: Fixed print layer sorting for grouped layers without zIndex.
-- SearchBar: 
+- SearchBar:
     - Added a checkbox to select all subcategories when opening a folder.
     - Fixed duplicated results with URL Parameter `QUERY`.
 - WMS-Time: Activating time comparison placed the second WMS-Time layer at the top of the layerTree, causing it to cover other layers. The fix places the comparison layer directly above the original layer.
