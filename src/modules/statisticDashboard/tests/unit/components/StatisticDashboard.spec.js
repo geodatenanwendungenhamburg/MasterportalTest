@@ -14,6 +14,7 @@ import AccordionItem from "@shared/modules/accordion/components/AccordionItem.vu
 import Overlay from "ol/Overlay.js";
 import Select from "ol/interaction/Select.js";
 import mapCollection from "@core/maps/js/mapCollection.js";
+import {rawLayerList} from "@masterportal/masterportalapi/src/index.js";
 
 import {
     and as andFilter,
@@ -35,6 +36,37 @@ function addSecondaryMenuElement () {
 
 describe("src/modules/statisticDashboard/components/StatisticDashboard.vue", () => {
     let store, wrapper, getOAFFeatureStreamStub;
+
+    /**
+     * Configures the given level as the only level and selects it.
+     * @param {Object} level The level to select.
+     * @returns {void}
+     */
+    function setLevel (level) {
+        store.commit("Modules/StatisticDashboard/setData", [{
+            levelName: "test",
+            ...level,
+            mappingFilter: {
+                statisticsAttributes: {},
+                ...level.mappingFilter
+            }
+        }]);
+        store.commit("Modules/StatisticDashboard/setSelectedLevelName", "test");
+    }
+
+    /**
+     * Sets up a selected level with two statistic attributes.
+     * @returns {void}
+     */
+    function setStatisticsLevel () {
+        const statisticsAttributes = {
+            bev_maennlich: {name: "Bevölkerung maennlich", category: "Bevölkerung"},
+            bev_weiblich: {name: "Bevölkerung weiblich", category: "Bevölkerung"}
+        };
+
+        setLevel({mappingFilter: {statisticsAttributes}});
+        store.commit("Modules/StatisticDashboard/setSelectedStatisticsKeys", Object.keys(statisticsAttributes));
+    }
 
     /**
      * Creates a shallow-mounted wrapper of the StatisticDashboard component
@@ -90,13 +122,25 @@ describe("src/modules/statisticDashboard/components/StatisticDashboard.vue", () 
 
     beforeEach(() => {
         addSecondaryMenuElement();
+        const statisticDashboardState = structuredClone(indexStatisticDashboard.state);
+
+        statisticDashboardState.data = [{
+            levelName: "test",
+            mappingFilter: {
+                statisticsAttributes: {}
+            }
+        }];
+        statisticDashboardState.selectedLevelName = "test";
         store = createStore({
             namespaced: true,
             modules: {
                 Modules: {
                     namespaced: true,
                     modules: {
-                        StatisticDashboard: indexStatisticDashboard
+                        StatisticDashboard: {
+                            ...indexStatisticDashboard,
+                            state: statisticDashboardState
+                        }
                     }
                 },
                 Maps: {
@@ -155,10 +199,7 @@ describe("src/modules/statisticDashboard/components/StatisticDashboard.vue", () 
                         "name": "90"
                     }
                 ],
-                showNoticeText: false,
-                selectedLevel: {
-                    id: ""
-                }
+                showNoticeText: false
             };
 
             await wrapper.setData(data);
@@ -286,10 +327,10 @@ describe("src/modules/statisticDashboard/components/StatisticDashboard.vue", () 
                 expect(wrapper.vm.selectedStatisticsNames).to.be.an("array").that.is.empty;
             });
             it("should return the correct statistic names", () => {
+                setStatisticsLevel();
                 wrapper = createWrapper();
-                wrapper.vm.setSelectedStatistics({stat1: {name: "Stat Eins"}, stat2: {name: "Stat Zwei"}});
 
-                expect(wrapper.vm.selectedStatisticsNames).to.deep.equal(["Stat Eins", "Stat Zwei"]);
+                expect(wrapper.vm.selectedStatisticsNames).to.deep.equal(["Bevölkerung maennlich", "Bevölkerung weiblich"]);
             });
         });
     });
@@ -306,14 +347,17 @@ describe("src/modules/statisticDashboard/components/StatisticDashboard.vue", () 
 
         it("should call 'checkFilterSettings' if selectedReferenceData is changed", async () => {
             wrapper = createWrapper();
-            const spyCheckFilterSettings = sinon.stub(wrapper.vm, "checkFilterSettings");
 
             wrapper.vm.setFlattenedRegions([{
                 values: ["foo", "bar"]
             }]);
+            wrapper.vm.setSelectedDates([{value: "too"}]);
+            wrapper.vm.setSelectedRegions([{value: "too"}]);
+            await wrapper.vm.$nextTick();
+
+            const spyCheckFilterSettings = sinon.stub(wrapper.vm, "checkFilterSettings");
+
             wrapper.vm.setSelectedReferenceData("too");
-            wrapper.vm.setSelectedDates(["too"]);
-            wrapper.vm.setSelectedRegions(["too"]);
             await wrapper.vm.$nextTick();
 
             expect(spyCheckFilterSettings.calledOnce).to.be.true;
@@ -355,7 +399,7 @@ describe("src/modules/statisticDashboard/components/StatisticDashboard.vue", () 
                 });
 
                 await wrapper.vm.$nextTick();
-                wrapper.vm.setSelectedLevel({layerId: ["33162"], mappingFilter: {}, geometryAttribute: ["geom"]});
+                setLevel({layerId: ["33162"], mappingFilter: {}, geometryAttribute: ["geom"]});
 
                 sinon.stub(wrapper.vm, "getSelectedLevelRegionNameAttributeInDepth").returns({attrName: ["ort"]});
                 getOAFFeatureStreamStub.callsFake(async function* () {
@@ -523,39 +567,6 @@ describe("src/modules/statisticDashboard/components/StatisticDashboard.vue", () 
                 });
             });
         });
-        describe("getTimestepsMerged", () => {
-            it("should return an empty array if first param and second param are not objects", () => {
-                wrapper = createWrapper();
-
-                expect(wrapper.vm.getTimestepsMerged(undefined, undefined)).to.be.an("array").that.is.empty;
-                expect(wrapper.vm.getTimestepsMerged(null, null)).to.be.an("array").that.is.empty;
-                expect(wrapper.vm.getTimestepsMerged([], [])).to.be.an("array").that.is.empty;
-                expect(wrapper.vm.getTimestepsMerged(true, true)).to.be.an("array").that.is.empty;
-                expect(wrapper.vm.getTimestepsMerged(false, false)).to.be.an("array").that.is.empty;
-                expect(wrapper.vm.getTimestepsMerged(1234, 1234)).to.be.an("array").that.is.empty;
-                expect(wrapper.vm.getTimestepsMerged("1234", "1234")).to.be.an("array").that.is.empty;
-            });
-            it("should return an empty array if second param is not an object but first is", () => {
-                wrapper = createWrapper();
-
-                expect(wrapper.vm.getTimestepsMerged({foo: "bar"})).to.be.an("array").that.is.empty;
-            });
-            it("should return only the values of the second param as array with invalid dates", () => {
-                wrapper = createWrapper();
-                const uniqueList = {foo: true, bar: true},
-                    expected = [{value: "bar", label: "Invalid Date"}, {value: "foo", label: "Invalid Date"}];
-
-                expect(wrapper.vm.getTimestepsMerged(undefined, uniqueList)).to.deep.equal(expected);
-            });
-            it("should return a merged array based of the given two objects", () => {
-                wrapper = createWrapper();
-                const uniqueList = {bar: true, buz: true, foo: true},
-                    configSteps = {2: "Last 2 Years"},
-                    expected = [{value: ["buz", "foo"], label: "Last 2 Years"}, {value: "foo", label: "Invalid Date"}, {value: "buz", label: "Invalid Date"}, {value: "bar", label: "Invalid Date"}];
-
-                expect(wrapper.vm.getTimestepsMerged(configSteps, uniqueList)).to.deep.equal(expected);
-            });
-        });
         describe("getAllRegions", () => {
             it("should return an empty array if there are no regions found", () => {
                 wrapper = createWrapper();
@@ -572,76 +583,10 @@ describe("src/modules/statisticDashboard/components/StatisticDashboard.vue", () 
                 wrapper = createWrapper();
 
                 expect(wrapper.vm.getAllRegions(["test", "test2"])).to.deep.equal([
-                    {value: ["test", "test2"], label: "Alle Gebiete"},
-                    {value: "test", label: "test"},
-                    {value: "test2", label: "test2"}
+                    {value: ["test", "test2"], title: "Alle Gebiete"},
+                    {value: "test", title: "test"},
+                    {value: "test2", title: "test2"}
                 ]);
-            });
-        });
-        describe("setStatisticsByCategories", () => {
-            it("should set all statistics if the category 'alle' is passed", () => {
-                wrapper = createWrapper();
-
-                wrapper.vm.categories = [{name: "Beschäftigte"}, {name: "Bevölkerung"}];
-                wrapper.vm.setSelectedLevel({
-                    "layerId": ["33162"],
-                    "geometryAttribute": ["geom"],
-                    "mappingFilter": {
-                        "statisticsAttributes": {
-                            "beschaeftigte": {
-                                "name": "Beschäftigte",
-                                "category": "Beschäftigte"
-                            },
-                            "bevoelkerung": {
-                                "name": "Bevölkerung",
-                                "category": "Bevölkerung"
-                            }
-                        }
-                    }
-                });
-                wrapper.vm.setStatisticsByCategories([{name: i18next.t("common:modules.statisticDashboard.button.allStatistics")}]);
-
-                expect(wrapper.vm.statisticsByCategory).to.deep.equal([{
-                    "beschaeftigte": {
-                        "name": "Beschäftigte",
-                        "category": "Beschäftigte"
-                    }
-                },
-                {
-                    "bevoelkerung": {
-                        "name": "Bevölkerung",
-                        "category": "Bevölkerung"
-                    }
-                }]);
-            });
-            it("should set the statistics by the given category", () => {
-                wrapper = createWrapper();
-
-                wrapper.vm.categories = [{name: "Beschäftigte"}, {name: "Bevölkerung"}];
-                wrapper.vm.setSelectedLevel({
-                    "layerId": ["33162"],
-                    "geometryAttribute": ["geom"],
-                    "mappingFilter": {
-                        "statisticsAttributes": {
-                            "beschaeftigte": {
-                                "name": "Beschäftigte",
-                                "category": "Beschäftigte"
-                            },
-                            "bevoelkerung": {
-                                "name": "Bevölkerung",
-                                "category": "Bevölkerung"
-                            }
-                        }
-                    }
-                });
-                wrapper.vm.setStatisticsByCategories([{name: "Beschäftigte"}]);
-
-                expect(wrapper.vm.statisticsByCategory).to.deep.equal([{
-                    "beschaeftigte": {
-                        "name": "Beschäftigte",
-                        "category": "Beschäftigte"
-                    }
-                }]);
             });
         });
         describe("getFilter", () => {
@@ -652,7 +597,7 @@ describe("src/modules/statisticDashboard/components/StatisticDashboard.vue", () 
 
                 wrapper.vm.regions = regions;
                 wrapper.vm.dates = dates;
-                wrapper.vm.setSelectedLevel({
+                setLevel({
                     "layerId": ["33162"],
                     "geometryAttribute": ["geom"],
                     mappingFilter: {
@@ -674,7 +619,7 @@ describe("src/modules/statisticDashboard/components/StatisticDashboard.vue", () 
                     getFilterForListSpy = sinon.spy(wrapper.vm, "getFilterForList");
 
                 wrapper.vm.dates = ["01.01.1999"];
-                wrapper.vm.setSelectedLevel({
+                setLevel({
                     "layerId": ["33162"],
                     "geometryAttribute": ["geom"],
                     mappingFilter: {
@@ -697,7 +642,7 @@ describe("src/modules/statisticDashboard/components/StatisticDashboard.vue", () 
                     getFilterForListSpy = sinon.spy(wrapper.vm, "getFilterForList");
 
                 wrapper.vm.dates = dates;
-                wrapper.vm.setSelectedLevel({
+                setLevel({
                     "layerId": ["33162"],
                     "geometryAttribute": ["geom"],
                     mappingFilter: {
@@ -722,7 +667,7 @@ describe("src/modules/statisticDashboard/components/StatisticDashboard.vue", () 
                     expected = andFilter(eq2, eq1);
 
                 wrapper.vm.dates = [...dates, "01.01.2001"];
-                wrapper.vm.setSelectedLevel({
+                setLevel({
                     "layerId": ["33162"],
                     "geometryAttribute": ["geom"],
                     mappingFilter: {
@@ -747,7 +692,7 @@ describe("src/modules/statisticDashboard/components/StatisticDashboard.vue", () 
                     getFilterForListSpy = sinon.spy(wrapper.vm, "getFilterForList");
 
                 wrapper.vm.dates = ["01.01.1999"];
-                wrapper.vm.setSelectedLevel({
+                setLevel({
                     "layerId": ["33162"],
                     "geometryAttribute": ["geom"],
                     mappingFilter: {
@@ -883,6 +828,7 @@ describe("src/modules/statisticDashboard/components/StatisticDashboard.vue", () 
         });
         describe("prepareStatisticsData", () => {
             it("should return an object representing the statistics from the features", () => {
+                setStatisticsLevel();
                 store.commit("Modules/StatisticDashboard/setSelectedReferenceData", {});
                 wrapper = createWrapper();
                 const statistics = {
@@ -909,7 +855,7 @@ describe("src/modules/statisticDashboard/components/StatisticDashboard.vue", () 
                     }
                 }];
 
-                expect(wrapper.vm.prepareStatisticsData(featureList, ["Bevölkerung maennlich", "Bevölkerung weiblich"], ["Hamburg"], ["1890", "1990"], {outputFormat: "YYYY", attrName: "jahr"}, "ort")).to.deep.equal(statistics);
+                expect(wrapper.vm.prepareStatisticsData(featureList, ["bev_maennlich", "bev_weiblich"], ["Hamburg"], ["1890", "1990"], {outputFormat: "YYYY", attrName: "jahr"}, "ort")).to.deep.equal(statistics);
             });
         });
         describe("addHoverInteraction", () => {
@@ -984,6 +930,7 @@ describe("src/modules/statisticDashboard/components/StatisticDashboard.vue", () 
             });
 
             it("should return an object representing the statistics from the features without the reference date", async () => {
+                setStatisticsLevel();
                 wrapper = createWrapper();
                 const statistics = {
                     "Bevölkerung maennlich": {
@@ -1009,7 +956,7 @@ describe("src/modules/statisticDashboard/components/StatisticDashboard.vue", () 
                     }
                 }];
 
-                expect(wrapper.vm.getChartDataOutOfDifference(featureList, ["Bevölkerung maennlich", "Bevölkerung weiblich"], ["Hamburg"], ["1890", "1990"], {outputFormat: "YYYY", attrName: "jahr"}, "ort")).to.deep.equal(statistics);
+                expect(wrapper.vm.getChartDataOutOfDifference(featureList, ["bev_maennlich", "bev_weiblich"], ["Hamburg"], ["1890", "1990"], {outputFormat: "YYYY", attrName: "jahr"}, "ort")).to.deep.equal(statistics);
             });
         });
         describe("getTableData", () => {
@@ -1164,39 +1111,6 @@ describe("src/modules/statisticDashboard/components/StatisticDashboard.vue", () 
                     expected = [{content: "StatistikTest1", title: "Statistik1"}];
 
                 expect(wrapper.vm.setDescriptionsOfSelectedStatistics(statistics)).to.deep.equal(expected);
-            });
-        });
-        describe("toggleLevel", () => {
-            it("should not trigger the resetLevel function", async () => {
-                wrapper = createWrapper();
-                const spyResetLevel = sinon.stub(StatisticDashboard.methods, "resetLevel");
-
-                wrapper.vm.toggleLevel(null);
-                await wrapper.vm.$nextTick();
-
-                expect(spyResetLevel.calledOnce).to.be.false;
-
-                wrapper.vm.toggleLevel(true);
-                await wrapper.vm.$nextTick();
-
-                expect(spyResetLevel.calledOnce).to.be.false;
-
-            });
-
-            it("should not trigger the initializeData function", async () => {
-                wrapper = createWrapper();
-                const spyInitializeData = sinon.stub(StatisticDashboard.methods, "initializeData");
-
-                wrapper.vm.toggleLevel(null);
-                await wrapper.vm.$nextTick();
-
-                expect(spyInitializeData.calledOnce).to.be.false;
-
-                wrapper.vm.toggleLevel(true);
-                await wrapper.vm.$nextTick();
-
-                expect(spyInitializeData.calledOnce).to.be.false;
-
             });
         });
         describe("formatFilterExpression", () => {
@@ -1514,6 +1428,66 @@ describe("src/modules/statisticDashboard/components/StatisticDashboard.vue", () 
                 wrapper.vm.flattenRegionHierarchy(obj);
 
                 expect(wrapper.vm.flattenedRegions).to.deep.equal([obj, obj.child]);
+            });
+        });
+        describe("getRegionsOptionsForLastChild", () => {
+            it("should return an empty array if flattenedRegions is empty", async () => {
+                wrapper = createWrapper();
+
+                expect(await wrapper.vm.getRegionsOptionsForLastChild()).to.be.an("array").that.is.empty;
+            });
+            it("should return the values of the last child if they are already present", async () => {
+                wrapper = createWrapper();
+                wrapper.vm.setFlattenedRegions([{attrName: "foo", values: ["foo"]}]);
+
+                expect(await wrapper.vm.getRegionsOptionsForLastChild()).to.deep.equal(["foo"]);
+            });
+            it("should return an empty array if no layer is found", async () => {
+                wrapper = createWrapper();
+                setLevel({layerId: ["1234"]});
+                wrapper.vm.setFlattenedRegions([{attrName: "foo"}]);
+                sinon.stub(rawLayerList, "getLayerWhere").returns(undefined);
+
+                expect(await wrapper.vm.getRegionsOptionsForLastChild()).to.be.an("array").that.is.empty;
+            });
+            it("should return an empty array if selectedLevel has no layerId", async () => {
+                wrapper = createWrapper();
+                setLevel({});
+                wrapper.vm.setFlattenedRegions([{attrName: "foo"}]);
+
+                expect(await wrapper.vm.getRegionsOptionsForLastChild()).to.be.an("array").that.is.empty;
+            });
+            it("should return an empty array if no unique object for the last child is given", async () => {
+                wrapper = createWrapper();
+                setLevel({layerId: ["1234"]});
+                wrapper.vm.setFlattenedRegions([{attrName: "foo"}]);
+                sinon.stub(rawLayerList, "getLayerWhere").returns({});
+                sinon.stub(getOAFFeature, "getUniqueValuesByScheme").resolves({});
+
+                expect(await wrapper.vm.getRegionsOptionsForLastChild()).to.be.an("array").that.is.empty;
+            });
+            it("should return the unique values for the last child", async () => {
+                wrapper = createWrapper();
+                setLevel({layerId: ["1234"]});
+                wrapper.vm.setFlattenedRegions([{attrName: "foo"}]);
+                sinon.stub(rawLayerList, "getLayerWhere").returns({});
+                sinon.stub(getOAFFeature, "getUniqueValuesByScheme").resolves({foo: {bar: true, fob: true}});
+
+                expect(await wrapper.vm.getRegionsOptionsForLastChild()).to.deep.equal(["bar", "fob"]);
+            });
+            it("should request the unique values for every layer of the selected level", async () => {
+                wrapper = createWrapper();
+                const getLayerWhereStub = sinon.stub(rawLayerList, "getLayerWhere"),
+                    getUniqueValuesStub = sinon.stub(getOAFFeature, "getUniqueValuesByScheme").resolves({foo: {bar: true, fob: true}});
+
+                getLayerWhereStub.withArgs({id: "1234"}).returns({url: "url1", collection: "col1"});
+                getLayerWhereStub.withArgs({id: "5678"}).returns({url: "url2", collection: "col2"});
+                setLevel({layerId: ["1234", "5678"]});
+                wrapper.vm.setFlattenedRegions([{attrName: "foo"}]);
+
+                expect(await wrapper.vm.getRegionsOptionsForLastChild()).to.deep.equal(["bar", "fob"]);
+                expect(getUniqueValuesStub.calledWith("url1", "col1", ["foo"])).to.be.true;
+                expect(getUniqueValuesStub.calledWith("url2", "col2", ["foo"])).to.be.true;
             });
         });
         describe("generateDownloadName", () => {

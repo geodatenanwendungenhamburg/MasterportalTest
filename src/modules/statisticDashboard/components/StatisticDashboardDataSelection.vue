@@ -1,11 +1,15 @@
 <script>
+// @ts-check
 import IconButton from "@shared/modules/buttons/components/IconButton.vue";
+import StatisticDashboardDataSelectionExpanded from "./StatisticDashboardDataSelectionExpanded.vue";
 
 export default {
     name: "StatisticDashboardDataSelection",
     components: {
-        IconButton
+        IconButton,
+        StatisticDashboardDataSelectionExpanded
     },
+    emits: ["resetAll"],
     data () {
         return {
             isExpanded: false
@@ -17,7 +21,7 @@ export default {
 
 <template lang="html">
     <div class="card card-body p-1">
-        <template v-if="isExpanded">
+        <div v-show="isExpanded">
             <div class="d-flex flex-wrap justify-content-between">
                 <div class="ml-3 mt-2">
                     <h5 class="fs-6">
@@ -32,6 +36,7 @@ export default {
                         :label="$t('common:modules.statisticDashboard.button.resetFilter')"
                         icon="bi bi-arrow-counterclockwise"
                         :label-class-array="['mt-1 lh-sm btn-label-smaller']"
+                        @click="$emit('resetAll')"
                     />
                     <IconButton
                         id="close-filter-button"
@@ -43,8 +48,9 @@ export default {
                     />
                 </div>
             </div>
-        </template>
-        <template v-else>
+            <StatisticDashboardDataSelectionExpanded />
+        </div>
+        <template v-if="!isExpanded">
             <div class="d-flex flex-wrap justify-content-between">
                 <div class="ml-3 mt-3">
                     <h5>

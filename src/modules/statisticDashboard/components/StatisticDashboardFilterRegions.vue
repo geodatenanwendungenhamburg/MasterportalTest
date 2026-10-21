@@ -1,5 +1,8 @@
 <script>
-import Multiselect from "vue-multiselect";
+/**
+ * @import {StatisticDashboardMapGetters} from "../types/helpers.js"
+ */
+import DropdownAutocomplete from "@shared/modules/dropdown/components/DropdownAutocomplete.vue";
 import {mapGetters, mapMutations} from "vuex";
 import {rawLayerList} from "@masterportal/masterportalapi/src/index.js";
 import getOAFFeature from "@shared/js/api/oaf/getOAFFeature.js";
@@ -17,84 +20,19 @@ import isObject from "@shared/js/utils/isObject.js";
 export default {
     name: "StatisticDashboardFilterRegions",
     components: {
-        Multiselect
-    },
-    props: {
-        regions: {
-            type: Array,
-            required: true
-        },
-        selectedLevel: {
-            type: Object,
-            required: false,
-            default: () => {
-                return {};
-            }
-        }
-    },
-    data () {
-        return {
-            openStates: {
-                regionFilterRef1: false
-            }
-        };
+        DropdownAutocomplete
     },
     computed: {
+        .../** @type {StatisticDashboardMapGetters} */ (mapGetters)("Modules/StatisticDashboard", {
+            "selectedLevel": "selectedLevel",
+            "regions": "flattenedRegions"
+        }),
         ...mapGetters("Maps", ["projection"])
     },
 
     methods: {
         ...mapMutations("Modules/StatisticDashboard", ["setSelectedRegions"]),
 
-        /**
-         * Toggles the open state of a multiselect component referenced by `refName`.
-         * If the dropdown is open, it will be closed (deactivated), otherwise it will be opened (activated).
-         * After opening, the search input inside the multiselect is focused.
-         *
-         * @param {string} refName - The reference name of the multiselect component.
-         * @returns {void}
-         */
-        toggle (refName) {
-            const multiselectRef = this.$refs[refName][0];
-
-            if (!multiselectRef) {
-                return;
-            }
-
-            if (this.openStates[refName]) {
-                multiselectRef.deactivate();
-            }
-            else {
-                multiselectRef.activate();
-                this.$nextTick(() => {
-                    const input = multiselectRef.$refs.search;
-
-                    if (input) {
-                        input.focus();
-                    }
-                });
-            }
-        },
-        /**
-         * Sets the open state of the multiselect referenced by `refName` to true.
-         * Called when the multiselect is opened.
-         *
-         * @param {string} refName - The reference name of the multiselect component.
-         * @returns {void}
-         */
-        onOpen (refName) {
-            this.openStates[refName] = true;
-        },
-        /**
-         * Sets the open state of the multiselect referenced by `refName` to false.
-         * Called when the multiselect is closed.
-         *
-         * @param {string} refName - The reference name of the multiselect component.
-         * @returns {void}
-         */
-        onClose (refName) {
-            this.openStates[refName] = false;
-        },
         /**
          * Checks whether the region has child.
          * @param {Object} region - The region to be checked.
@@ -114,13 +52,13 @@ export default {
             if (!regions?.length || !Array.isArray(selectedRegions)) {
                 return [];
             }
-            const notSelectedRegions = sortBy(regions.filter(region => !selectedRegions.some(selectedRegion => selectedRegion.label === region.label)), "label");
+            const notSelectedRegions = sortBy(regions.filter(region => !selectedRegions.some(selectedRegion => selectedRegion.title === region.title)), "title");
 
             if (this.containsAllTag(selectedRegions)) {
                 return [...selectedRegions, ...notSelectedRegions];
             }
 
-            return [...selectedRegions, {label: i18next.t("common:modules.statisticDashboard.button.allAreas")}, ...notSelectedRegions];
+            return [...selectedRegions, {title: i18next.t("common:modules.statisticDashboard.button.allAreas")}, ...notSelectedRegions];
         },
 
         /**
@@ -147,7 +85,7 @@ export default {
                       childValues = [...new Set(childAttributeNames.flatMap(attributeName => Object.keys(uniqueValues[attributeName] || {})))];
 
                 region.child.values = childValues.map(key => {
-                    return {label: key, value: key};
+                    return {title: key, value: key};
                 });
 
                 if (region.child.selectedValues.length) {
@@ -238,7 +176,7 @@ export default {
             const updatedSelectedValues = [];
 
             selectedValues.forEach(selectedValue => {
-                const stillExist = values.findIndex(value => value.label === selectedValue.label);
+                const stillExist = values.findIndex(value => value.title === selectedValue.title);
 
                 if (stillExist !== -1) {
                     updatedSelectedValues.push(selectedValue);
@@ -376,7 +314,7 @@ export default {
          * @returns {Boolean} true if all tag was found, false otherwise.
          */
         containsAllTag (values) {
-            return values.some(val => val.label === i18next.t("common:modules.statisticDashboard.button.allAreas"));
+            return values.some(val => val.title === i18next.t("common:modules.statisticDashboard.button.allAreas"));
         }
     }
 };
@@ -417,78 +355,29 @@ export default {
                     :class="toggleButtonActive(value, region.selectedValues)"
                     @click="updatesTopLevelRegionSelectedValues(value, region)"
                 >
-                    {{ value.label }}
+                    {{ value.title }}
                 </button>
             </div>
             <div
                 v-else
                 class="col-sm-12 mb-2"
             >
-                <label
-                    class="col-form-label-sm mb-1"
-                    :for="'region-filter-' + index"
-                >
-                    {{ region.name }}
-                </label>
-                <div
-                    role="button"
-                    tabindex="0"
-                    @click.stop="toggle('regionFilterRef' + index)"
-                    @mousedown.prevent
-                    @keydown.enter.stop.prevent="toggle('regionFilterRef' + index)"
-                    @keydown.space.stop.prevent="toggle('regionFilterRef' + index)"
-                >
-                    <Multiselect
-                        :id="'region-filter' + index"
-                        :ref="'regionFilterRef' + index"
-                        :model-value="region.selectedValues"
-                        :multiple="true"
-                        :options="getRegionsSorted(region.values, region.selectedValues)"
-                        :searchable="true"
-                        :close-on-select="false"
-                        :clear-on-select="false"
-                        :show-labels="false"
-                        :limit="3"
-                        :limit-text="count => count + ' ' + $t('common:modules.statisticDashboard.label.more')"
-                        :allow-empty="true"
-                        :placeholder="$t('common:modules.statisticDashboard.reference.placeholder')"
-                        :loading="region.loadingDataCounter > 0"
-                        :disabled="region.loadingDataCounter > 0"
-                        label="label"
-                        track-by="label"
-                        @open="onOpen('regionFilterRef' + index)"
-                        @close="onClose('regionFilterRef' + index)"
-                        @update:model-value="setSelectedValuesToRegion($event, region)"
-                    >
-                        <template #clear>
-                            <div class="multiselect__clear">
-                                <i class="bi bi-search" />
-                            </div>
-                        </template>
-                        <template #tag="{ option, remove }">
-                            <button
-                                class="multiselect__tag"
-                                :class="option"
-                                @click="remove(option)"
-                                @keypress="remove(option)"
-                            >
-                                {{ option.label }}
-                                <i class="bi bi-x" />
-                            </button>
-                        </template>
-                        <template #caret>
-                            <div
-                                class="multiselect__select"
-                            />
-                        </template>
-                    </Multiselect>
-                </div>
+                <DropdownAutocomplete
+                    :id="'region-filter' + index"
+                    :label="region.name ?? $t('common:modules.statisticDashboard.label.area')"
+                    :items="getRegionsSorted(region.values, region.selectedValues)"
+                    :placeholder="$t('common:modules.statisticDashboard.reference.placeholder')"
+                    multiple
+                    :model-value="region.selectedValues"
+                    :v-loading="region.loadingDataCounter > 0"
+                    :disabled="region.loadingDataCounter > 0"
+                    return-object
+                    @update:model-value="setSelectedValuesToRegion($event, region)"
+                />
             </div>
         </div>
     </div>
 </template>
-
-<style src="vue-multiselect/dist/vue-multiselect.css"></style>
 
 <style lang="scss">
 .region-filter {
@@ -505,33 +394,6 @@ export default {
     .active-button {
         background: $dark_blue;
         color: $white;
-    }
-
-    .multiselect .multiselect__spinner:after, .multiselect__spinner:before {
-        position: absolute;
-        content: "";
-        top: 50%;
-        left: 50%;
-        margin: -8px 0 0 -8px;
-        width: 16px;
-        height: 16px;
-        border-radius: 100%;
-        border: 2px solid transparent;
-        border-top-color: $dark_grey;
-        box-shadow: 0 0 0 1px transparent;
-    }
-    .multiselect .multiselect__tag {
-        background: $light_blue;
-        padding: 4px 10px 4px 10px;
-        border-radius: 50px;
-        border: none;
-    }
-    .multiselect .multiselect__tag:hover {
-        background: $dark_blue;
-        color: $white;
-    }
-    .multiselect .multiselect__tag i::before {
-        vertical-align: middle;
     }
 }
 </style>

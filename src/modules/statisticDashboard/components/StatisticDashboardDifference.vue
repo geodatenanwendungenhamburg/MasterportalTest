@@ -1,23 +1,18 @@
 <script>
+/**
+ * @import {StatisticDashboardMapGetters} from "../types/helpers.js"
+ */
 import ButtonGroup from "@shared/modules/buttons/components/ButtonGroup.vue";
-import Multiselect from "vue-multiselect";
+import DropdownAutocomplete from "@shared/modules/dropdown/components/DropdownAutocomplete.vue";
 import {mapGetters, mapMutations} from "vuex";
 import isObject from "@shared/js/utils/isObject.js";
-import getOAFFeature from "@shared/js/api/oaf/getOAFFeature.js";
-import {rawLayerList} from "@masterportal/masterportalapi/src/index.js";
 
 
 export default {
     name: "StatisticDashboardDifference",
     components: {
         ButtonGroup,
-        Multiselect
-    },
-    props: {
-        referenceData: {
-            type: Object,
-            required: true
-        }
+        DropdownAutocomplete
     },
     data () {
         return {
@@ -27,19 +22,21 @@ export default {
                                    {
                                        name: i18next.t("common:modules.statisticDashboard.label.area")
                                    }],
-            dateOptions: this.referenceData.date,
-            regionOptions: this.referenceData.region,
             selectedDate: "",
             selectedRegion: "",
             referenceType: ""
         };
     },
     computed: {
-        ...mapGetters("Modules/StatisticDashboard", [
+        .../** @type {StatisticDashboardMapGetters} */ (mapGetters)("Modules/StatisticDashboard", [
+            "referenceData",
             "selectedReferenceData",
-            "flattenedRegions",
             "selectedLevel"
-        ])
+        ]),
+
+        regionOptions () {
+            return this.referenceData?.region ?? [];
+        }
     },
     watch: {
         selectedReferenceData (val) {
@@ -49,11 +46,7 @@ export default {
             }
         }
     },
-    created () {
-        document.addEventListener("click", this.handleClickOutside);
-    },
     async mounted () {
-        this.regionOptions = await this.getRegionsOptionsForLastChild(this.flattenedRegions);
         this.handleReference(this.buttonGroupReference[0].name);
         if (isObject(this.selectedReferenceData)) {
             if (this.selectedReferenceData.type === "date" && isObject(this.selectedReferenceData.value)) {
@@ -64,9 +57,6 @@ export default {
                 this.selectedRegion = this.selectedReferenceData.value;
             }
         }
-    },
-    beforeUnmount () {
-        document.removeEventListener("click", this.handleClickOutside);
     },
     methods: {
         ...mapMutations("Modules/StatisticDashboard", [
@@ -81,17 +71,6 @@ export default {
             this.referenceType = value;
         },
 
-        /**
-         * Close this component when click outside.
-         * @param {Event} evt - Click event.
-         * @returns {void}
-         */
-        handleClickOutside (evt) {
-            if (evt.target.closest(".difference-button")) {
-                return;
-            }
-            document.querySelector(".dropdown-menu")?.classList?.remove("show");
-        },
         /**
          * Updates the emit value.
          * @param {String} type The type which is triggered. Can be either "date" or "region".
@@ -116,32 +95,6 @@ export default {
             }
 
             this.setSelectedReferenceData(selectedReferenceData);
-        },
-
-        /**
-         * Gets the region options for the last child. Is required if the region has nested children.
-         * @param {Object[]} flattenedRegions The regions as flattened array.
-         * @returns {String[]} the list of options for region dropdown.
-         */
-        async getRegionsOptionsForLastChild (flattenedRegions) {
-            if (!Array.isArray(flattenedRegions) || !flattenedRegions.length) {
-                return [];
-            }
-            const lastChild = flattenedRegions[flattenedRegions.length - 1],
-                  selectedLayers = this.selectedLevel?.layerId?.map(id => rawLayerList.getLayerWhere({id})).filter(isObject),
-                  uniqueObject = {};
-
-            if (lastChild?.values?.length) {
-                return lastChild.values;
-            }
-            if (!Array.isArray(selectedLayers)) {
-                return [];
-            }
-            for (const selectedLayer of selectedLayers) {
-                Object.assign(uniqueObject, await getOAFFeature.getUniqueValuesByScheme(selectedLayer.url, selectedLayer.collection, [lastChild.attrName]));
-            }
-
-            return !isObject(uniqueObject[lastChild.attrName]) ? [] : Object.keys(uniqueObject[lastChild.attrName]);
         }
     }
 };
@@ -165,60 +118,28 @@ export default {
                 v-if="referenceType === buttonGroupReference[0].name"
                 class="col-md-12 mt-2"
             >
-                <div class="des">
-                    {{ $t("common:modules.statisticDashboard.reference.optionDate") }}
-                </div>
-                <Multiselect
+                <DropdownAutocomplete
                     v-model="selectedDate"
-                    :multiple="false"
-                    :options="dateOptions"
-                    :show-labels="false"
+                    :label="$t('common:modules.statisticDashboard.reference.optionDate')"
+                    :items="referenceData?.date ?? []"
+                    return-object
+                    clearable
                     :placeholder="$t('common:modules.statisticDashboard.reference.placeholder')"
-                    label="label"
-                    track-by="label"
                     @update:model-value="updateSelectedReferenceData('date')"
-                >
-                    <template #singleLabel="{ option }">
-                        <button
-                            class="multiselect__tag pe-1"
-                            :class="option"
-                            @mousedown.stop.prevent="selectedDate='', updateSelectedReferenceData('date')"
-                            @keydown.enter.prevent="selectedDate='', updateSelectedReferenceData('date')"
-                        >
-                            {{ option.label }}
-                            <i class="bi bi-x" />
-                        </button>
-                    </template>
-                </Multiselect>
+                />
             </div>
             <div
                 v-else
                 class="col-md-12  mt-2"
             >
-                <div class="des">
-                    {{ $t("common:modules.statisticDashboard.reference.optionArea") }}
-                </div>
-                <Multiselect
-                    id="reference-value"
+                <DropdownAutocomplete
                     v-model="selectedRegion"
-                    :multiple="false"
-                    :options="regionOptions"
-                    :show-labels="false"
+                    :items="regionOptions"
+                    :label="$t('common:modules.statisticDashboard.reference.optionArea')"
                     :placeholder="$t('common:modules.statisticDashboard.reference.placeholder')"
+                    clearable
                     @update:model-value="updateSelectedReferenceData('region')"
-                >
-                    <template #singleLabel="{ option }">
-                        <button
-                            class="multiselect__tag pe-1"
-                            :class="option"
-                            @mousedown.stop.prevent="selectedRegion='', updateSelectedReferenceData('region')"
-                            @keydown.enter.prevent="selectedRegion='', updateSelectedReferenceData('region')"
-                        >
-                            {{ option }}
-                            <i class="bi bi-x" />
-                        </button>
-                    </template>
-                </Multiselect>
+                />
             </div>
         </div>
     </div>
@@ -241,10 +162,6 @@ export default {
 .btn-group {
     margin-top: 0.5rem;
     margin-bottom: 0.8rem;
-}
-.des {
-    margin-top: 0.5rem;;
-    margin-bottom: 0.25rem;;
 }
 </style>
 

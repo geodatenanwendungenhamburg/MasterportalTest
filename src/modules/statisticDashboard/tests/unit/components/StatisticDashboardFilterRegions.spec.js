@@ -2,15 +2,15 @@ import {shallowMount} from "@vue/test-utils";
 import {expect} from "chai";
 import {createStore} from "vuex";
 import StatisticDashboardFilterRegions from "@modules/statisticDashboard/components/StatisticDashboardFilterRegions.vue";
+import indexStatisticDashboard from "@modules/statisticDashboard/store/indexStatisticDashboard.js";
 import {Multiselect} from "vue-multiselect";
 import sinon from "sinon";
 
 
 describe("src/modules/statiscticDashboard/components/StatisticDashboardFilterRegions.vue", () => {
     const factory = {
-        createVuexStore: (initialState) => {
+        createVuexStore: () => {
             return createStore({
-                namespaced: true,
                 modules: {
                     Maps: {
                         namespaced: true,
@@ -29,12 +29,8 @@ describe("src/modules/statiscticDashboard/components/StatisticDashboardFilterReg
                         namespaced: true,
                         modules: {
                             StatisticDashboard: {
-                                state: {
-                                    ...initialState
-                                },
-                                mutations: {
-                                    setSelectedRegions: sinon.stub()
-                                }
+                                ...indexStatisticDashboard,
+                                state: structuredClone(indexStatisticDashboard.state)
                             }
                         }
                     }
@@ -297,11 +293,11 @@ describe("src/modules/statiscticDashboard/components/StatisticDashboardFilterReg
                             plugins: [store]
                         }
                     }),
-                    selectedValues = [{label: "Mordor"}, {label: "Manhatten"}],
-                    values = [{label: "Mordor"}],
+                    selectedValues = [{title: "Mordor"}, {title: "Manhatten"}],
+                    values = [{title: "Mordor"}],
                     newSelectedValues = wrapper.vm.updatesRegionSelectedValues(selectedValues, values);
 
-                expect(newSelectedValues).to.deep.equal([{label: "Mordor"}]);
+                expect(newSelectedValues).to.deep.equal([{title: "Mordor"}]);
 
             });
 
@@ -315,11 +311,11 @@ describe("src/modules/statiscticDashboard/components/StatisticDashboardFilterReg
                             plugins: [store]
                         }
                     }),
-                    selectedValues = [{label: "Mordor"}, {label: "Manhatten"}],
-                    values = [{label: "Mordor"}, {label: "Manhatten"}, {label: "Wilhelmsburg"}],
+                    selectedValues = [{title: "Mordor"}, {title: "Manhatten"}],
+                    values = [{title: "Mordor"}, {title: "Manhatten"}, {title: "Wilhelmsburg"}],
                     newSelectedValues = wrapper.vm.updatesRegionSelectedValues(selectedValues, values);
 
-                expect(newSelectedValues).to.deep.equal([{label: "Mordor"}, {label: "Manhatten"}]);
+                expect(newSelectedValues).to.deep.equal([{title: "Mordor"}, {title: "Manhatten"}]);
             });
 
             it("should remove all selected values", () => {

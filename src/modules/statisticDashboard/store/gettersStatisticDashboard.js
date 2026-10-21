@@ -1,3 +1,6 @@
+/** @import { SelectedStatistics }  from "../types/internalTypes.js" */
+/** @import { StatisticDashboardLevel } from "../types/typesStatisticDashboard" */
+/** @import { StatisticDashboardState } from "../store/stateStatisticDashboard.js" */
 import {generateSimpleGetters} from "@shared/js/utils/generators.js";
 import isObject from "@shared/js/utils/isObject.js";
 import initialState from "./stateStatisticDashboard.js";
@@ -5,6 +8,54 @@ import sortBy from "@shared/js/utils/sortBy.js";
 
 const getters = {
     ...generateSimpleGetters(initialState),
+
+    /**
+     * Gets the selected level from the configured levels by its name.
+     * @param {StatisticDashboardState} state - The StatisticDashboard state.
+     * @returns {StatisticDashboardLevel|undefined} The matching level or undefined.
+     */
+    selectedLevel: state => state.data.find(level => level.levelName === state.selectedLevelName),
+
+    /**
+     * Gets the available categories from the selected level
+     * @param {StatisticDashboardState} state - The StatisticDashboard state.
+     * @param {object} getters
+     * @param {StatisticDashboardLevel|undefined} getters.selectedLevel
+     * @returns {string[]} The available categories.
+     */
+    categories (state, {selectedLevel}) {
+        if (!selectedLevel) {
+            return [];
+        }
+        const categories = new Set();
+
+        for (const attribute of Object.values(selectedLevel.mappingFilter.statisticsAttributes)) {
+            categories.add(attribute.category);
+        }
+        return [...categories];
+    },
+
+    /**
+     * Gets the an object containing the selectedStatistics
+     * @param {StatisticDashboardState} state - The StatisticDashboard state.
+     * @param {object} getters
+     * @param {StatisticDashboardLevel|undefined} getters.selectedLevel The selected level.
+     * @returns {SelectedStatistics} An object containing the selected statistics.
+     */
+    selectedStatistics (state, {selectedLevel}) {
+        if (!selectedLevel) {
+            return {};
+        }
+        return Object.fromEntries(
+            Object.entries(selectedLevel.mappingFilter.statisticsAttributes)
+                .filter(([key]) => state.selectedStatisticsKeys.includes(key))
+                .map(([key, value]) => [key, {
+                    ...value,
+                    key,
+                    selectedOrder: state.selectedStatisticsKeys.findIndex(e => e === key)
+                }])
+        );
+    },
 
     /**
      * Gets the values of the selected dates.
@@ -45,10 +96,10 @@ const getters = {
 
         let regions = selectedRegions;
 
-        if (selectedRegions.some(val => val.label === i18next.t("common:modules.statisticDashboard.button.allAreas")) && typeof state?.flattenedRegions !== "undefined") {
+        if (selectedRegions.some(val => val.title === i18next.t("common:modules.statisticDashboard.button.allAreas")) && typeof state?.flattenedRegions !== "undefined") {
             regions = sortBy(state?.flattenedRegions.find(region => {
                 return !Object.prototype.hasOwnProperty.call(region, "child");
-            })?.values, "label");
+            })?.values, "title");
         }
 
         const mappedRegionsValues = regions.map(region => region.value),

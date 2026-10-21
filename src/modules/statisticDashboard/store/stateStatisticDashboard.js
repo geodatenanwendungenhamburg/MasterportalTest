@@ -1,4 +1,6 @@
 /** @import { StatisticDashboardLevel } from "../types/typesStatisticDashboard" */
+/** @import { ReferenceData } from "../types/internalTypes" */
+/** @import {DropdownItem} from "@shared/modules/dropdown/types/typesDropdown.js" */
 
 /**
  * Statistic dashboard tool state definition.
@@ -12,10 +14,14 @@
  * @property {Boolean} resizableWindow If true, window is resizable. (config-param)
  * @property {Boolean} isVisibleInMenu If true, tool is selectable in menu. (config-param)
  * @property {StatisticDashboardLevel[]} data The configured levels with their data sources. (config-param)
+ * @property {ReferenceData} referenceData - The reference data used in the statistic dashboard.
  * @property {Object} selectedReferenceData the selected reference data
- * @property {StatisticDashboardLevel} selectedLevel - The selected level (district, county, ...).
+ * @property {string|undefined} selectedLevelName - The levelName of the selected level (district, county, ...). The level itself is provided by the getter selectedLevel.
+ * @property {string[]} selectedCategories - The selected categories.
+ * @property {string[]} selectedStatisticsKeys - The keys of the selected statistics.
  * @property {Object[]} flattenedRegions - An array in which the region hierarchy is flattened.
  * @property {Object[]} selectedRegions - The selected regions.
+ * @property {DropdownItem[]} timeStepsFilter - The available time steps for filtering.
  * @property {Object[]} selectedDates - The selected dates.
  * @property {String} classificationMode - Method of dividing values into classes: "quantiles" or "equalIntervals".
  * @property {Boolean} allowPositiveNegativeClasses - If classification may contain classes like "from -1 to 1".
@@ -51,14 +57,16 @@ const state = {
     isVisibleInMenu: true,
     colorScheme: {},
     data: [],
+    referenceData: {},
     selectedReferenceData: undefined,
     selectedCategories: [],
     selectedReferenceValueTag: undefined,
     selectedRegions: [],
-    selectedLevel: undefined,
+    selectedLevelName: undefined,
     flattenedRegions: [],
+    timeStepsFilter: [],
     selectedDates: [],
-    selectedStatistics: {},
+    selectedStatisticsKeys: [],
     classificationMode: "quantiles",
     allowPositiveNegativeClasses: false,
     decimalPlaces: 1,

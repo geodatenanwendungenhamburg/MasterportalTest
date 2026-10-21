@@ -25,6 +25,7 @@ export default {
         /**
          * Can be an array of objects or strings. By default objects should have title and value properties, and can optionally have a props property containing any VListItem props.
          * Keys to use for these can be changed with the item-title, item-value, and item-props props.
+         * The default item shape is described by {@link import("@shared/modules/dropdown/types/typesDropdown.js").DropdownItem}, but Vuetify accepts any data type.
          */
         items: {
             type: Array,
@@ -65,8 +66,20 @@ export default {
             default: false,
             required: false
         },
+        /** Changes the selection behavior to return the object directly rather than the value specified with item-value. */
+        returnObject: {
+            type: Boolean,
+            default: false,
+            required: false
+        },
         /** Shows a "Select all" option in mode "multiple" */
         selectAll: {
+            type: Boolean,
+            default: false,
+            required: false
+        },
+        /** Original vuetify loading prop */
+        vLoading: {
             type: Boolean,
             default: false,
             required: false
@@ -183,6 +196,8 @@ export default {
             :clearable
             :closable-chips="multiple"
             :disabled
+            :loading="vLoading"
+            :return-object="returnObject"
             @update:modelValue="$emit('update:modelValue', $event)"
         >
             <template

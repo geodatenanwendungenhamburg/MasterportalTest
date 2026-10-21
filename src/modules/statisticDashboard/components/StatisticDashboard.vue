@@ -1,11 +1,11 @@
 <script>
 /**
+ * @import { StatisticDashboardLevel } from "../types/typesStatisticDashboard"
  * @import {StatisticDashboardMapGetters, StatisticDashboardMapMutations} from "../types/helpers.js"
  */
 
 import AccordionItem from "@shared/modules/accordion/components/AccordionItem.vue";
 import {and as andFilter, equalTo as equalToFilter, or as orFilter} from "ol/format/filter.js";
-import ButtonGroup from "@shared/modules/buttons/components/ButtonGroup.vue";
 import ChartProcessor from "../js/chartProcessor.js";
 import {colorbrewer} from "../js/colorbrewer.js";
 import Controls from "./StatisticDashboardControls.vue";
@@ -25,10 +25,9 @@ import TableComponent from "@shared/modules/table/components/TableComponent.vue"
 import isNumber from "@shared/js/utils/isNumber.js";
 import isObject from "@shared/js/utils/isObject.js";
 import {rawLayerList} from "@masterportal/masterportalapi/src/index.js";
-import sortBy from "@shared/js/utils/sortBy.js";
 import SpinnerItem from "@shared/modules/spinner/components/SpinnerItem.vue";
 import StatisticDashboardDataSelection from "./StatisticDashboardDataSelection.vue";
-import StatisticsHandler from "../js/handleStatistics.js";
+import getTimestepsMerged from "../js/getTimestepsMerged.js";
 import thousandsSeparator from "@shared/js/utils/thousandsSeparator.js";
 import WFS from "ol/format/WFS.js";
 import {CanceledError} from "axios";
@@ -40,11 +39,21 @@ import debounce from "@shared/js/utils/debounce.js";
 import {GeoJSON} from "ol/format.js";
 import {openSecuredPopup} from "@shared/js/utils/openSecuredPopup.js";
 
+const filterMap = {
+    "Or": "OR",
+    "And": "AND",
+    "PropertyIsEqualTo": "=",
+    "PropertyIsNotEqualTo": "<>",
+    "PropertyIsLessThan": "<",
+    "PropertyIsLessThanOrEqualTo": "<=",
+    "PropertyIsGreaterThan": ">",
+    "PropertyIsGreaterThanOrEqualTo": ">="
+};
+
 export default {
     name: "StatisticDashboard",
     components: {
         AccordionItem,
-        ButtonGroup,
         Controls,
         FlatButton,
         GridComponent,
@@ -66,21 +75,16 @@ export default {
             selectMode: "column",
             showHeader: true,
             sortable: true,
-            categories: [],
-            statisticsByCategory: false,
             loadedFilterData: false,
             loadedReferenceData: false,
-            timeStepsFilter: [],
             regions: [],
             allRegions: [],
             selectedLevelRegionNameAttribute: [],
-            areCategoriesGrouped: false,
             dates: [],
             sortedRows: [],
             currentChart: {},
             chartCounts: 0,
             showGrid: false,
-            referenceData: undefined,
             referenceFeatures: {},
             selectedColumn: undefined,
             colorArrayDifference: ["#E28574", "#89C67F"],
@@ -109,16 +113,19 @@ export default {
     },
     computed: {
         .../** @type {StatisticDashboardMapGetters} */ (mapGetters)("Modules/StatisticDashboard", [
+            "categories",
+            "selectedStatisticsKeys",
             "selectedRegions",
+            "timeStepsFilter",
             "selectedDates",
             "selectedStatistics",
-            "selectedCategories",
             "data",
             "chartTableToggle",
             "chosenStatisticName",
             "selectedRegionsValues",
             "selectedReferenceData",
             "flattenedRegions",
+            "selectedDates",
             "selectedDatesValues",
             "numberOfClasses",
             "allowPositiveNegativeClasses",
@@ -127,6 +134,7 @@ export default {
             "stepValues",
             "legendData",
             "selectedLevel",
+            "selectedLevelName",
             "minNumberOfClasses",
             "maxNumberOfClasses",
             "selectableColorPalettes",
@@ -144,6 +152,15 @@ export default {
         ]),
         ...mapGetters("Maps", ["projection"]),
 
+        /**
+         * Checks if all filter settings are set.
+         * @returns {boolean} true if all filter settings are set, false otherwise.
+         */
+        areAllFilterSettingsSet () {
+            return this.selectedRegions.length > 0 &&
+                this.selectedDates.length > 0 &&
+                this.selectedStatisticsKeys.length > 0;
+        },
         /**
          * Gets the statistics data for the currently chosen statistic name.
          * If a region is selected as reference, it filters out that region from the statistics data.
@@ -179,19 +196,6 @@ export default {
             return this.setDescriptionsOfSelectedStatistics(this.selectedStatistics);
         },
         /**
-         * Gets the buttons with group regions
-         * @returns {Object[]} The button group regions
-         */
-        buttonGroupRegions () {
-            if (!Array.isArray(this.data) || !this.data.length) {
-                return [];
-            }
-
-            return this.data.map(value => {
-                return {name: value?.levelName};
-            });
-        },
-        /**
          * Checks if the chart should be shown.
          * @returns {Boolean} true if it should shows the chart, false otherwise.
          */
@@ -219,11 +223,20 @@ export default {
                 this.checkFilterSettings(this.selectedRegionsValues, getters.selectedDatesValues(null, {selectedDates: this.selectedDates}), val);
             }
         },
-        selectedDatesValues () {
+        /**
+         * Watches for changes in selected dates and calls checkFilterSettings.
+         * @returns {void}
+         */
+        selectedDates () {
             if (this.showLimitView) {
                 this.updateLimitedData();
             }
+            this.checkFilterSettings(this.selectedRegionsValues, this.selectedDatesValues, this.selectedReferenceData);
         },
+        /**
+         * Watches for changes in selected region values and calls checkFilterSettings.
+         * @returns {void}
+         */
         selectedRegionsValues () {
             if (this.flattenedRegions?.length) {
                 this.flattenedRegions[this.flattenedRegions.length - 1].selectedValues = this.selectedRegions;
@@ -232,6 +245,17 @@ export default {
             if (this.showLimitView) {
                 this.updateLimitedData();
             }
+            this.checkFilterSettings(this.selectedRegionsValues, this.selectedDatesValues, this.selectedReferenceData);
+        },
+        /**
+         * Watches for changes in selected statistic keys and calls checkFilterSettings.
+         * @returns {void}
+         */
+        selectedStatisticsKeys () {
+            if (this.showLimitView) {
+                this.updateLimitedData();
+            }
+            this.checkFilterSettings(this.selectedRegionsValues, this.selectedDatesValues, this.selectedReferenceData);
         },
         /**
          Creates an overview and updates a chart when the overview is left.
@@ -372,6 +396,15 @@ export default {
             this.updateAfterLegendChange();
         },
 
+        /**
+         * Watches for changes in the selected level name. Resets old level and loads the new level data.
+         * @returns {void}
+         */
+        selectedLevelName () {
+            this.resetLevel();
+            this.initializeData(this.selectedLevel);
+        },
+
         stepValues (val, oldVal) {
             if (val?.length !== oldVal?.length || val.some((value, index) => value !== oldVal[index])) {
                 this.updateAfterLegendChange();
@@ -390,21 +423,10 @@ export default {
         }
     },
     async created () {
-        this.layer = await this.addNewLayerIfNotExists({layerName: "statistic-dashboard"});
-        if (typeof this.selectedLevel === "undefined") {
-            this.setSelectedLevel(this.data[0]);
+        if (!this.selectedLevelName) {
+            this.setSelectedLevelName(this.data[0].levelName);
         }
-        this.initializeData(this.selectedLevel);
-        this.filterMap = {
-            "Or": "OR",
-            "And": "AND",
-            "PropertyIsEqualTo": "=",
-            "PropertyIsNotEqualTo": "<>",
-            "PropertyIsLessThan": "<",
-            "PropertyIsLessThanOrEqualTo": "<=",
-            "PropertyIsGreaterThan": ">",
-            "PropertyIsGreaterThanOrEqualTo": ">="
-        };
+        this.layer = await this.addNewLayerIfNotExists({layerName: "statistic-dashboard"});
         this.addHoverInteraction();
     },
     deactivated () {
@@ -428,6 +450,7 @@ export default {
         else if (this.numberOfClasses > this.maxNumberOfClasses) {
             this.setNumberOfClasses(this.maxNumberOfClasses);
         }
+        this.checkFilterSettings(this.selectedRegionsValues, this.selectedDatesValues, this.selectedReferenceData);
     },
     beforeUnmount () {
         const map = mapCollection.getMap("2D");
@@ -451,21 +474,22 @@ export default {
             "setChosenStatisticName",
             "setStepValues",
             "setColorPalette",
-            "setSelectedLevel",
+            "setSelectedLevelName",
             "setMinNumberOfClasses",
             "setMaxNumberOfClasses",
             "setNumberOfClasses",
             "setSelectedReferenceValueTag",
             "setChartTableToggle",
             "setLevelTitle",
-            "setStatisticsByCategories",
+            "setReferenceData",
             "setFlattenedRegions",
             "setSelectedCategories",
             "setSelectedRegions",
             "setSelectedDates",
             "setSelectedReferenceData",
-            "setSelectedStatistics",
+            "setSelectedStatisticsKeys",
             "setSelectableColorPalettes",
+            "setTimeStepsFilter",
             "setIsFeatureLoaded"
         ]),
         ...mapActions("Maps", ["addNewLayerIfNotExists"]),
@@ -607,39 +631,6 @@ export default {
         },
 
         /**
-         * Gets the time steps for the filter. It will merge the unique list with the given
-         * configured time steps if they are configured.
-         * @param {Object} timeSteps The time steps object with {Number: Label}.
-         * @param {Object} uniqueList The list as object with {value: true}.
-         * @param {String} inputFormat The input format for the date.
-         * @param {String} outputFormat The format to transform the date to.
-         * @returns {Object[]} The merged time steps.
-         */
-        getTimestepsMerged (timeSteps, uniqueList, inputFormat, outputFormat) {
-            let result = [],
-                uniqueListAsArray = [];
-
-            if (isObject(uniqueList)) {
-                uniqueListAsArray = Object.keys(uniqueList);
-                uniqueListAsArray.forEach(uniqueTime => {
-                    result.push({value: uniqueTime, label: dayjs(uniqueTime, inputFormat).format(outputFormat)});
-                });
-            }
-            if (isObject(timeSteps)) {
-                Object.entries(timeSteps).forEach(([key, value]) => {
-                    const uniqueTime = key === "all" ? uniqueListAsArray : uniqueListAsArray.slice(Number(`-${key}`));
-
-                    if (Array.isArray(uniqueTime) && uniqueTime.length) {
-                        result.push({value: uniqueTime, label: value});
-                    }
-                });
-            }
-
-            result = sortBy(result, "label").reverse();
-
-            return result;
-        },
-        /**
          * Get the direction of the bar chart.
          * @param {String[]} regions - The selected regions for the statistic(s).
          * @param {String|Boolean} differenceMode - Indicates the difference mode('date' or 'region') ohterwise false.
@@ -664,35 +655,13 @@ export default {
                 return [];
             }
 
-            result.push({value: regions, label: "Alle Gebiete"});
+            result.push({value: regions, title: "Alle Gebiete"});
 
             regions.forEach(region => {
-                result.push({value: region, label: region});
+                result.push({value: region, title: region});
             });
 
             return result;
-        },
-
-        /**
-         * Sets the statistics selected in the filter.
-         * If the category "alle" is selected, all statistics are added.
-         * @param {Object[]} categories - The categories.
-         * @returns {void}
-         */
-        setStatisticsByCategories (categories) {
-            const statistics = [];
-
-            if (categories.some(category => category.name === i18next.t("common:modules.statisticDashboard.button.allStatistics"))) {
-                this.categories.forEach(category => {
-                    statistics.push(StatisticsHandler.getStatisticsByCategory(category.name, this.getSelectedLevelStatisticsAttributes(this.selectedLevel)));
-                });
-            }
-            else {
-                categories.forEach(category => {
-                    statistics.push(StatisticsHandler.getStatisticsByCategory(category.name, this.getSelectedLevelStatisticsAttributes(this.selectedLevel)));
-                });
-            }
-            this.statisticsByCategory = statistics;
         },
         /**
          * Sets the sorted rows.
@@ -710,6 +679,10 @@ export default {
          * @returns {void}
          */
         checkFilterSettings (regions, dates, referenceData) {
+            if (!this.areAllFilterSettingsSet) {
+                this.handleReset();
+                return;
+            }
             if (!isObject(referenceData)) {
                 this.handleFilterSettings(regions, dates, false);
                 return;
@@ -722,7 +695,7 @@ export default {
                 }
                 this.handleFilterSettings([...new Set(regionsWithReference)], dates, "region");
             }
-            else if (isObject(referenceData.value) && typeof referenceData.value.label === "string") {
+            else if (isObject(referenceData.value) && typeof referenceData.value.title === "string") {
                 dates.push(referenceData.value.value);
                 this.handleFilterSettings(regions, [...new Set(dates)], "date");
             }
@@ -850,10 +823,9 @@ export default {
         /**
          * Parses an existing ol filter into an OAF filter string.
          * @param {ol/format/Filter} filter The filter to parse.
-         * @param {Object} filterMap The map to parse conditions from ol format to OAF format.
          * @returns {String} The parsed oaf filter string.
          */
-        parseOLFilterToOAF (filter, filterMap) {
+        parseOLFilterToOAF (filter) {
             if (!filter || !isObject(filterMap)) {
                 return "";
             }
@@ -903,7 +875,6 @@ export default {
                       selectedLayerGfiAttributes = selectedLayer.gfiAttributes,
                       selectedStatistics = Object.values(this.selectedStatistics).filter(statistic => Object.prototype.hasOwnProperty.call(selectedLayerGfiAttributes || {}, statistic.key)),
                       statsKeys = selectedStatistics.map(statistic => statistic.key),
-                      statsValues = selectedStatistics.map(statistic => statistic.name),
                       selectedLevelRegionNameAttribute = this.getSelectedLevelRegionNameAttributeInDepth(this.selectedLevel.mappingFilter.regionNameAttribute),
                       selectedLevelDateAttribute = this.getSelectedLevelDateAttribute(this.selectedLevel),
                       payload = {
@@ -934,7 +905,7 @@ export default {
                             selectedLayer.collection,
                             {
                                 signal: this.abortController.signal,
-                                filter: this.parseOLFilterToOAF(payload.filter, this.filterMap),
+                                filter: this.parseOLFilterToOAF(payload.filter),
                                 filterCrs: this.selectedLevel.oafRequestCRS,
                                 crs: this.selectedLevel.oafRequestCRS,
                                 propertyNames: payload.propertyNames,
@@ -950,9 +921,9 @@ export default {
                         return;
                     }
                 }
-                this.statisticsData = Object.assign({}, this.statisticsData, this.prepareStatisticsData(statFeatures, statsValues, regions, dates, selectedLevelDateAttribute, selectedLevelRegionNameAttribute.attrName[index], differenceMode));
+                this.statisticsData = Object.assign({}, this.statisticsData, this.prepareStatisticsData(statFeatures, statsKeys, regions, dates, selectedLevelDateAttribute, selectedLevelRegionNameAttribute.attrName[index], differenceMode));
                 if (typeof differenceMode === "string") {
-                    this.chartData = this.getChartDataOutOfDifference(statFeatures, this.selectedStatisticsNames, regions, dates, selectedLevelDateAttribute, selectedLevelRegionNameAttribute.attrName[index], differenceMode);
+                    this.chartData = this.getChartDataOutOfDifference(statFeatures, statsKeys, regions, dates, selectedLevelDateAttribute, selectedLevelRegionNameAttribute.attrName[index], differenceMode);
                 }
                 else {
                     this.chartData = this.statisticsData;
@@ -981,7 +952,7 @@ export default {
 
             this.handleChartData(this.statisticNameOfChart, regions, dates, this.chartData, differenceMode);
 
-            this.selectedColumn ||= this.timeStepsFilter.find(v => v.value === dates[0])?.label;
+            this.selectedColumn ||= this.timeStepsFilter.find(v => v.value === dates[0])?.title;
             if (this.selectedStatisticsNames.length && this.classificationMode !== "custom") {
                 this.setStepValues(
                     FeaturesHandler.getStepValue(
@@ -1374,8 +1345,8 @@ export default {
                 for (let i = 0; i < tmpFlattenedRegions.length; i++) {
                     const nextRegion = tmpFlattenedRegions[i];
 
-                    if (!nextRegion.selectedValues.some(selectedValue => selectedValue.label === i18next.t("common:modules.statisticDashboard.button.allAreas"))) {
-                        return andFilter(this.getFilterForList(dates, dateAttrName), this.getFilterForList(nextRegion.selectedValues.map(selectedValue => selectedValue.label), nextRegion.attrName[0]));
+                    if (!nextRegion.selectedValues.some(selectedValue => selectedValue.title === i18next.t("common:modules.statisticDashboard.button.allAreas"))) {
+                        return andFilter(this.getFilterForList(dates, dateAttrName), this.getFilterForList(nextRegion.selectedValues.map(selectedValue => selectedValue.title), nextRegion.attrName[0]));
                     }
                 }
             }
@@ -1469,6 +1440,9 @@ export default {
          * @returns {Object} The prepared statistical data.
          */
         prepareStatisticsData (features, statistics, regions, dates, dateAttribute, regionAttribute, differenceMode) {
+            if (!this.selectedLevel) {
+                return {};
+            }
             const regionKey = regionAttribute,
                   dateKey = dateAttribute.attrName,
                   refRegionValues = {},
@@ -1480,8 +1454,8 @@ export default {
                 this.fixedRow = undefined;
             }
 
-            statistics.forEach(stat => {
-                const statsKey = StatisticsHandler.getStatsKeysByName(this.statisticsByCategory, [stat]);
+            statistics.forEach(statsKey => {
+                const stat = this.selectedStatistics[statsKey].name;
 
                 data[stat] = {};
                 refRegionValues[stat] = {};
@@ -1510,7 +1484,7 @@ export default {
                     }
                     else if (differenceMode === "date" && date === this.selectedReferenceData?.value?.value) {
                         refDateValues[stat][region] = value;
-                        this.fixedColumn = {name: this.selectedReferenceData?.value?.label, index: 1, title: i18next.t("common:modules.statisticDashboard.reference.year")};
+                        this.fixedColumn = {name: this.selectedReferenceData?.value?.title, index: 1, title: i18next.t("common:modules.statisticDashboard.reference.year")};
                         this.fixedRow = undefined;
                     }
                     else {
@@ -1564,8 +1538,11 @@ export default {
                   refDateValues = {},
                   data = {};
 
-            statistics.forEach(stat => {
-                const statsKey = StatisticsHandler.getStatsKeysByName(this.statisticsByCategory, [stat])[0];
+            statistics.forEach(statsKey => {
+                if (!this.selectedLevel) {
+                    return;
+                }
+                const stat = this.selectedLevel.mappingFilter.statisticsAttributes[statsKey].name;
 
                 data[stat] = {};
                 refRegionValues[stat] = {};
@@ -1697,7 +1674,7 @@ export default {
         handleReset () {
             this.abortController.abort();
             this.abortController = new AbortController();
-            this.layer.setStyle(null);
+            this.layer?.setStyle(null);
             this.tableData = [];
 
             if (this.$refs.chartContainer && this.$refs.chartContainer.hasChildNodes()) {
@@ -1775,7 +1752,7 @@ export default {
         },
         /**
          * Initializes the data from selected level.
-         * @param {Object} selectedLevel - The selected level object
+         * @param {StatisticDashboardLevel} selectedLevel - The selected level object
          * @returns {void}
          */
         async initializeData (selectedLevel) {
@@ -1795,28 +1772,50 @@ export default {
                 this.selectedLevelRegionNameAttribute.values = this.regions.map(val => {
                     return {
                         value: val,
-                        label: val
+                        title: val
                     };
                 });
                 this.allRegions = this.getAllRegions(this.regions);
                 this.dates = Object.keys(uniqueValues[selectedLevelDateAttribute.attrName]);
-                this.timeStepsFilter = this.getTimestepsMerged(selectedLevel?.timeStepsFilter, uniqueValues[selectedLevelDateAttribute.attrName], selectedLevelDateAttribute.inputFormat, selectedLevelDateAttribute.outputFormat);
+                this.setTimeStepsFilter(getTimestepsMerged(selectedLevel?.timeStepsFilter, uniqueValues[selectedLevelDateAttribute.attrName], selectedLevelDateAttribute.inputFormat, selectedLevelDateAttribute.outputFormat));
             }
 
-            this.areCategoriesGrouped = StatisticsHandler.hasOneGroup(this.getSelectedLevelStatisticsAttributes(selectedLevel));
-            this.categories = sortBy(StatisticsHandler.getCategoriesFromStatisticAttributes(this.getSelectedLevelStatisticsAttributes(selectedLevel), this.areCategoriesGrouped), "name");
-            this.setStatisticsByCategories(this.selectedCategories);
             this.loadedFilterData = true;
             this.loadedReferenceData = true;
-            this.referenceData = {
-                "date": this.getTimestepsMerged(undefined, uniqueValues[selectedLevelDateAttribute?.attrName], selectedLevelDateAttribute?.inputFormat, selectedLevelDateAttribute?.outputFormat),
-                "region": this.regions
-            };
 
             if (!this.flattenedRegions.length) {
                 this.flattenRegionHierarchy(this.selectedLevelRegionNameAttribute);
             }
+            this.setReferenceData({
+                "date": getTimestepsMerged(undefined, uniqueValues[selectedLevelDateAttribute?.attrName], selectedLevelDateAttribute?.inputFormat, selectedLevelDateAttribute?.outputFormat),
+                "region": await this.getRegionsOptionsForLastChild()
+            });
             this.prepareLayer();
+        },
+
+        /**
+         * Fetches the region options for the last child in the flattened region hierarchy.
+         * @returns {Promise<string[]>} The list of options for the region dropdown.
+         */
+        async getRegionsOptionsForLastChild () {
+            if (!this.flattenedRegions.length) {
+                return [];
+            }
+            const lastChild = this.flattenedRegions.at(-1),
+                  selectedLayers = this.selectedLevel?.layerId?.map(id => rawLayerList.getLayerWhere({id})).filter(isObject),
+                  uniqueObject = {};
+
+            if (lastChild?.values?.length) {
+                return lastChild.values;
+            }
+            if (!Array.isArray(selectedLayers)) {
+                return [];
+            }
+            for (const selectedLayer of selectedLayers) {
+                Object.assign(uniqueObject, await getOAFFeature.getUniqueValuesByScheme(selectedLayer.url, selectedLayer.collection, [lastChild.attrName]));
+            }
+
+            return !isObject(uniqueObject[lastChild.attrName]) ? [] : Object.keys(uniqueObject[lastChild.attrName]);
         },
 
         /**
@@ -1867,45 +1866,26 @@ export default {
             }
         },
         /**
-         * Gets the current level object.
-         * @param {String} name - The toggled level name.
-         * @returns {void}
-         */
-        toggleLevel (name) {
-            if (typeof name !== "string") {
-                return;
-            }
-
-            this.resetLevel();
-
-            this.setSelectedLevel(this.data.find(val=> {
-                return val?.levelName === name;
-            }));
-
-            this.initializeData(this.selectedLevel);
-        },
-        /**
          * Resets to the original status
          * @returns {void}
          */
         resetLevel () {
             this.loadedFilterData = false;
             this.loadedReferenceData = false;
-            this.statisticsByCategory = false;
             this.regions = [];
             this.allRegions = [];
             this.dates = [];
-            this.timeStepsFilter = [];
+            this.setTimeStepsFilter([]);
             this.showLimitView = false;
             this.diagramType = undefined;
             this.selectedFilteredRegions = [];
             this.showLineLimitView = false;
             this.setFlattenedRegions([]);
             this.setSelectedCategories([]);
+            this.setSelectedStatisticsKeys([]);
             this.setSelectedRegions([]);
             this.setSelectedDates([]);
             this.setSelectedReferenceData(undefined);
-            this.setSelectedStatistics({});
             this.handleReset();
         },
 
@@ -1936,10 +1916,10 @@ export default {
          */
         resetAll () {
             this.setSelectedCategories([]);
+            this.setSelectedStatisticsKeys([]);
             this.setSelectedRegions([]);
             this.setSelectedDates([]);
             this.setSelectedReferenceData(undefined);
-            this.setSelectedStatistics({});
             this.setFlattenedRegions([]);
             this.flattenRegionHierarchy(this.selectedLevelRegionNameAttribute);
             this.handleReset();
@@ -1971,7 +1951,9 @@ export default {
         id="modules-statisticDashboard"
         class="static-dashboard"
     >
-        <StatisticDashboardDataSelection />
+        <StatisticDashboardDataSelection
+            @reset-all="resetAll"
+        />
         <template v-if="showLegendView">
             <div v-if="classificationMode !== 'custom'">
                 <h5 class="mb-3 mt-3">
@@ -2016,18 +1998,6 @@ export default {
                         icon="bi-info-circle"
                         :interaction="() => openMetadata()"
                         :class-array="['info', 'btn', 'btn-light', 'btn-sm', 'ms-1', 'mt-0']"
-                    />
-                </div>
-                <div
-                    v-if="buttonGroupRegions.length > 1"
-                    class="col-md-auto mt-2"
-                >
-                    <ButtonGroup
-                        :buttons="buttonGroupRegions"
-                        :pre-checked-value="selectedLevel?.levelName"
-                        group="regions"
-                        class="level-switch"
-                        @set-selected-button="toggleLevel"
                     />
                 </div>
             </div>
@@ -2093,22 +2063,9 @@ export default {
             <Controls
                 v-if="loadedReferenceData"
                 :descriptions="controlDescription"
-                :reference-data="referenceData"
-                :enable-buttons="tableData.length > 0"
-                :categories="categories"
-                :are-categories-grouped="areCategoriesGrouped"
-                :regions="selectedLevelRegionNameAttribute"
-                :selected-level="selectedLevel"
-                :statistics="statisticsByCategory"
-                :time-steps-filter="timeStepsFilter"
-                :checked="isFeatureLoaded"
                 class="mb-3"
                 @show-chart-table="toggleChartTable"
                 @set-table-subtitle="setTableSubtitle"
-                @change-category="setStatisticsByCategories"
-                @change-filter-settings="checkFilterSettings"
-                @reset-statistics="handleReset"
-                @reset-filter="resetAll"
                 @show-charts-in-grid="handleGrid"
             />
             <div

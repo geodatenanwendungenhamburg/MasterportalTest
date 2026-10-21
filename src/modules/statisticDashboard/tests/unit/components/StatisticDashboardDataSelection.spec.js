@@ -1,4 +1,4 @@
-import {shallowMount, mount} from "@vue/test-utils";
+import {shallowMount} from "@vue/test-utils";
 import {describe, it, expect} from "vitest";
 import IconButton from "@shared/modules/buttons/components/IconButton.vue";
 import StatisticDashboardDataSelection from "../../../components/StatisticDashboardDataSelection.vue";
@@ -17,7 +17,7 @@ describe("StatisticDashboardDataSelection.vue", () => {
 
         expect(wrapper.vm.isExpanded).toBe(false);
         expect(wrapper.find("button.btn-text").exists()).toBe(true);
-        expect(wrapper.find("#close-filter-button").exists()).toBe(false);
+        expect(wrapper.find("#close-filter-button").isVisible()).toBe(false);
     });
 
     it("sets isExpanded to true when the edit button is clicked", async () => {
@@ -39,7 +39,7 @@ describe("StatisticDashboardDataSelection.vue", () => {
     });
 
     it("sets isExpanded to false when the close button is clicked", async () => {
-        const wrapper = mount(StatisticDashboardDataSelection, mountOptions);
+        const wrapper = shallowMount(StatisticDashboardDataSelection, mountOptions);
 
         await wrapper.setData({isExpanded: true});
 
