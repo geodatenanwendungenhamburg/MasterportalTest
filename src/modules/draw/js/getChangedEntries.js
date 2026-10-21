@@ -19,9 +19,7 @@ export function isSameValue (a, b) {
  * @returns {Object|null} The changed entries or null if nothing changes.
  */
 export function getChangedEntries (currentState, options) {
-    const changes = Object.fromEntries(
-        Object.entries(options ?? {}).filter(([key, value]) => !isSameValue(currentState?.[key], value))
-    );
+    const changes = Object.entries(options ?? {}).filter(([key, value]) => !isSameValue(currentState?.[key], value));
 
-    return Object.keys(changes).length > 0 ? changes : null;
+    return changes.length > 0 ? Object.fromEntries(changes) : null;
 }
