@@ -73,6 +73,7 @@ export default {
             }
         }
     },
+    emits: ["file-downloaded", "format-changed"],
     data () {
         return {
             fileName: "",
@@ -139,16 +140,19 @@ export default {
 
         /**
          * Updates the selected export format when the user changes the dropdown.
+         * Emits "format-changed" with the new format.
          * @param {Event} event - The change event from the format select element.
          * @returns {void}
          */
         onFormatChange (event) {
             this.exportFormat = event.target.value;
+            this.$emit("format-changed", this.exportFormat);
         },
 
         /**
          * Triggers the download for the currently selected export format.
          * Aborts if no format is selected or if unsupported polygon types are present for GPX.
+         * Emits "file-downloaded" with the format after the download has been triggered.
          * @returns {void}
          */
         async startDownload () {
@@ -160,6 +164,7 @@ export default {
 
             if (handler) {
                 await handler();
+                this.$emit("file-downloaded", this.exportFormat);
             }
         },
 

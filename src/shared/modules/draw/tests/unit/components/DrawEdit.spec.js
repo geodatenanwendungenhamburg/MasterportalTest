@@ -139,6 +139,39 @@ describe("src/shared/modules/draw/components/DrawEdit.vue", () => {
         });
     });
 
+    describe("download events of ExportItem", () => {
+        beforeEach(async () => {
+            wrapper = shallowMount(DrawEditComponent, {
+                propsData: {layer, selectedInteraction: "download"},
+                global: {
+                    plugins: [store],
+                    stubs: {LayoutFrame: {template: "<div><slot /></div>"}}
+                }
+            });
+            wrapper.vm.showFrame = true;
+            await wrapper.vm.$nextTick();
+        });
+
+        it("positive: dispatches editActionPerformed with the chosen download format", () => {
+            wrapper.findComponent({name: "ExportItem"}).vm.$emit("format-changed", "CSV");
+
+            expect(editActionPerformedSpy.calledOnce).to.be.true;
+            expect(editActionPerformedSpy.firstCall.args[1]).to.deep.equal({action: "setDownloadFormat", format: "CSV"});
+        });
+
+        it("positive: dispatches editActionPerformed when a file was downloaded", () => {
+            wrapper.findComponent({name: "ExportItem"}).vm.$emit("file-downloaded", "KML");
+
+            expect(editActionPerformedSpy.calledOnce).to.be.true;
+            expect(editActionPerformedSpy.firstCall.args[1]).to.deep.equal({action: "downloadFile", format: "KML"});
+        });
+
+        it("negative: does not dispatch without events of ExportItem", () => {
+            expect(wrapper.findComponent({name: "ExportItem"}).exists()).to.be.true;
+            expect(editActionPerformedSpy.notCalled).to.be.true;
+        });
+    });
+
     describe("regulateEditInteraction", () => {
         const event = {
             target: {

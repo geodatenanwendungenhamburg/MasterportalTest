@@ -465,6 +465,24 @@ export default {
         },
 
         /**
+         * Notifies store subscribers that another download format was chosen.
+         * @param {String} format The chosen download format.
+         * @returns {void}
+         */
+        onDownloadFormatChanged (format) {
+            this.editActionPerformed({action: "setDownloadFormat", format});
+        },
+
+        /**
+         * Notifies store subscribers that a file was downloaded.
+         * @param {String} format The format of the downloaded file.
+         * @returns {void}
+         */
+        onFileDownloaded (format) {
+            this.editActionPerformed({action: "downloadFile", format});
+        },
+
+        /**
          * Synchronizes the reactive undo/redo counts from the non-reactive stacks.
          * @returns {void}
          */
@@ -667,6 +685,8 @@ export default {
                 :features="features"
                 :pre-selected-format="preSelectedDownloadFormat"
                 :semicolon-csv-delimiter="semicolonCsvDelimiter"
+                @file-downloaded="onFileDownloaded"
+                @format-changed="onDownloadFormatChanged"
             />
             <div v-if="selectedInteraction === 'modify'">
                 <DrawEditStyle :selected-feature="selectedEditFeature" />

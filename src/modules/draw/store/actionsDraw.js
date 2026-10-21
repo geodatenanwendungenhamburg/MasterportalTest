@@ -59,11 +59,12 @@ export default {
     },
 
     /**
-     * Does not change the state. Lets tools like userTracking observe clicks on the edit toolbar
-     * (e.g. undo, redo, deleteAll), which only affect the features and therefore trigger no mutation.
+     * Does not change the state. Lets tools like userTracking observe actions of the edit toolbar and its dialogs
+     * (e.g. undo, redo, deleteAll, download), which only affect the features and therefore trigger no mutation.
      * @param {Object} context Vuex action context.
      * @param {Object} payload The edit action.
-     * @param {String} payload.action The name of the clicked edit button, e.g. "undo".
+     * @param {String} payload.action The performed action, e.g. "undo", "deleteFeature", "setDownloadFormat" or "downloadFile".
+     * @param {String} [payload.format] The download format for "setDownloadFormat" and "downloadFile".
      * @returns {void}
      */
     editActionPerformed () {

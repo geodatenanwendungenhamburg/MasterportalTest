@@ -158,6 +158,20 @@ describe("src/shared/modules/exportItem/components/ExportItem.vue", () => {
             expect(wrapper.vm.exportFormat).to.equal("none");
             expect(wrapper.find("#downloadBtn").classes()).to.include("disabled");
         });
+
+        it("should emit format-changed with the new format", () => {
+            wrapper = mountComponent();
+
+            wrapper.vm.onFormatChange({target: {value: "GPX"}});
+
+            expect(wrapper.emitted("format-changed")).to.deep.equal([["GPX"]]);
+        });
+
+        it("should not emit format-changed when the preselected format is synced", () => {
+            wrapper = mountComponent({preSelectedFormat: "KML"});
+
+            expect(wrapper.emitted("format-changed")).to.be.undefined;
+        });
     });
 
     describe("method: syncPreSelectedFormat", () => {
@@ -207,6 +221,29 @@ describe("src/shared/modules/exportItem/components/ExportItem.vue", () => {
             await wrapper.vm.startDownload();
 
             expect(spy.called).to.be.false;
+        });
+    });
+
+    describe("event: file-downloaded", () => {
+        it("positive: emits file-downloaded with the format after the download was triggered", async () => {
+            wrapper = mountComponent();
+            wrapper.vm.exportFormat = "KML";
+            wrapper.vm.fileName = "draw-export";
+            wrapper.vm.downloadStrategies.KML = sinon.stub().resolves();
+
+            await wrapper.vm.startDownload();
+
+            expect(wrapper.emitted("file-downloaded")).to.deep.equal([["KML"]]);
+        });
+
+        it("negative: does not emit file-downloaded without a file name", async () => {
+            wrapper = mountComponent();
+            wrapper.vm.exportFormat = "KML";
+            wrapper.vm.downloadStrategies.KML = sinon.stub().resolves();
+
+            await wrapper.vm.startDownload();
+
+            expect(wrapper.emitted("file-downloaded")).to.be.undefined;
         });
     });
 
