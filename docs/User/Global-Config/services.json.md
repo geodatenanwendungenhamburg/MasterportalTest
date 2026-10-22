@@ -338,7 +338,9 @@ A layer based on the OGC's [Web Feature Service](https://www.ogc.org/standard/wf
 |Name|Required|Type|Default|Description|Example|
 |----|--------|----|-------|-----------|-------|
 |capabilitiesUrl|no|String||Service's capabilities URL|`"https://geodienste.hamburg.de/HH_WFS_Verkehr_opendata?SERVICE=WFS&VERSION=1.1.0&REQUEST=GetCapabilities"`|
-|datasets|yes|**[datasets](#wms_wfs_oaf_datasets)**[]/Boolean||Metadata specification. All metadata of the layer data is referenced here. By clicking the "i" button in the layer tree, the information is retrieved by the CSW interface and shown to the user. For this, the **[rest-services.json](rest-services.json.md)** has to provide the URL of the metadata catalog resp. its CSW interface. The values *kategorie_opendata*, *kategorie_inspire*, and *kategorie_organisation* are used for layer categorization if the **[config.json](../Portal-Config/config.json.md)** has `tree.type` set to `"default"`. It is also possible to retrieve metadata with a getMetaData request, in this case there can also be additional informations displayed. It is also possible to retrieve metadata with a getMetaData request, in this case there can also be additional informations displayed. To remove the "i" button altogether, explicitly set `"datasets": false`.||
+|datasets|yes|**[datasets](#wms_wfs_oaf_datasets)**[]/Boolean||Metadata specification. All metadata of the layer data is referenced here. By clicking the "i" button in the layer tree, the information is retrieved by the CSW interface and shown to the user. For this, the **[rest-services.json](rest-services.json.md)** has to provide the URL of the metadata catalog resp. its CSW interface. The values *kategorie_opendata*, *kategorie_inspire*, and *kategorie_organisation* are used for layer categorization if the **[config.json](../Portal-Config/config.json.md)** has `tree.type` set to `"default"`. It is also possible to retrieve metadata with a getMetaData request, in this case there can also be additional informations displayed. It is also possible to retrieve metadata with a getMetaData request, in this case there can also be 
+additional informations displayed. To remove the "i" button altogether, explicitly set `"datasets": false`.||
+|dataProjection|no|string|configured portal CRS|Source CRS of geometries returned by `wfsSearch`. Set this when search results use a different CRS than the portal so their coordinates can be transformed correctly. Use the feature type’s default CRS, listed as DefaultSRS or DefaultCRS in the service’s GetCapabilities document. If the projection is not already available in the portal, add its definition to `namedProjections`in the **[config.json](../Portal-Config/config.json.md)**. This setting does not change the portal CRS or request a different CRS from the service.|-------|
 |featureNS|yes|String||Usually referenced in the WFS *GetCapabilities*' header. Used to resolve the namespace given in *FeatureType/Name*.|`"http://www.deegree.org/app"`|
 |featureType|yes|String||Feature type to load. Must match a value of *FeatureTypeList/FeatureType/Name* in the *GetCapabilities* response. Provide without namespace.|`"bab_vkl"`|
 |featurePrefix|no|String||Used to identify a *FeatureType* in the service.|
@@ -391,6 +393,7 @@ A layer based on the OGC's [Web Feature Service](https://www.ogc.org/standard/wf
           "anzahl_sus_primarstufe",
           "geom"
       ],
+      "dataProjection": "EPSG:4647",
       "datasets" : [
          {
             "md_id" : "2FC4BBED-350C-4380-B138-4222C28F56C6",

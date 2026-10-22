@@ -4643,6 +4643,7 @@ The module allows for switching the style of vector tile layers(❗) which provi
 
 Allows to query a WFS(❗) layer decoupled from the search bar using filters and to create a form if necessary.
 It is assumed that a stored query is used when using a WFS@2.0.0. When using a WFS@1.1.0, it is assumed that the way the WFS should be filtered is defined through the configuration.
+Please note that you need to configure a `dataProjection` for the used WFS in the **[services.json](../Global-Config/services.json.md)** if the WFS does not support the portal CRS.
 
 Multiple **[SearchInstances](#portalconfigmenusectionsmoduleswfssearchsearchinstance)** can be defined, which will be selectable through a dropdown menu.
 

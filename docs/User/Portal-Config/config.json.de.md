@@ -4631,6 +4631,7 @@ Das Modul ermöglicht das Umschalten des Stylings von Vector Tile Layers(❗), s
 
 Das Modul ermöglicht es einen WFS(❗) Layer abgekoppelt von der Suchleiste mittels Filter anzufragen und gegebenenfalls eine Ergebnisliste zu erstellen.
 Wenn ein WFS@2.0.0 verwendet werden soll, wird erwartet, dass eine gespeicherte Anfrage (Stored Query) verwendet wird. Wenn ein WFS@1.1.0 verwendet werden soll, wird erwartet, dass der Aufbau der Anfrage mittels der Konfiguration dieses Werkzeugs grundlegend vorgegeben wird.
+Bitte beachten, dass für das verwendete WFS der Parameter `dataProjection` in der **[services.json](../Global-Config/services.json.md)** konfiguriert werden muss, sollte das WFS nicht das Koordinatenreferenzsystems des Portals unterstützen.
 
 Es können mehrere Suchinstanzen (**[SearchInstances](#portalconfigmenusectionsmoduleswfssearchsearchinstance)**) definiert werden, welche durch jeweilige Dropdown-Menüs ausgewählt werden können.
 
