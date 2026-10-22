@@ -1553,7 +1553,7 @@
       "timeSlider": {
         "buttons": {
           "backward": "Move one step back",
-          "deactivateLayerSwiper": "Remove layer",
+          "deactivateLayerSwiper": "Stop comparing",
           "forward": "Move one step forward",
           "layerSwiper": "Compare two points in time",
           "play": "Playback of all points in time of the layer, starting from the currently selected point in time."

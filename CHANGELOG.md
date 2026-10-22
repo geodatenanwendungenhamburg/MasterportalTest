@@ -23,6 +23,7 @@
       - @vitest/ui: "^4.0.16" to "4.1.11"
       - @vitest/web-worker: "^4.0.16" to "4.1.11"
       - jsdom: "29.1.1" to "^30.1.2"
+- WMS-Time: Changed button name to avoid confusion.
 
 ### Deprecated
 - WMTS: The `services.json` parameter `transparent` is deprecated and has no effect. Use `transparency` instead.
