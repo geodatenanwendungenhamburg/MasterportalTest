@@ -23,11 +23,13 @@
 
 ### Changed
 - The following packages have been updated:
-    -devDependencies:
-      - vitest: "^4.0.16" to "4.1.11"
-      - @vitest/ui: "^4.0.16" to "4.1.11"
-      - @vitest/web-worker: "^4.0.16" to "4.1.11"
-      - jsdom: "29.1.1" to "^30.1.2"
+    - dependencies:
+        - @masterportal/masterportalapi: 2.64.0 to 2.65.0
+    - devDependencies:
+        - vitest: "^4.0.16" to "4.1.11"
+        - @vitest/ui: "^4.0.16" to "4.1.11"
+        - @vitest/web-worker: "^4.0.16" to "4.1.11"
+        - jsdom: "29.1.1" to "^30.1.2"
 - WMS-Time: Changed button name to avoid confusion.
 - LayerTree/LayerSelection: In portals with a configured login, secured layers can no longer be activated without being logged in. Instead, an alert asks the user to log in. The lock icon of secured layers is shown open when logged in and closed otherwise.
 
