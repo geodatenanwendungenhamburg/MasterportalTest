@@ -86,7 +86,13 @@ export default {
                     properties.icon = this.customMenuElementIcon;
                 }
                 if (typeof stateProperties === "object") {
-                    properties = stateProperties;
+                    properties = {
+                        name: stateProperties.name,
+                        icon: stateProperties.icon,
+                        description: stateProperties.description,
+                        ...item,
+                        type: item.type
+                    };
                 }
             }
             return properties;

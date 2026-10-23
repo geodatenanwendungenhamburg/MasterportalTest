@@ -40,6 +40,7 @@
 ### Fixed
 - Issue \#1629: Fetch legendUrl with authorization header where needed.
 - Issue \#1646: Improved WMTS printing with raster reprojection for differing projections, correct opacity handling, more reliable raster fallbacks and rendering, and reduced 3D print payload sizes.
+- Issue \#1655, \#1663: It is now possible to configure modules with the same `type` multiple times. However, there are two restriction: the modules must have different names and they must be configured in the same menu (`mainMenu` or `secondaryMenu`). Only one of the modules configured multiple times can be open at a time; otherwise, the wrong content may be displayed.
 - Draw: Fixed an error when editing imported multi geometries (e.g. from KML files), which prevented the measurement tooltip from being positioned.
 - Legend: Legend images of secured services are now loaded with the auth token of the login module, so that no 401 error occurs.
 - GetFeatureInfo: A gfiTheme addon that is configured at a layer but missing in `Config.addons` of config.js is now loaded on demand instead of falling back to the default theme. This also applies to layers added via search.
