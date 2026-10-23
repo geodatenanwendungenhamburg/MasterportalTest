@@ -6,6 +6,7 @@ import DropdownAutocomplete from "@shared/modules/dropdown/components/DropdownAu
 import indexStatisticDashboard from "@modules/statisticDashboard/store/indexStatisticDashboard.js";
 import StatisticDashboardDataSelectionExpanded from "@modules/statisticDashboard/components/StatisticDashboardDataSelectionExpanded.vue";
 import StatisticDashboardDifference from "@modules/statisticDashboard/components/StatisticDashboardDifference.vue";
+import FlatButton from "@shared/modules/buttons/components/FlatButton.vue";
 import SwitchInput from "@shared/modules/checkboxes/components/SwitchInput.vue";
 
 describe("src/modules/statisticDashboard/components/StatisticDashboardDataSelectionExpanded.vue", () => {
@@ -112,8 +113,19 @@ describe("src/modules/statisticDashboard/components/StatisticDashboardDataSelect
         const wrapper = createWrapper(),
             differenceSwitch = wrapper.findComponent(SwitchInput);
 
+        expect(wrapper.findComponent(StatisticDashboardDifference).exists()).to.be.false;
+
         await differenceSwitch.vm.$emit("update:model-value", true);
 
         expect(wrapper.findComponent(StatisticDashboardDifference).exists()).to.be.true;
+    });
+
+    it("emits the showData event when the action button is activated", () => {
+        const wrapper = createWrapper(),
+            showDataButton = wrapper.findComponent(FlatButton);
+
+        showDataButton.props("interaction")();
+
+        expect(wrapper.emitted("click:showData")).to.have.lengthOf(1);
     });
 });

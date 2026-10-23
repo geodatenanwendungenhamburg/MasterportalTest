@@ -1951,7 +1951,11 @@ export default {
         id="modules-statisticDashboard"
         class="static-dashboard"
     >
+        <h5 class="mb-3">
+            {{ $t(levelTitle ?? subtitle) }}
+        </h5>
         <StatisticDashboardDataSelection
+            class
             @reset-all="resetAll"
         />
         <template v-if="showLegendView">
@@ -1988,9 +1992,6 @@ export default {
         <div v-show="!showLegendView">
             <div class="row justify-content-between">
                 <div class="col-md-12 d-flex align-items-center">
-                    <h5 class="m-0">
-                        {{ $t(levelTitle ?? subtitle) }}
-                    </h5>
                     <IconButton
                         v-if="getMetadataLink()"
                         :aria="$t('common:modules.statisticDashboard.headings.mrhstatisticsTooltip')"

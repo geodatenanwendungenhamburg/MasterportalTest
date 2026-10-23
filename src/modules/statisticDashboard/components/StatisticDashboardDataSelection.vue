@@ -20,11 +20,14 @@ export default {
 </script>
 
 <template lang="html">
-    <div class="card card-body p-1">
-        <div v-show="isExpanded">
+    <div class="card card-body p-3">
+        <div
+            v-show="isExpanded"
+            class="px-2"
+        >
             <div class="d-flex flex-wrap justify-content-between">
-                <div class="ml-3 mt-2">
-                    <h5 class="fs-6">
+                <div class="my-3">
+                    <h5 class="m-0">
                         <i class="bi bi-sliders mr-2" />
                         {{ $t('common:modules.statisticDashboard.headings.dataSelection') }}
                     </h5>
@@ -48,12 +51,14 @@ export default {
                     />
                 </div>
             </div>
-            <StatisticDashboardDataSelectionExpanded />
+            <StatisticDashboardDataSelectionExpanded
+                @click:showData="isExpanded = false"
+            />
         </div>
         <template v-if="!isExpanded">
             <div class="d-flex flex-wrap justify-content-between">
-                <div class="ml-3 mt-3">
-                    <h5>
+                <div class="my-3">
+                    <h5 class="m-0">
                         <i class="bi bi-sliders mx-2" />
                         {{ $t('common:modules.statisticDashboard.headings.dataSelection') }}
                     </h5>
