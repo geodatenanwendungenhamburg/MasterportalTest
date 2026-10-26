@@ -109,20 +109,6 @@ describe("src/modules/statiscticDashboard/components/StatisticDashboardControls.
 
         });
 
-        it("should find switcher component", () => {
-            const wrapper = shallowMount(StatisticDashboardControls, {
-                propsData: {
-                    referenceData,
-                    enableButtons
-                },
-                global: {
-                    plugins: [store]
-                }
-            });
-
-            expect(wrapper.findComponent({name: "ButtonGroup"}).exists()).to.be.true;
-        });
-
         it("should not find a back-overview element", () => {
             const wrapper = shallowMount(StatisticDashboardControls, {
                 propsData: {
@@ -299,38 +285,6 @@ describe("src/modules/statiscticDashboard/components/StatisticDashboardControls.
 
             expect(wrapper.vm.contentDescription).to.be.equal("ContentTwo");
             expect(wrapper.vm.titleDescription).to.be.equal("TitleTwo");
-        });
-        it("should set precheckedViewSwitcher to buttonGroupControls 0 name", () => {
-            const wrapper = shallowMount(StatisticDashboardControls, {
-                    propsData: {
-                        referenceData,
-                        descriptions,
-                        enableButtons
-                    },
-                    global: {
-                        plugins: [store]
-                    }
-                }),
-                expected = wrapper.vm.buttonGroupControls[0].name;
-
-            store.commit("Modules/StatisticDashboard/setChartTableToggle", "table");
-            expect(wrapper.vm.precheckedViewSwitcher).to.be.equal(expected);
-        });
-        it("should set precheckedViewSwitcher to buttonGroupControls 1 name", () => {
-            const wrapper = shallowMount(StatisticDashboardControls, {
-                    propsData: {
-                        referenceData,
-                        descriptions,
-                        enableButtons
-                    },
-                    global: {
-                        plugins: [store]
-                    }
-                }),
-                expected = wrapper.vm.buttonGroupControls[1].name;
-
-            store.commit("Modules/StatisticDashboard/setChartTableToggle", "chart");
-            expect(wrapper.vm.precheckedViewSwitcher).to.be.equal(expected);
         });
         it("should set showStatisticnameInChart to be false", () => {
             const wrapper = shallowMount(StatisticDashboardControls, {

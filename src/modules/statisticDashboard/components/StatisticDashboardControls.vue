@@ -1,14 +1,14 @@
 <script>
-import ButtonGroup from "@shared/modules/buttons/components/ButtonGroup.vue";
 import isObject from "@shared/js/utils/isObject.js";
 import {mapGetters, mapMutations} from "vuex";
 import IconButton from "@shared/modules/buttons/components/IconButton.vue";
+import NavTab from "@shared/modules/tabs/components/NavTab.vue";
 
 export default {
     name: "StatisticDashboardControls",
     components: {
-        ButtonGroup,
-        IconButton
+        IconButton,
+        NavTab
     },
     props: {
         descriptions: {
@@ -21,16 +21,12 @@ export default {
     data () {
         return {
             currentDescriptionIndex: 0,
-            buttonGroupControls: [{
-                                      name: "Tabelle",
-                                      icon: "bi bi-table pe-2"
-                                  },
-                                  {
-                                      name: "Diagramm",
-                                      icon: "bi bi-bar-chart pe-2"
-                                  }],
-            switchValue: "",
-            indexSelectedStatistics: 0
+            indexSelectedStatistics: 0,
+            tabs: [
+                {id: "tab-table", view: "table", label: "common:modules.statisticDashboard.tabs.table", icon: "bi-table", target: "#table-pane"},
+                {id: "tab-diagram", view: "chart", label: "common:modules.statisticDashboard.tabs.diagram", icon: "bi-bar-chart", target: "#diagram-pane"},
+                {id: "tab-map", view: "map", label: "common:modules.statisticDashboard.tabs.map", icon: "bi-map", target: "#map-pane"}
+            ]
         };
     },
     computed: {
@@ -43,8 +39,7 @@ export default {
             "selectedStatistics",
             "selectedReferenceData",
             "selectedRegions",
-            "selectedRegionsValues",
-            "selectedDatesValues"
+            "selectedRegionsValues"
         ]),
         /**
          * Checks if there is at least one description
@@ -69,12 +64,6 @@ export default {
          */
         contentDescription () {
             return this.descriptions[this.currentDescriptionIndex].content;
-        },
-        precheckedViewSwitcher () {
-            if (this.chartTableToggle === "table") {
-                return this.buttonGroupControls[0].name;
-            }
-            return this.buttonGroupControls[1].name;
         },
         isStatisticsSelected () {
             return this.selectedDatesValues.length > 0 && this.selectedRegionsValues.length > 0 && Object.keys(this.selectedStatistics)?.length > 1;
@@ -107,15 +96,6 @@ export default {
             return this.isStatisticsSelected && this.chartTableToggle === "table";
         }
     },
-    watch: {
-        /**
-         * Emits an event to toggle between chart and table view.
-         * @returns {void}
-         */
-        switchValue () {
-            this.$emit("showChartTable");
-        }
-    },
     methods: {
         ...mapMutations("Modules/StatisticDashboard", [
             "setChosenStatisticName"
@@ -145,14 +125,6 @@ export default {
             else {
                 this.currentDescriptionIndex = this.descriptions.length - 1;
             }
-        },
-        /**
-         * Sets chart or table view
-         * @param {Object} value - The name of clicked button in object with key name.
-         * @returns {void}
-         */
-        handleView (value) {
-            this.switchValue = value;
         },
         /**
          * Sets indexSelectedStatistics after clicking previous arrow.
@@ -221,14 +193,21 @@ export default {
                 class="gap-1 empty"
             />
         </div>
-        <ButtonGroup
-            :buttons="buttonGroupControls"
-            :pre-checked-value="precheckedViewSwitcher"
-            :is-group="false"
-            class="col col-md btn-table-diagram mb-2 p-0"
-            group="dataViews"
-            @set-selected-button="handleView"
-        />
+        <ul
+            class="nav nav-tabs border-bottom-0 btn-table-diagram"
+            role="tablist"
+        >
+            <NavTab
+                v-for="tab in tabs"
+                :id="tab.id"
+                :key="tab.id"
+                :label="$t(tab.label)"
+                :icon="tab.icon"
+                :active="chartTableToggle === tab.view"
+                :target="tab.target"
+                @click="$emit('showChartTable', tab.view)"
+            />
+        </ul>
         <div
             v-if="showStatisticnameInChart"
             class="back-overview"

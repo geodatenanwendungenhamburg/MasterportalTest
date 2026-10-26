@@ -1,4 +1,4 @@
-import {Fill, Stroke, Style} from "ol/style.js";
+import {Fill, Stroke, Style, Text} from "ol/style.js";
 import {convertColor} from "@shared/js/utils/convertColor.js";
 import isObject from "@shared/js/utils/isObject.js";
 import isNumber from "@shared/js/utils/isNumber.js";
@@ -59,6 +59,47 @@ function getStyleFunction (statisticData, colorScheme, date, regionKeys, stepVal
             });
         }
         return styleCache[colorKey];
+    };
+}
+
+/**
+ * Wraps the given style function so that every feature additionally gets a label with region name, year and value.
+ * @param {Function} styleFunction The style function of the layer, returns a single style or null.
+ * @param {Object} statisticData The data of the chosen statistic, grouped by region and date.
+ * @param {String} regionNameAttribute The attribute holding the region name.
+ * @param {String} date The selected date (column).
+ * @param {Function} [formatValue=String] Formats a value for the label.
+ * @returns {Function} The style function including labels.
+ */
+function getStyleFunctionWithLabels (styleFunction, statisticData, regionNameAttribute, date, formatValue = String) {
+    const labelFill = new Fill({color: "#000000"}),
+        labelBackgroundFill = new Fill({color: "rgba(255, 255, 255, 0.5)"}),
+        labelBackgroundStroke = new Stroke({color: "#cccccc", width: 1});
+
+    return (feature, resolution) => {
+        const style = styleFunction(feature, resolution),
+            region = feature.get(regionNameAttribute);
+
+        if (!style) {
+            return null;
+        }
+
+        if (!region) {
+            return style;
+        }
+
+        const labelStyle = style.clone();
+
+        labelStyle.setText(new Text({
+            text: `${region}\n${date}: ${formatValue(statisticData?.[region]?.[date])}`,
+            font: "11px sans-serif",
+            fill: labelFill,
+            backgroundFill: labelBackgroundFill,
+            backgroundStroke: labelBackgroundStroke,
+            padding: [4, 8, 4, 8]
+        }));
+
+        return labelStyle;
     };
 }
 
@@ -281,6 +322,7 @@ function getLegendValue (val, decimalPlaces = 2, withoutValue = false) {
 export default {
     filterFeaturesByKeyValue,
     getStyleFunction,
+    getStyleFunctionWithLabels,
     calcStepValues,
     getStatisticValuesByDate,
     getStepValue,

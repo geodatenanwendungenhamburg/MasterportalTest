@@ -1395,16 +1395,24 @@
         "region": "Referenzgebiet {{value}}",
         "difference": "Differenz"
       },
+      "tabs": {
+        "table": "Tabelle",
+        "diagram": "Diagramm",
+        "map": "Karte"
+      },
       "legend": {
         "under": "unter",
         "between": "{{minimum}} bis unter {{maximum}}",
         "from": "Ab",
         "nodata": "Die Visualisierung der Daten von mehreren Statistiken auf der Karte steht nicht zur Verfügung.",
         "legend": "Kartenlegende",
-        "edit": "Bearbeiten",
+        "additionalInformation": "Zusätzliche Karteninformationen",
+        "numberOfClasses": "Anzahl der Klassen: {{count}}",
+        "showTooltips": "Tooltips auf der Karte anzeigen",
+        "showLabels": "Gebietsnamen, Jahr und Wert anzeigen",
         "editClassification": "Klasseneinteilung bearbeiten",
+        "edit": "Bearbeiten",
         "classification": "Klassifikation",
-        "numberOfClasses": "Anzahl der Klassen",
         "colorPalette": "Farbpalette",
         "betweenValues": "bis unter",
         "opacity": "Deckkraft",

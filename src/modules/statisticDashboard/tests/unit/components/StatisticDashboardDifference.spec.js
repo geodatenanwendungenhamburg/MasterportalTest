@@ -4,6 +4,7 @@ import {createStore} from "vuex";
 import StatisticDashboardDifference from "@modules/statisticDashboard/components/StatisticDashboardDifference.vue";
 import indexStatisticDashboard from "@modules/statisticDashboard/store/indexStatisticDashboard.js";
 import DropdownAutocomplete from "@shared/modules/dropdown/components/DropdownAutocomplete.vue";
+import NavTab from "@shared/modules/tabs/components/NavTab.vue";
 import sinon from "sinon";
 
 
@@ -50,17 +51,6 @@ describe("src/modules/statiscticDashboard/components/StatisticDashboardDifferenc
             });
 
             expect(wrapper.find("h4").exists()).to.be.false;
-        });
-
-        it("should find switcher component", () => {
-            const wrapper = shallowMount(StatisticDashboardDifference, {
-                propsData: propsData,
-                global: {
-                    plugins: [store]
-                }
-            });
-
-            expect(wrapper.findComponent({name: "ButtonGroup"}).exists()).to.be.true;
         });
 
         it("The date selection dropdown should exist", () => {

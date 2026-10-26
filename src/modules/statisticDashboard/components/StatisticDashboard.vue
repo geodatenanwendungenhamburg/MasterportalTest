@@ -4,40 +4,40 @@
  * @import {StatisticDashboardMapGetters, StatisticDashboardMapMutations} from "../types/helpers.js"
  */
 
-import AccordionItem from "@shared/modules/accordion/components/AccordionItem.vue";
 import {and as andFilter, equalTo as equalToFilter, or as orFilter} from "ol/format/filter.js";
+import {CanceledError} from "axios";
 import ChartProcessor from "../js/chartProcessor.js";
 import {colorbrewer} from "../js/colorbrewer.js";
 import Controls from "./StatisticDashboardControls.vue";
 import {convertColor} from "@shared/js/utils/convertColor.js";
 import dayjs from "dayjs";
+import debounce from "@shared/js/utils/debounce.js";
 import FeaturesHandler from "../js/handleFeatures.js";
 import FetchDataHandler from "../js/fetchData.js";
 import FlatButton from "@shared/modules/buttons/components/FlatButton.vue";
+import {GeoJSON} from "ol/format.js";
 import getFeature from "@shared/js/api/wfs/getFeature.js";
+import getOAFFeature from "@shared/js/api/oaf/getOAFFeature.js";
 import getters from "../store/gettersStatisticDashboard.js";
+import getTimestepsMerged from "../js/getTimestepsMerged.js";
 import GridComponent from "./StatisticGridComponent.vue";
 import IconButton from "@shared/modules/buttons/components/IconButton.vue";
-import LegendComponent from "./StatisticDashboardLegend.vue";
-import {mapGetters, mapMutations, mapActions} from "vuex";
-import Multiselect from "vue-multiselect";
-import TableComponent from "@shared/modules/table/components/TableComponent.vue";
 import isNumber from "@shared/js/utils/isNumber.js";
 import isObject from "@shared/js/utils/isObject.js";
+import LegendComponent from "./StatisticDashboardLegend.vue";
+import {mapActions, mapGetters, mapMutations} from "vuex";
+import Multiselect from "vue-multiselect";
+import {openSecuredPopup} from "@shared/js/utils/openSecuredPopup.js";
+import Overlay from "ol/Overlay.js";
+import {pointerMove} from "ol/events/condition.js";
 import {rawLayerList} from "@masterportal/masterportalapi/src/index.js";
+import Select from "ol/interaction/Select.js";
 import SpinnerItem from "@shared/modules/spinner/components/SpinnerItem.vue";
 import StatisticDashboardDataSelection from "./StatisticDashboardDataSelection.vue";
-import getTimestepsMerged from "../js/getTimestepsMerged.js";
+import StatisticDashboardMapSettings from "./StatisticDashboardMapSettings.vue";
+import TableComponent from "@shared/modules/table/components/TableComponent.vue";
 import thousandsSeparator from "@shared/js/utils/thousandsSeparator.js";
 import WFS from "ol/format/WFS.js";
-import {CanceledError} from "axios";
-import getOAFFeature from "@shared/js/api/oaf/getOAFFeature.js";
-import Select from "ol/interaction/Select.js";
-import {pointerMove} from "ol/events/condition.js";
-import Overlay from "ol/Overlay.js";
-import debounce from "@shared/js/utils/debounce.js";
-import {GeoJSON} from "ol/format.js";
-import {openSecuredPopup} from "@shared/js/utils/openSecuredPopup.js";
 
 const filterMap = {
     "Or": "OR",
@@ -53,7 +53,6 @@ const filterMap = {
 export default {
     name: "StatisticDashboard",
     components: {
-        AccordionItem,
         Controls,
         FlatButton,
         GridComponent,
@@ -62,6 +61,7 @@ export default {
         Multiselect,
         SpinnerItem,
         StatisticDashboardDataSelection,
+        StatisticDashboardMapSettings,
         TableComponent
     },
     data () {
@@ -108,7 +108,9 @@ export default {
             exportTableData: {},
             hoverInteraction: null,
             overlay: null,
-            maxDecimalPlaces: 2
+            maxDecimalPlaces: 2,
+            showMapLabels: true,
+            showMapTooltips: true
         };
     },
     computed: {
@@ -208,6 +210,13 @@ export default {
          */
         showTable () {
             return this.chartTableToggle === "table";
+        },
+        /**
+         * Checks if the map settings should be shown.
+         * @returns {Boolean} true if it should shows the map settings, false otherwise.
+         */
+        showMap () {
+            return this.chartTableToggle === "map";
         },
         /**
          * Returns the statisticName of chart.
@@ -420,6 +429,25 @@ export default {
             if (val === "table" && isObject(this.statisticsData) && Object.keys(this.statisticsData).length && this.chosenStatisticName === "") {
                 this.chosenTableData = this.getTableData(this.statisticsData, this.chosenStatisticName);
             }
+        },
+        /**
+         * Redraws the map style when the labels are switched on or off.
+         * @returns {void}
+         */
+        showMapLabels () {
+            this.updateAfterLegendChange();
+        },
+        /**
+         * Activates or deactivates the hover tooltip on the map.
+         * @param {Boolean} value true if tooltips should be shown.
+         * @returns {void}
+         */
+        showMapTooltips (value) {
+            this.hoverInteraction?.setActive(value);
+            if (!value) {
+                this.overlay?.setPosition(undefined);
+                this.clearHoverInfo();
+            }
         }
     },
     async created () {
@@ -590,7 +618,6 @@ export default {
             if (this.selectedStatisticsNames?.length) {
                 this.updateFeatureStyle(
                     this.selectedColumn,
-                    typeof this.selectedReferenceData !== "undefined",
                     this.selectedReferenceData);
             }
         },
@@ -716,22 +743,30 @@ export default {
         /**
          * Updates the features displayed on the map and their styles.
          * @param {String} date - The chosen date from the column.
-         * @param {Boolean} differenceMode - true if difference mode is on otherwise false.
          * @param {Object} [selectedReferenceData] - The selected reference data.
          * @returns {void}
          */
-        updateFeatureStyle (date, differenceMode, selectedReferenceData) {
-            const regionNameAttribute = this.getSelectedLevelRegionNameAttributeInDepth(this.selectedLevel?.mappingFilter?.regionNameAttribute).attrName;
+        updateFeatureStyle (date, selectedReferenceData) {
+            const regionNameAttribute = this.getSelectedLevelRegionNameAttributeInDepth(this.selectedLevel?.mappingFilter?.regionNameAttribute).attrName,
+                  styleFunction = FeaturesHandler.getStyleFunction(
+                      this.statisticsData?.[this.chosenStatisticName],
+                      this.colorPalette.map(v => [...v, this.opacity]),
+                      date,
+                      regionNameAttribute,
+                      this.stepValues,
+                      selectedReferenceData?.type === "region" ? selectedReferenceData.value : null,
+                      this.colorScheme.referenceRegion
+                  );
 
-            this.layer.setStyle(FeaturesHandler.getStyleFunction(
-                this.statisticsData?.[this.chosenStatisticName],
-                this.colorPalette.map(v => [...v, this.opacity]),
-                date,
-                regionNameAttribute,
-                this.stepValues,
-                selectedReferenceData?.type === "region" ? selectedReferenceData.value : null,
-                this.colorScheme.referenceRegion
-            ));
+            this.layer.setStyle(this.showMapLabels
+                ? FeaturesHandler.getStyleFunctionWithLabels(
+                    styleFunction,
+                    this.statisticsData?.[this.chosenStatisticName],
+                    regionNameAttribute,
+                    date,
+                    this.formatMapValue
+                )
+                : styleFunction);
 
             if (isObject(this.statisticsData?.[this.chosenStatisticName])) {
                 this.featureWithoutValue = Object.values(this.statisticsData[this.chosenStatisticName]).some(
@@ -743,6 +778,18 @@ export default {
                 "color": this.colorPalette.map(v => [...v, this.opacity]),
                 "value": this.stepValues
             });
+        },
+
+        /**
+         * Formats a statistic value for the map label.
+         * @param {Number} value The raw value.
+         * @returns {String} The formatted value or "-" if there is none.
+         */
+        formatMapValue (value) {
+            if (typeof value !== "number" || isNaN(value)) {
+                return "-";
+            }
+            return new Intl.NumberFormat(i18next.language, {maximumFractionDigits: this.maxDecimalPlaces}).format(value);
         },
 
         /**
@@ -969,7 +1016,6 @@ export default {
             else if (this.selectedStatisticsNames.length) {
                 this.updateFeatureStyle(
                     this.selectedColumn,
-                    typeof this.selectedReferenceData !== "undefined",
                     this.selectedReferenceData);
             }
             this.showNoLegendData = !this.selectedStatisticsNames.length;
@@ -1020,6 +1066,7 @@ export default {
                 layers: [this.layer],
                 style: null
             });
+            this.hoverInteraction.setActive(this.showMapTooltips);
 
             map.addInteraction(this.hoverInteraction);
 
@@ -1660,11 +1707,12 @@ export default {
         },
 
         /**
-         * Toggles between chart and table.
+         * Sets the active view (table, chart or map).
+         * @param {String} view The view to show: "table", "chart" or "map".
          * @returns {void}
          */
-        toggleChartTable () {
-            this.setChartTableToggle(this.chartTableToggle === "table" ? "chart" : "table");
+        toggleChartTable (view) {
+            this.setChartTableToggle(view);
         },
 
         /**
@@ -2002,64 +2050,6 @@ export default {
                     />
                 </div>
             </div>
-            <hr
-                v-if="Array.isArray(legendValue) && legendValue.length && !noDataInColumn || showNoLegendData"
-                class="mb-0"
-            >
-            <AccordionItem
-                v-show="Array.isArray(legendValue) && legendValue.length && !noDataInColumn || showNoLegendData"
-                id="legend-accordion"
-                :title="$t('common:modules.statisticDashboard.legend.legend') + ' - ' + chosenStatisticName"
-                icon="bi bi-map"
-                is-open
-            >
-                <div
-                    id="legend-content"
-                >
-                    <div class="legend-body ps-0 py-0">
-                        <div
-                            v-if="!showNoLegendData"
-                            class="container"
-                        >
-                            <div class="row">
-                                <div class="col col-md-6">
-                                    <div
-                                        v-for="legendObj in legendValue"
-                                        :key="legendObj.name"
-                                        class="row layer"
-                                    >
-                                        <div class="col">
-                                            <img
-                                                :alt="legendObj.name"
-                                                :src="legendObj.graphic"
-                                                class="legend-img col-3 col-xs px-0 py-0 left"
-                                            >
-                                            <span
-                                                class="col col-xs legend-names px-0 ms-1"
-                                            >
-                                                {{ legendObj.name }}
-                                            </span>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="col col-md-6">
-                                    <FlatButton
-                                        id="edit-legend"
-                                        aria-label="$t('common:modules.statisticDashboard.legend.edit')"
-                                        :text="$t('common:modules.statisticDashboard.legend.edit')"
-                                        icon="bi bi-gear"
-                                        class="float-end btn-sm"
-                                        :interaction="() => changeLegendView()"
-                                    />
-                                </div>
-                            </div>
-                        </div>
-                        <div v-else>
-                            {{ $t("common:modules.statisticDashboard.legend.nodata") }}
-                        </div>
-                    </div>
-                </div>
-            </AccordionItem>
             <hr class="mt-3 mb-0">
             <Controls
                 v-if="loadedReferenceData"
@@ -2214,6 +2204,28 @@ export default {
                         />
                     </template>
                 </GridComponent>
+            </div>
+            <div v-show="showMap">
+                <StatisticDashboardMapSettings
+                    v-model:show-labels="showMapLabels"
+                    v-model:show-tooltips="showMapTooltips"
+                    :statistic-name="chosenStatisticName"
+                    :year="selectedColumn"
+                    :legend-items="noDataInColumn ? [] : legendValue"
+                    :legend-no-data="showNoLegendData"
+                    :class-count="numberOfClasses"
+                    :min-class-count="minNumberOfClasses"
+                    :max-class-count="maxNumberOfClasses"
+                    @update:class-count="setNumberOfClasses"
+                />
+                <FlatButton
+                    id="edit-legend"
+                    :aria-label="$t('common:modules.statisticDashboard.legend.edit')"
+                    :text="$t('common:modules.statisticDashboard.legend.edit')"
+                    icon="bi bi-gear"
+                    class="btn-sm ms-2 mt-3"
+                    :interaction="() => changeLegendView()"
+                />
             </div>
         </div>
         <div

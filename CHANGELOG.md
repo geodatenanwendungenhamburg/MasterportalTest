@@ -8,6 +8,8 @@
 ### __Breaking Changes__
 
 ### Added
+- Statistic Dashboard: The map view shows the values of the selected statistic on the map.
+  Labels and tooltips can be switched on and off.
 - CustomMenuElement: Added HTML sanitation with DOMPurify to prevent XSS vulnerabilities.
 - Draw: Added new draw module to replace draw_old (type="draw").
 - WMS-Layer: Added additional request parameter `sld` and `gfi_template`.
