@@ -32,6 +32,7 @@
         - jsdom: "29.1.1" to "^30.1.2"
 - WMS-Time: Changed button name to avoid confusion.
 - LayerTree/LayerSelection: In portals with a configured login, secured layers can no longer be activated without being logged in. Instead, an alert asks the user to log in. The lock icon of secured layers is shown open when logged in and closed otherwise.
+- Changed Node.js support: Minimum supported versions are now Node.js **22.23.4** (LTS) and **24.22.1** (LTS). This update is required to address known security vulnerabilities in older Node.js versions.
 
 ### Deprecated
 - WMTS: The `services.json` parameter `transparent` is deprecated and has no effect. Use `transparency` instead.

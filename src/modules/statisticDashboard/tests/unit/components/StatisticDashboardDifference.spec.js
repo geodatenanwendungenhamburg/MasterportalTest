@@ -4,7 +4,6 @@ import {createStore} from "vuex";
 import StatisticDashboardDifference from "@modules/statisticDashboard/components/StatisticDashboardDifference.vue";
 import indexStatisticDashboard from "@modules/statisticDashboard/store/indexStatisticDashboard.js";
 import DropdownAutocomplete from "@shared/modules/dropdown/components/DropdownAutocomplete.vue";
-import NavTab from "@shared/modules/tabs/components/NavTab.vue";
 import sinon from "sinon";
 
 
