@@ -423,17 +423,26 @@ export default {
         }
     },
     async created () {
-        if (!this.selectedLevelName) {
+        const isLevelAlreadySelected = Boolean(this.selectedLevelName);
+
+        if (!isLevelAlreadySelected) {
             this.setSelectedLevelName(this.data[0].levelName);
         }
         this.layer = await this.addNewLayerIfNotExists({layerName: "statistic-dashboard"});
         this.addHoverInteraction();
+        if (isLevelAlreadySelected) {
+            this.initializeData(this.selectedLevel);
+        }
     },
     deactivated () {
         document.getElementById("mp-menu-secondaryMenu").style.width = this.sideMenuWidth;
+        this.removeHoverInteraction();
     },
     activated () {
         document.getElementById("mp-menu-secondaryMenu").style.width = "47vw";
+        if (this.layer && !this.hoverInteraction) {
+            this.addHoverInteraction();
+        }
     },
     mounted () {
         this.sideMenuWidth = document.getElementById("mp-menu-secondaryMenu").style.width;
@@ -453,18 +462,7 @@ export default {
         this.checkFilterSettings(this.selectedRegionsValues, this.selectedDatesValues, this.selectedReferenceData);
     },
     beforeUnmount () {
-        const map = mapCollection.getMap("2D");
-
-        if (map) {
-            if (this.hoverInteraction) {
-                map.removeInteraction(this.hoverInteraction);
-                this.hoverInteraction = null;
-            }
-            if (this.overlay) {
-                map.removeOverlay(this.overlay);
-                this.overlay = null;
-            }
-        }
+        this.removeHoverInteraction();
         this.abortController.abort();
     },
     methods: {
@@ -615,17 +613,19 @@ export default {
                   timeAttribute = level.mappingFilter.timeAttribute.attrName,
                   timeInputFormat = level.mappingFilter.timeAttribute.inputFormat,
                   timeOutputFormat = level.mappingFilter.timeAttribute.outputFormat,
-                  regionNameAttributes = level.mappingFilter.regionNameAttribute.attrName;
-            const uniqueValues = {};
+                  regionNameAttributes = level.mappingFilter.regionNameAttribute.attrName,
+                  allLayerUniqueValues = await Promise.all(layerIds.map((layerId, index) => {
+                      const regionNameAttribute = Array.isArray(regionNameAttributes) ? regionNameAttributes[index] : regionNameAttributes;
 
-            for (const [index, layerId] of layerIds.entries()) {
-                const regionNameAttribute = Array.isArray(regionNameAttributes) ? regionNameAttributes[index] : regionNameAttributes,
-                      layerUniqueValues = await FetchDataHandler.getUniqueValues(layerId, [timeAttribute, regionNameAttribute], timeInputFormat, timeOutputFormat);
+                      return FetchDataHandler.getUniqueValues(layerId, [timeAttribute, regionNameAttribute], timeInputFormat, timeOutputFormat);
+                  })),
+                  uniqueValues = {};
 
+            allLayerUniqueValues.forEach(layerUniqueValues => {
                 Object.entries(layerUniqueValues || {}).forEach(([attributeName, values]) => {
                     uniqueValues[attributeName] = {...uniqueValues[attributeName], ...values};
                 });
-            }
+            });
 
             return uniqueValues;
         },
@@ -989,7 +989,7 @@ export default {
                       this.updateHoverInfo(feature);
                   }, 200),
                   debouncedClearInfo = debounce(() => {
-                      this.overlay.setPosition(undefined);
+                      this.overlay?.setPosition(undefined);
                       this.clearHoverInfo();
                   }, 200);
 
@@ -997,14 +997,7 @@ export default {
                 return;
             }
 
-            if (this.overlay) {
-                map.removeOverlay(this.overlay);
-                this.overlay = null;
-            }
-            if (this.hoverInteraction) {
-                map.removeInteraction(this.hoverInteraction);
-                this.hoverInteraction = null;
-            }
+            this.removeHoverInteraction();
 
             this.overlay = new Overlay({
                 element: this.$refs.hoverInfoOverlay,
@@ -1036,6 +1029,26 @@ export default {
                     debouncedClearInfo();
                 }
             });
+        },
+
+        /**
+         * Removes the hover interaction and the info overlay from the map.
+         * @returns {void}
+         */
+        removeHoverInteraction () {
+            const map = mapCollection.getMap("2D");
+
+            if (!map) {
+                return;
+            }
+            if (this.hoverInteraction) {
+                map.removeInteraction(this.hoverInteraction);
+                this.hoverInteraction = null;
+            }
+            if (this.overlay) {
+                map.removeOverlay(this.overlay);
+                this.overlay = null;
+            }
         },
         /**
          * Updates the hover overlay to show the region name and one statistic value.
@@ -1802,8 +1815,7 @@ export default {
                 return [];
             }
             const lastChild = this.flattenedRegions.at(-1),
-                  selectedLayers = this.selectedLevel?.layerId?.map(id => rawLayerList.getLayerWhere({id})).filter(isObject),
-                  uniqueObject = {};
+                  selectedLayers = this.selectedLevel?.layerId?.map(id => rawLayerList.getLayerWhere({id})).filter(isObject);
 
             if (lastChild?.values?.length) {
                 return lastChild.values;
@@ -1811,9 +1823,9 @@ export default {
             if (!Array.isArray(selectedLayers)) {
                 return [];
             }
-            for (const selectedLayer of selectedLayers) {
-                Object.assign(uniqueObject, await getOAFFeature.getUniqueValuesByScheme(selectedLayer.url, selectedLayer.collection, [lastChild.attrName]));
-            }
+            const uniqueObject = Object.assign({}, ...await Promise.all(selectedLayers.map(
+                selectedLayer => getOAFFeature.getUniqueValuesByScheme(selectedLayer.url, selectedLayer.collection, [lastChild.attrName])
+            )));
 
             return !isObject(uniqueObject[lastChild.attrName]) ? [] : Object.keys(uniqueObject[lastChild.attrName]);
         },
@@ -1823,14 +1835,14 @@ export default {
          * @returns {void}
          */
         async prepareLayer () {
-            if (this.getRawLayerByLayerId(this.selectedLevel.layerId?.[0]).typ === "WFS") {
+            if (!Array.isArray(this.selectedLevel?.layerId) || this.getRawLayerByLayerId(this.selectedLevel.layerId[0])?.typ === "WFS") {
                 return;
             }
 
             this.layer.getSource().clear();
             this.layer.setStyle(null);
 
-            for (const [index, layerId] of this.selectedLevel.layerId.entries()) {
+            await Promise.all(this.selectedLevel.layerId.map(async (layerId, index) => {
                 const regionKey = this.getSelectedLevelRegionNameAttributeInDepth(
                           this.selectedLevel.mappingFilter.regionNameAttribute
                       ).attrName?.[index],
@@ -1846,7 +1858,7 @@ export default {
                     features.push(feature);
                 }
                 this.layer.getSource().addFeatures(features);
-            }
+            }));
         },
 
         /**
@@ -2068,6 +2080,15 @@ export default {
                 @set-table-subtitle="setTableSubtitle"
                 @show-charts-in-grid="handleGrid"
             />
+            <div
+                v-else
+                class="statistic-dashboard-loading d-flex flex-column align-items-center my-4"
+            >
+                <SpinnerItem />
+                <span class="mt-2">
+                    {{ $t('common:modules.statisticDashboard.loadingData') }}
+                </span>
+            </div>
             <div
                 v-if="!isFeatureLoaded"
                 class="text-center"

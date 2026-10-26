@@ -1335,6 +1335,7 @@
       },
       "infoText": "Hinweis: Bei vielen Gebieten wird zunächst nur ein Teil im Diagramm gezeigt. Über das untere Feld lassen sich weitere Gebiete hinzufügen.",
       "infoTextNoData": "Es wurden noch keine oder nicht alle notwendigen Filter hinzugefügt. Um statistische Daten in Tabellen und Diagrammen anzeigen zu lassen, müssen die Daten erst gefiltert werden.",
+      "loadingData": "Daten werden geladen ...",
       "button": {
         "difference": "Differenz",
         "table": "Tabelle",

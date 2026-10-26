@@ -28,6 +28,7 @@
       - jsdom: "29.1.1" to "^30.1.2"
 - WMS-Time: Changed button name to avoid confusion.
 - LayerTree/LayerSelection: In portals with a configured login, secured layers can no longer be activated without being logged in. Instead, an alert asks the user to log in. The lock icon of secured layers is shown open when logged in and closed otherwise.
+- StatisticDashboard: A loading spinner is shown while the module code and the initial data are loaded. Requests for multiple layers are now sent in parallel to speed up loading.
 
 ### Deprecated
 - WMTS: The `services.json` parameter `transparent` is deprecated and has no effect. Use `transparency` instead.
@@ -38,6 +39,8 @@
 ### Fixed
 - Issue \#1629: Fetch legendUrl with authorization header where needed.
 - Issue \#1646: Improved WMTS printing with raster reprojection for differing projections, correct opacity handling, more reliable raster fallbacks and rendering, and reduced 3D print payload sizes.
+- StatisticDashboard: Reopening the module from the menu no longer leaves it stuck in the loading state without controls.
+- StatisticDashboard: The module is now cached when switching between menu entries, so it is no longer rebuilt and its data is no longer reloaded each time it is opened. The hover info on the map is removed while the module is closed.
 - Draw: Fixed an error when editing imported multi geometries (e.g. from KML files), which prevented the measurement tooltip from being positioned.
 - Legend: Legend images of secured services are now loaded with the auth token of the login module, so that no 401 error occurs.
 - GetFeatureInfo: A gfiTheme addon that is configured at a layer but missing in `Config.addons` of config.js is now loaded on demand instead of falling back to the default theme. This also applies to layers added via search.

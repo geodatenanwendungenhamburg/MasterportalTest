@@ -1,5 +1,5 @@
 Error.stackTraceLimit = 50;
-import {shallowMount} from "@vue/test-utils";
+import {flushPromises, shallowMount} from "@vue/test-utils";
 import {expect} from "chai";
 import {createStore} from "vuex";
 import dayjs from "dayjs";
@@ -35,7 +35,7 @@ function addSecondaryMenuElement () {
 }
 
 describe("src/modules/statisticDashboard/components/StatisticDashboard.vue", () => {
-    let store, wrapper, getOAFFeatureStreamStub;
+    let store, wrapper, getOAFFeatureStreamStub, initializeDataStub;
 
     /**
      * Configures the given level as the only level and selects it.
@@ -162,12 +162,68 @@ describe("src/modules/statisticDashboard/components/StatisticDashboard.vue", () 
             }});
         // eslint-disable-next-line no-empty-function
         getOAFFeatureStreamStub = sinon.stub(getOAFFeature, "getOAFFeatureStream").returns((async function* () {})());
+        initializeDataStub = sinon.stub(StatisticDashboard.methods, "initializeData");
     });
 
     afterEach(() => {
         if (wrapper) {
             wrapper.unmount();
         }
+    });
+
+    describe("created", () => {
+        it("should initialize the data of the already selected level when the component is created again", async () => {
+            wrapper = createWrapper();
+            await flushPromises();
+
+            expect(initializeDataStub.calledOnce).to.be.true;
+        });
+        it("should select the first level and initialize its data only once via the watcher if no level is selected yet", async () => {
+            store.commit("Modules/StatisticDashboard/setSelectedLevelName", undefined);
+            wrapper = createWrapper();
+            await flushPromises();
+
+            expect(initializeDataStub.calledOnce).to.be.true;
+            expect(store.state.Modules.StatisticDashboard.selectedLevelName).to.equal("test");
+        });
+    });
+
+    describe("keep-alive hooks", () => {
+        it("should remove the hover interaction when the dashboard is deactivated", () => {
+            const removeHoverInteractionStub = sinon.stub(StatisticDashboard.methods, "removeHoverInteraction");
+
+            wrapper = createWrapper();
+            StatisticDashboard.deactivated.call(wrapper.vm);
+
+            expect(removeHoverInteractionStub.calledOnce).to.be.true;
+            removeHoverInteractionStub.restore();
+        });
+        it("should add the hover interaction again when the dashboard is activated with an existing layer", () => {
+            const addHoverInteractionStub = sinon.stub(StatisticDashboard.methods, "addHoverInteraction");
+
+            wrapper = createWrapper();
+            addHoverInteractionStub.resetHistory();
+            wrapper.vm.layer = {};
+            wrapper.vm.hoverInteraction = null;
+            StatisticDashboard.activated.call(wrapper.vm);
+
+            expect(addHoverInteractionStub.calledOnce).to.be.true;
+            addHoverInteractionStub.restore();
+        });
+        it("should not add the hover interaction when the dashboard is activated without layer or with an existing interaction", () => {
+            const addHoverInteractionStub = sinon.stub(StatisticDashboard.methods, "addHoverInteraction");
+
+            wrapper = createWrapper();
+            addHoverInteractionStub.resetHistory();
+            wrapper.vm.layer = undefined;
+            StatisticDashboard.activated.call(wrapper.vm);
+            wrapper.vm.layer = {};
+            wrapper.vm.hoverInteraction = {};
+            StatisticDashboard.activated.call(wrapper.vm);
+
+            expect(addHoverInteractionStub.notCalled).to.be.true;
+            addHoverInteractionStub.restore();
+        });
     });
 
     describe("Component DOM", () => {
@@ -215,6 +271,20 @@ describe("src/modules/statisticDashboard/components/StatisticDashboard.vue", () 
             });
 
             expect(wrapper.find(".filtered-areas").exists()).to.be.true;
+        });
+        it("should render the loading spinner while the reference data is not loaded", async () => {
+            wrapper = createWrapper();
+
+            await wrapper.setData({loadedReferenceData: false});
+
+            expect(wrapper.find(".statistic-dashboard-loading").exists()).to.be.true;
+        });
+        it("should not render the loading spinner if the reference data is loaded", async () => {
+            wrapper = createWrapper();
+
+            await wrapper.setData({loadedReferenceData: true});
+
+            expect(wrapper.find(".statistic-dashboard-loading").exists()).to.be.false;
         });
         it("should render info text, if no statistical data is available", async () => {
             wrapper = createWrapper();
@@ -922,6 +992,49 @@ describe("src/modules/statisticDashboard/components/StatisticDashboard.vue", () 
 
                 expect(removeOverlaySpy.calledOnce).to.be.true;
                 expect(removeInteractionSpy.calledOnce).to.be.true;
+            });
+        });
+        describe("removeHoverInteraction", () => {
+            let getMapStub;
+
+            afterEach(() => {
+                getMapStub.restore();
+            });
+
+            it("should remove the overlay and the interaction from the map", () => {
+                const mockMap = {addOverlay: sinon.spy(), addInteraction: sinon.spy(), removeOverlay: sinon.spy(), removeInteraction: sinon.spy()},
+                    overlay = {},
+                    hoverInteraction = {};
+
+                getMapStub = sinon.stub(mapCollection, "getMap").returns(mockMap);
+                wrapper = createWrapper();
+                wrapper.vm.overlay = overlay;
+                wrapper.vm.hoverInteraction = hoverInteraction;
+
+                wrapper.vm.removeHoverInteraction();
+
+                expect(mockMap.removeOverlay.calledOnceWith(overlay)).to.be.true;
+                expect(mockMap.removeInteraction.calledOnceWith(hoverInteraction)).to.be.true;
+                expect(wrapper.vm.overlay).to.be.null;
+                expect(wrapper.vm.hoverInteraction).to.be.null;
+            });
+            it("should do nothing if there is no map or nothing to remove", () => {
+                const mockMap = {addOverlay: sinon.spy(), addInteraction: sinon.spy(), removeOverlay: sinon.spy(), removeInteraction: sinon.spy()};
+
+                getMapStub = sinon.stub(mapCollection, "getMap").returns(undefined);
+                wrapper = createWrapper();
+                wrapper.vm.overlay = {};
+                wrapper.vm.removeHoverInteraction();
+
+                expect(wrapper.vm.overlay).to.deep.equal({});
+
+                getMapStub.returns(mockMap);
+                wrapper.vm.overlay = null;
+                wrapper.vm.hoverInteraction = null;
+                wrapper.vm.removeHoverInteraction();
+
+                expect(mockMap.removeOverlay.notCalled).to.be.true;
+                expect(mockMap.removeInteraction.notCalled).to.be.true;
             });
         });
         describe("getChartDataOutOfDifference", () => {
