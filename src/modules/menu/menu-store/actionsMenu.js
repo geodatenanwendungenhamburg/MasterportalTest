@@ -80,8 +80,8 @@ export default {
             const uniqueNames = new Set(modulesWithThisType.map(module => module.name));
 
             if (uniqueNames.size === modulesWithThisType.length) {
-                const moduleConfig = rootGetters.configuredModules.find(module => module.type === type && module.name === props.name),
-                    newState = Object.assign(rootState.Modules[changeCase.upperFirst(type)], moduleConfig);
+                const moduleConfig = rootGetters.configuredModules.find(module => module.type === type && module.name === props.name);
+                const newState = Object.assign({}, rootState.Modules[changeCase.upperFirst(type)], moduleConfig);
 
                 newState.name = props.name;
                 if (props.description) {

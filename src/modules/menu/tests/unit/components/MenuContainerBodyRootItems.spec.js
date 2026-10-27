@@ -36,8 +36,7 @@ describe("src/modules/menu/MenuContainerBodyRootItems.vue", () => {
                         TestModule: {
                             icon: "bi-state",
                             name: "stateName",
-                            description: "stateDescription",
-                            type: "print"
+                            description: "stateDescription"
                         }
                     })
                 }
