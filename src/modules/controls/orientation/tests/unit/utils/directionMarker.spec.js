@@ -47,5 +47,17 @@ describe("src/modules/controls/orientation/utils/directionMarker.js", () => {
 
             expect(style["--marker-heading-angle"]).to.equal("270deg");
         });
+
+        it("adds the map rotation to the heading", () => {
+            const style = getMarkerDirectionStyle(true, Math.PI / 2, Math.PI / 2);
+
+            expect(style["--marker-heading-angle"]).to.equal("180deg");
+        });
+
+        it("wraps the angle when heading plus map rotation exceeds 360 degrees", () => {
+            const style = getMarkerDirectionStyle(true, 3 * Math.PI / 2, Math.PI);
+
+            expect(style["--marker-heading-angle"]).to.equal("90deg");
+        });
     });
 });

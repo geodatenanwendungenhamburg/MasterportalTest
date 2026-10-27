@@ -20,6 +20,7 @@ describe("src/modules/controls/orientation/components/OrientationItem.vue", () =
         iconDirectionArrow,
         originalMapCollection,
         mapMock,
+        viewMock,
         wrappers;
     const mockAlertingActions = {
         addSingleAlert: sinon.stub()
@@ -38,9 +39,15 @@ describe("src/modules/controls/orientation/components/OrientationItem.vue", () =
             removeLayer: sinon.stub(),
             removeOverlay: sinon.stub()
         };
+        viewMock = {
+            getRotation: sinon.stub().returns(0),
+            on: sinon.stub(),
+            un: sinon.stub()
+        };
         originalMapCollection = globalThis.mapCollection;
         globalThis.mapCollection = {
-            getMap: sinon.stub().returns(mapMock)
+            getMap: sinon.stub().returns(mapMock),
+            getMapView: sinon.stub().returns(viewMock)
         };
         store = createStore({
             namespaced: true,
@@ -148,6 +155,45 @@ describe("src/modules/controls/orientation/components/OrientationItem.vue", () =
         wrapper.vm.heading = Math.PI / 2;
 
         expect(wrapper.vm.markerDirectionStyle["--marker-heading-angle"]).to.equal("90deg");
+    });
+
+    it("adds the map rotation to the heading of the marker direction style", () => {
+        showDirection = true;
+        const wrapper = mountOrientationItem();
+
+        wrapper.vm.heading = Math.PI / 2;
+        wrapper.vm.onRotationChange({target: {getRotation: () => Math.PI / 2}});
+
+        expect(wrapper.vm.mapRotation).to.equal(Math.PI / 2);
+        expect(wrapper.vm.markerDirectionStyle["--marker-heading-angle"]).to.equal("180deg");
+    });
+
+    it("takes the initial map rotation from the view on mount", () => {
+        viewMock.getRotation.returns(Math.PI);
+        const wrapper = mountOrientationItem();
+
+        expect(wrapper.vm.mapRotation).to.equal(Math.PI);
+    });
+
+    it("registers the change:rotation listener on mount and removes it on unmount", () => {
+        const wrapper = mountOrientationItem(),
+            listener = wrapper.vm.onRotationChange;
+
+        expect(viewMock.on.calledWith("change:rotation")).to.be.true;
+        expect(viewMock.on.firstCall.args[1]).to.be.a("function");
+
+        wrapper.unmount();
+        wrappers = [];
+
+        expect(viewMock.un.calledWith("change:rotation", listener)).to.be.true;
+    });
+
+    it("returns no marker direction style if showDirection is disabled", () => {
+        const wrapper = mountOrientationItem();
+
+        wrapper.vm.heading = Math.PI / 2;
+
+        expect(wrapper.vm.markerDirectionStyle).to.deep.equal({});
     });
 
     it("shows accuracy layer with marker overlay when accuracy is enabled", () => {

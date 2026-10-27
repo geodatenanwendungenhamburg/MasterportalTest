@@ -23,15 +23,16 @@ export function resolveHeading (nativeHeading) {
 /**
  * Generates CSS style object for direction marker rotation.
  * @param {Boolean} showDirection Whether direction display is enabled.
- * @param {Number|null} heading Heading in radians.
+ * @param {Number|null} heading Heading in radians clockwise from north.
+ * @param {Number} [mapRotation=0] Rotation of the map view in radians, clockwise.
  * @returns {Object} Style object with CSS variable or empty.
  */
-export function getMarkerDirectionStyle (showDirection, heading) {
-    if (!showDirection || !Number.isFinite(heading)) {
+export function getMarkerDirectionStyle (showDirection, heading, mapRotation = 0) {
+    if (!showDirection || !Number.isFinite(heading) || Number.isNaN(mapRotation)) {
         return {};
     }
 
-    const headingInDegree = toHeadingDegrees(heading);
+    const headingInDegree = toHeadingDegrees(heading + mapRotation);
 
     return {
         "--marker-heading-angle": `${headingInDegree}deg`

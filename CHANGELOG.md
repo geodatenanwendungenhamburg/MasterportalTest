@@ -16,6 +16,7 @@
 ### Removed
 
 ### Fixed
+- Issue \#1667: Respect map rotation when displaying user moving direction.
 
 ---
 

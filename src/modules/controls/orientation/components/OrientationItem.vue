@@ -52,7 +52,8 @@ export default {
             heading: null,
             previousPosition: null,
             accuracyFeature: createAccuracyFeature(),
-            accuracyLayer: null
+            accuracyLayer: null,
+            mapRotation: 0
         };
     },
     computed: {
@@ -80,7 +81,7 @@ export default {
             return this.poiDistances === true ? [500, 1000, 2000] : this.poiDistances;
         },
         markerDirectionStyle () {
-            return getMarkerDirectionStyle(this.showDirection, this.heading);
+            return getMarkerDirectionStyle(this.showDirection, this.heading, this.mapRotation);
         }
     },
     watch: {
@@ -110,6 +111,8 @@ export default {
     mounted () {
         this.addElement();
         this.checkWFS();
+        this.mapRotation = mapCollection.getMapView("2D").getRotation();
+        mapCollection.getMapView("2D").on("change:rotation", this.onRotationChange);
     },
     beforeUnmount () {
         clearAccuracyGeometryUtil({
@@ -118,6 +121,7 @@ export default {
             listener: this.onAccuracyGeometryChange
         });
         this.removeOverlay();
+        mapCollection.getMapView("2D").un("change:rotation", this.onRotationChange);
     },
     methods: {
         ...mapMutations("Controls/Orientation", Object.keys(mutations)),
@@ -135,6 +139,15 @@ export default {
 
         setIsGeoLocationPossible () {
             this.isGeoLocationPossible = window.location.protocol === "https:" || ["localhost", "127.0.0.1"].indexOf(window.location.hostname);
+        },
+
+        /**
+         * Stores the current map rotation, so that the direction arrow follows it.
+         * @param {ol/Object.ObjectEvent} event The change:rotation event of the map view.
+         * @returns {void}
+         */
+        onRotationChange (event) {
+            this.mapRotation = event.target.getRotation();
         },
 
         /**
