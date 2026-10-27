@@ -722,7 +722,7 @@
             }
           },
           {
-            "type": "draw_old",
+            "type": "draw",
             "enableAttributesSelector": true,
             "addIconsOfActiveLayers": true
           },
