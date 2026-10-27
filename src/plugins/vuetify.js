@@ -30,11 +30,13 @@ export async function instantiateVuetify () {
                 VAutocomplete: {
                     hideDetails: true,
                     menuProps,
+                    theme: "light",
                     VChip: {closeIcon: "$close"}
                 },
                 VSelect: {
                     hideDetails: true,
                     menuProps,
+                    theme: "light",
                     VChip: {closeIcon: "$close"}
                 }
             },

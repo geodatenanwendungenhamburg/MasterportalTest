@@ -1,5 +1,6 @@
 import {shallowMount} from "@vue/test-utils";
 import {expect} from "chai";
+import {h} from "vue";
 import DropdownSelect from "@shared/modules/dropdown/components/DropdownSelect.vue";
 
 describe("src/shared/modules/dropdown/components/DropdownSelect.vue", () => {
@@ -9,17 +10,28 @@ describe("src/shared/modules/dropdown/components/DropdownSelect.vue", () => {
             name: "VSelect",
             props: ["items", "modelValue"],
             emits: ["update:modelValue"],
-            template: "<div />"
+            render () {
+                return h(
+                    "div",
+                    Object.keys(this.$slots).map(name => h(
+                        "div",
+                        {"data-slot": name},
+                        this.$slots[name]({props: {}, foo: "bar"})
+                    ))
+                );
+            }
         };
 
     /**
-     * Mounts the component with the given props.
+     * Mounts the component with the given props and slots.
      * @param {Object} props the props to pass
+     * @param {Object} slots the slots to pass
      * @returns {Object} the mounted wrapper
      */
-    function mountComponent (props = {}) {
+    function mountComponent (props = {}, slots = {}) {
         return shallowMount(DropdownSelect, {
             props: {label: "City", ...props},
+            slots,
             global: {
                 stubs: {VSelect: VSelectStub}
             }
@@ -64,6 +76,60 @@ describe("src/shared/modules/dropdown/components/DropdownSelect.vue", () => {
             const wrapper = mountComponent({items});
 
             expect(wrapper.emitted("update:modelValue")).to.be.undefined;
+        });
+    });
+
+    describe("forwardedSlotNames", () => {
+        it("returns the names of slots the component does not render itself", () => {
+            const wrapper = mountComponent({items}, {append: "<span>a</span>"});
+
+            expect(wrapper.vm.forwardedSlotNames).to.deep.equal(["append"]);
+        });
+
+        it("does not return chip, subheader and prepend-item", () => {
+            const wrapper = mountComponent({items}, {
+                chip: "<span>a</span>", subheader: "<span>b</span>", "prepend-item": "<span>c</span>"
+            });
+
+            expect(wrapper.vm.forwardedSlotNames).to.deep.equal([]);
+        });
+
+        it("returns an empty array if no slots are given", () => {
+            const wrapper = mountComponent({items});
+
+            expect(wrapper.vm.forwardedSlotNames).to.deep.equal([]);
+        });
+    });
+
+    describe("slot forwarding", () => {
+        it("forwards a slot the component does not handle itself (append)", () => {
+            const wrapper = mountComponent({items}, {
+                append: "<template #append=\"{foo}\"><span class=\"custom\">{{ foo }}</span></template>"
+            });
+
+            expect(wrapper.find("[data-slot='append'] .custom").text()).to.equal("bar");
+        });
+
+        it("renders the custom chip slot instead of the default chip", () => {
+            const wrapper = mountComponent({items}, {
+                chip: "<template #chip=\"{foo}\"><span class=\"custom\">{{ foo }}</span></template>"
+            });
+
+            expect(wrapper.find("[data-slot='chip'] .custom").text()).to.equal("bar");
+        });
+
+        it("renders the default slots for multiple select with select all and no custom slots", () => {
+            const wrapper = mountComponent({items, multiple: true, selectAll: true}),
+                slotNames = wrapper.findAll("[data-slot]").map(el => el.attributes("data-slot"));
+
+            expect(slotNames).to.deep.equal(["subheader", "prepend-item", "chip"]);
+        });
+
+        it("renders the default subheader slot for single select with no custom slots", () => {
+            const wrapper = mountComponent({items}),
+                slotNames = wrapper.findAll("[data-slot]").map(el => el.attributes("data-slot"));
+
+            expect(slotNames).to.deep.equal(["subheader"]);
         });
     });
 });

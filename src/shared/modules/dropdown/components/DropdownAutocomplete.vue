@@ -96,6 +96,20 @@ export default {
         },
 
         /**
+         * Returns slots that DropdownAutocomplete does not handle itself.
+         * @returns {string[]} Slot names to forward.
+         */
+        forwardedSlotNames () {
+            const handledSlots = [
+                "prepend-item",
+                "chip",
+                "subheader"
+            ];
+
+            return Object.keys(this.$slots).filter(name => !handledSlots.includes(name));
+        },
+
+        /**
          * Checks whether some items are selected.
          * @returns {boolean} True if more than one value is selected, or all values.
          */
@@ -201,44 +215,69 @@ export default {
             @update:modelValue="$emit('update:modelValue', $event)"
         >
             <template
-                v-if="multiple && selectAll"
-                #prepend-item
+                v-for="name in forwardedSlotNames"
+                :key="name"
+                #[name]="slotProps"
             >
-                <v-list-item
-                    :title="$t('common:shared.modules.dropdown.selectAll')"
-                    @click="toggleSelectAll"
+                <slot
+                    :name="name"
+                    v-bind="slotProps"
+                />
+            </template>
+            <template
+                v-if="$slots['prepend-item'] || multiple && selectAll"
+                #prepend-item="slotProps"
+            >
+                <slot
+                    name="prepend-item"
+                    v-bind="slotProps"
                 >
-                    <template #prepend>
-                        <v-checkbox-btn
-                            :indeterminate="someSelectedItems && !allSelectedItems"
-                            :model-value="allSelectedItems"
-                        />
-                    </template>
-                </v-list-item>
+                    <v-list-item
+                        :title="$t('common:shared.modules.dropdown.selectAll')"
+                        @click="toggleSelectAll"
+                    >
+                        <template #prepend>
+                            <v-checkbox-btn
+                                :indeterminate="someSelectedItems && !allSelectedItems"
+                                :model-value="allSelectedItems"
+                            />
+                        </template>
+                    </v-list-item>
+                </slot>
                 <v-divider class="mt-2" />
             </template>
             <template
-                v-if="multiple"
-                #chip="{ index, props }"
+                v-if="$slots['chip'] || multiple"
+                #chip="slotProps"
             >
-                <v-chip
-                    v-if="index < maxChipCount"
-                    v-bind="props"
-                />
-                <span v-if="multiple && index === maxChipCount">
-                    <small>{{ $t('common:shared.modules.dropdown.more', {count: modelValue.length - maxChipCount}) }}</small>
-                </span>
+                <slot
+                    name="chip"
+                    v-bind="slotProps"
+                >
+                    <v-chip
+                        v-if="slotProps.index < maxChipCount"
+                        v-bind="slotProps.props"
+                    />
+                    <span v-if="multiple && slotProps.index === maxChipCount">
+                        <small>{{ $t('common:shared.modules.dropdown.more', {count: modelValue.length - maxChipCount}) }}</small>
+                    </span>
+                </slot>
             </template>
             <template
-                #subheader="{props}"
+                #subheader="slotProps"
             >
-                <VListSubheader
-                    v-bind="props"
-                    class="group-title"
-                    :class="props.level === 1 ? 'level-1' : 'level-2'"
+                <slot
+                    name="subheader"
+                    v-bind="slotProps"
                 >
-                    {{ props[itemTitle || "title"] }}
-                </VListSubheader>
+                    <VListSubheader
+                        v-bind="slotProps.props"
+                        class="group-title"
+                        :class="slotProps.props.level === 1 ? 'level-1' : 'level-2'"
+                    >
+                        {{ slotProps.props[itemTitle || "title"] }}
+                    </VListSubheader>
+                </slot>
             </template>
         </v-autocomplete>
     </template>
@@ -273,6 +312,9 @@ export default {
         .v-chip__content {
             position: relative;
             top: 2px;
+        }
+        .v-field__input {
+            font-size: 1rem;
         }
         .v-field__outline {
             --v-field-border-width: 0;
