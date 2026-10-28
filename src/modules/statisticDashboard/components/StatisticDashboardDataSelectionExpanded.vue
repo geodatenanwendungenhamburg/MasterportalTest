@@ -4,7 +4,7 @@
  * @import {DropdownItem} from "@shared/modules/dropdown/types/typesDropdown.js"
  * @import {StatisticDashboardMapGetters, StatisticDashboardMapMutations} from "../types/helpers.js"
  */
-import BaseCard from "@shared/modules/Cards/BaseCard.vue";
+import BaseCard from "@shared/modules/cards/components/BaseCard.vue";
 import ButtonGroup from "@shared/modules/buttons/components/ButtonGroup.vue";
 import DropdownAutocomplete from "@shared/modules/dropdown/components/DropdownAutocomplete.vue";
 import FlatButton from "@shared/modules/buttons/components/FlatButton.vue";
