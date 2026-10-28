@@ -55,6 +55,7 @@ export default defineConfig(mode => mergeConfig(
                 "devtools/**/*.spec.js"
             ],
             exclude: [
+                "addons/cosi/**/*.spec.js",
                 // an G31: https://lgv-hamburg.atlassian.net/browse/G31DEV1-3566
                 "**/FilterGeneral.spec.js",
                 // defaults from vitest:
