@@ -49,21 +49,21 @@ export default {
          * @returns {Boolean} Whether stroke color is editable.
          */
         hasStrokeColor () {
-            return ["point", "line", "polygon", "circle"].includes(this.featureEditType);
+            return ["line", "polygon", "circle"].includes(this.featureEditType);
         },
         /**
          * Returns true if the feature has stroke width editing.
          * @returns {Boolean} Whether stroke width is editable.
          */
         hasStrokeWidth () {
-            return ["point", "line", "polygon", "circle"].includes(this.featureEditType);
+            return ["line", "polygon", "circle"].includes(this.featureEditType);
         },
         /**
          * Returns true if the feature has fill transparency editing.
          * @returns {Boolean} Whether fill transparency is editable.
          */
         hasFillTransparency () {
-            return ["text", "point", "line", "polygon", "circle"].includes(this.featureEditType);
+            return ["text", "line", "polygon", "circle"].includes(this.featureEditType);
         },
         /**
          * Returns the transparency key name based on edit type.
@@ -192,29 +192,6 @@ export default {
                 :value="editState.iconScale.toString()"
                 :step="0.5"
                 :interaction="event => updateStyle('iconScale', parseFloat(event.target.value))"
-            />
-        </div>
-
-        <!-- Point size -->
-        <div
-            v-if="featureEditType === 'point'"
-            class="mb-2"
-        >
-            <label
-                for="draw-edit-style-point-size"
-                class="form-label"
-            >
-                {{ $t("common:shared.modules.draw.drawEditStyle.pointSize") }}
-            </label>
-            <SliderItem
-                id="draw-edit-style-point-size"
-                :aria="`${editState.pointSize}px`"
-                :label="`${editState.pointSize}px`"
-                min="4"
-                max="64"
-                :value="editState.pointSize.toString()"
-                :step="2"
-                :interaction="event => updateStyle('pointSize', parseInt(event.target.value, 10))"
             />
         </div>
 

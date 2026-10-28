@@ -175,23 +175,7 @@ describe("src/shared/modules/draw/components/DrawEditStyle.vue", () => {
     });
 
     describe("point feature", () => {
-        it("should render point size slider for simple points", async () => {
-            const feature = createFeatureWithDrawState({
-                drawType: {id: "drawSymbol", geometry: "Point"},
-                color: [55, 126, 184, 1],
-                colorContour: [0, 0, 0, 1],
-                pointSize: 16,
-                strokeWidth: 1,
-                zIndex: 0
-            });
-
-            mountComponent({selectedFeature: feature});
-            await wrapper.vm.$nextTick();
-
-            expect(wrapper.find("#draw-edit-style-point-size").exists()).to.be.true;
-        });
-
-        it("should render fill and stroke color buttons for simple points", async () => {
+        it("should render a fill color button for simple points", async () => {
             const feature = createFeatureWithDrawState({
                 drawType: {id: "drawSymbol", geometry: "Point"},
                 color: [55, 126, 184, 1],
@@ -205,7 +189,6 @@ describe("src/shared/modules/draw/components/DrawEditStyle.vue", () => {
             await wrapper.vm.$nextTick();
 
             expect(wrapper.find("#draw-edit-style-fill-color").exists()).to.be.true;
-            expect(wrapper.find("#draw-edit-style-stroke-color").exists()).to.be.true;
         });
     });
 
