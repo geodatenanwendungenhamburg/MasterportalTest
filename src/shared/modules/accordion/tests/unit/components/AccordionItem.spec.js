@@ -136,5 +136,18 @@ describe("src/shared/modules/accordion/components/AccordionItem.vue", () => {
             expect(heading.element.tagName).to.equal(level.toUpperCase());
         }
     });
+    it("should render badge with badgeText", () => {
+        const wrapper = shallowMount(AccordionItem, {
+            props: {id: "id-badge", title, badgeText: "42"}
+        });
 
+        expect(wrapper.find(".badge").text()).to.equal("42");
+    });
+    it("should not render badge without badgeText", () => {
+        const wrapper = shallowMount(AccordionItem, {
+            props: {id: "id-no-badge", title}
+        });
+
+        expect(wrapper.find(".badge").exists()).to.be.false;
+    });
 });

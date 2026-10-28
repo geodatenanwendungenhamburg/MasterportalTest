@@ -151,4 +151,55 @@ describe("src/modules/statisticDashboard/store/gettersStatisticDashboard.js", ()
             expect(getters.selectedRegionsValues(state, {selectedRegions})).to.deep.equals(["A", "Z"]);
         });
     });
+
+    describe("specifics", () => {
+        const statisticsAttributes = {
+                popTotal: {name: "Population", category: "Pop", specifics: {gender: ["popM", "popF"], age: ["popYoung"]}},
+                popM: {name: "Male", category: "Pop"},
+                popF: {name: "Female", category: "Pop"},
+                popYoung: {name: "Young", category: "Pop"},
+                jobsTotal: {name: "Jobs", category: "Work"}
+            },
+            selectedLevel = {levelName: "Counties", mappingFilter: {statisticsAttributes}};
+
+        describe("hasSpecifics", () => {
+            it("should return true if a statistic of the selected level has specifics", () => {
+                expect(getters.hasSpecifics(null, {selectedLevel})).to.be.true;
+            });
+
+            it("should return false if no statistic has specifics or no level is selected", () => {
+                expect(getters.hasSpecifics(null, {selectedLevel: {mappingFilter: {statisticsAttributes: {jobsTotal: {name: "Jobs", specifics: {}}}}}})).to.be.false;
+                expect(getters.hasSpecifics(null, {selectedLevel: undefined})).to.be.false;
+            });
+        });
+
+        describe("specificStatisticKeys", () => {
+            it("should return the keys referenced as specifics", () => {
+                expect(getters.specificStatisticKeys(null, {selectedLevel})).to.deep.equal(["popM", "popF", "popYoung"]);
+            });
+
+            it("should return an empty array if no level is selected", () => {
+                expect(getters.specificStatisticKeys(null, {selectedLevel: undefined})).to.deep.equal([]);
+            });
+        });
+
+        describe("aggregatedStatistics", () => {
+            it("should return the selected statistics without specific statistics", () => {
+                const selectedStatistics = {
+                    popTotal: {key: "popTotal", selectedOrder: 0},
+                    popM: {key: "popM", selectedOrder: 1},
+                    jobsTotal: {key: "jobsTotal", selectedOrder: 2}
+                };
+
+                expect(getters.aggregatedStatistics(null, {selectedStatistics, specificStatisticKeys: ["popM"]})).to.deep.equal({
+                    popTotal: {key: "popTotal", selectedOrder: 0},
+                    jobsTotal: {key: "jobsTotal", selectedOrder: 2}
+                });
+            });
+
+            it("should return an empty object if no statistics are selected", () => {
+                expect(getters.aggregatedStatistics(null, {selectedStatistics: {}, specificStatisticKeys: ["popM"]})).to.deep.equal({});
+            });
+        });
+    });
 });

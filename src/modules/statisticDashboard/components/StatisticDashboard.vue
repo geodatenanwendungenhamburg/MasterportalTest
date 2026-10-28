@@ -37,6 +37,7 @@ import StatisticDashboardDataSelection from "./StatisticDashboardDataSelection.v
 import StatisticDashboardMapSettings from "./StatisticDashboardMapSettings.vue";
 import TableComponent from "@shared/modules/table/components/TableComponent.vue";
 import thousandsSeparator from "@shared/js/utils/thousandsSeparator.js";
+import warnMissingSpecifics from "../js/warnMissingSpecifics.js";
 import WFS from "ol/format/WFS.js";
 
 const filterMap = {
@@ -137,6 +138,7 @@ export default {
             "legendData",
             "selectedLevel",
             "selectedLevelName",
+            "showAggregatedView",
             "minNumberOfClasses",
             "maxNumberOfClasses",
             "selectableColorPalettes",
@@ -331,8 +333,12 @@ export default {
                 );
             });
         },
-        selectedStatisticsNames (val, oldVal) {
-            if (Array.isArray(oldVal) && oldVal.length > 1 && Array.isArray(val) && val.length === 1 && !val.includes(this.chosenStatisticName)) {
+        /**
+         * Adjusts the chosen statistic name and filtered regions based on the new selection.
+         * @param {string[]} val The new value of `selectedStatisticsNames`.
+         */
+        selectedStatisticsNames (val) {
+            if (val.length && !val.includes(this.chosenStatisticName)) {
                 this.setChosenStatisticName(val[0]);
                 this.selectedFilteredRegions = this.selectedFilteredRegions.filter(name => this.selectedRegionsValues.includes(name));
             }
@@ -456,6 +462,9 @@ export default {
         if (!isLevelAlreadySelected) {
             this.setSelectedLevelName(this.data[0].levelName);
         }
+        if (this.showAggregatedView) {
+            warnMissingSpecifics(this.data);
+        }
         this.layer = await this.addNewLayerIfNotExists({layerName: "statistic-dashboard"});
         this.addHoverInteraction();
         if (isLevelAlreadySelected) {
@@ -514,6 +523,7 @@ export default {
             "setSelectedDates",
             "setSelectedReferenceData",
             "setSelectedStatisticsKeys",
+            "setSelectedSpecificsTags",
             "setSelectableColorPalettes",
             "setTimeStepsFilter",
             "setIsFeatureLoaded"
@@ -1943,6 +1953,7 @@ export default {
             this.setFlattenedRegions([]);
             this.setSelectedCategories([]);
             this.setSelectedStatisticsKeys([]);
+            this.setSelectedSpecificsTags({});
             this.setSelectedRegions([]);
             this.setSelectedDates([]);
             this.setSelectedReferenceData(undefined);
@@ -1977,6 +1988,7 @@ export default {
         resetAll () {
             this.setSelectedCategories([]);
             this.setSelectedStatisticsKeys([]);
+            this.setSelectedSpecificsTags({});
             this.setSelectedRegions([]);
             this.setSelectedDates([]);
             this.setSelectedReferenceData(undefined);

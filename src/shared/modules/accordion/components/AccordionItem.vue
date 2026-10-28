@@ -14,6 +14,7 @@
  * @vue-prop {String} iconMarginEnd - sets the margin-end utility class for the icon (e.g., me-2, me-3).
  * @vue-prop {String} subTitle - sets an optional subtitle to be displayed below the title.
  * @vue-prop {String} subFontSize - defaults to font-size-base (1rem) and can be changed to use a different size for the subtitle.
+ * @vue-prop {String} badgeText - sets an optional text to be displayed in a badge right of the title/subtitle block.
  * @vue-prop {Boolean} withBorder - if true, the accordion will have a border around it and a border between the title and the content.
  * @vue-event {updateAccordionState} - emitted when the accordion state changes, passing a boolean indicating whether the accordion is open.
  */
@@ -76,6 +77,11 @@ export default {
             default: "font-size-base",
             validator: value => ["font-size-base", "font-size-big", "font-size-small"].includes(value)
         },
+        badgeText: {
+            type: String,
+            required: false,
+            default: null
+        },
         withBorder: {
             type: Boolean,
             required: false,
@@ -110,6 +116,7 @@ export default {
                 <button
                     :class="[
                         'accordion-button',
+                        badgeText ? 'has-badge' : '',
                         fontSize,
                         !isOpen? 'collapsed' : '',
                         colouredHeader ? 'rounded' : useIndentation ? '' : 'ps-0'
@@ -137,6 +144,12 @@ export default {
                         >
                             {{ subTitle }}
                         </span>
+                    </span>
+                    <span
+                        v-if="badgeText"
+                        class="badge rounded-pill bg-mp-light-blue text-body mx-auto"
+                    >
+                        {{ badgeText }}
                     </span>
                 </button>
             </component>
@@ -170,6 +183,9 @@ export default {
         }
         .font-size-small {
             font-size: $font_size_sm;
+        }
+        .accordion-button.has-badge::after {
+            margin-left: 0;
         }
         [coloured=true] {
                 background-color: $light_blue;

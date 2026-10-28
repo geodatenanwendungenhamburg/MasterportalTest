@@ -1,4 +1,4 @@
-/** @import { SelectedStatistics }  from "../types/internalTypes.js" */
+/** @import { SelectedStatistics } from "../types/internalTypes.js" */
 /** @import { StatisticDashboardLevel } from "../types/typesStatisticDashboard" */
 /** @import { StatisticDashboardState } from "../store/stateStatisticDashboard.js" */
 import {generateSimpleGetters} from "@shared/js/utils/generators.js";
@@ -106,6 +106,59 @@ const getters = {
             allRegions = mappedRegionsValues.find(region => Array.isArray(region));
 
         return typeof allRegions !== "undefined" ? allRegions : mappedRegionsValues;
+    },
+
+    /**
+     * Checks whether the selected level has at least one statistic with specifics.
+     * @param {StatisticDashboardState} state - The StatisticDashboard state.
+     * @param {object} getters
+     * @param {StatisticDashboardLevel|undefined} getters.selectedLevel The selected level.
+     * @returns {Boolean} True if any statistic of the selected level has specifics.
+     */
+    hasSpecifics (state, {selectedLevel}) {
+        return Object.values(selectedLevel?.mappingFilter.statisticsAttributes ?? {})
+            .some(attribute => Object.keys(attribute.specifics ?? {}).length > 0);
+    },
+
+    /**
+     * Gets the keys of all statistics referenced as specifics in the selected level.
+     * @param {StatisticDashboardState} state - The StatisticDashboard state.
+     * @param {object} getters
+     * @param {StatisticDashboardLevel|undefined} getters.selectedLevel The selected level.
+     * @returns {string[]} The specific statistic keys.
+     */
+    specificStatisticKeys (state, {selectedLevel}) {
+        if (!selectedLevel) {
+            return [];
+        }
+        /** @type {Set<string>} */
+        const keys = new Set();
+
+        for (const attribute of Object.values(selectedLevel.mappingFilter.statisticsAttributes)) {
+            if (!attribute.specifics) {
+                continue;
+            }
+            for (const specificKeys of Object.values(attribute.specifics)) {
+                for (const key of specificKeys) {
+                    keys.add(key);
+                }
+            }
+        }
+        return [...keys];
+    },
+
+    /**
+     * Gets the selected statistics that are not specific statistics.
+     * @param {StatisticDashboardState} state - The StatisticDashboard state.
+     * @param {object} getters
+     * @param {SelectedStatistics} getters.selectedStatistics The selected statistics.
+     * @param {string[]} getters.specificStatisticKeys The specific statistic keys.
+     * @returns {SelectedStatistics} The selected aggregated statistics.
+     */
+    aggregatedStatistics (state, {selectedStatistics, specificStatisticKeys}) {
+        return Object.fromEntries(
+            Object.entries(selectedStatistics).filter(([key]) => !specificStatisticKeys.includes(key))
+        );
     }
 };
 

@@ -14,6 +14,9 @@
  * @property {Boolean} resizableWindow If true, window is resizable. (config-param)
  * @property {Boolean} isVisibleInMenu If true, tool is selectable in menu. (config-param)
  * @property {StatisticDashboardLevel[]} data The configured levels with their data sources. (config-param)
+ * @property {Boolean} showAggregatedView If true, only aggregated statistics are offered in the statistics dropdown and their specific statistics can be selected in an accordion. (config-param)
+ * @property {Number} specificsChipLimit The number of selected specific statistics shown per aggregated statistic before "show all" is offered. Values below 1 show all. (config-param)
+ * @property {Record<string, string[]>} selectedSpecificsTags - The selected tags per aggregated statistic key.
  * @property {ReferenceData} referenceData - The reference data used in the statistic dashboard.
  * @property {Object} selectedReferenceData the selected reference data
  * @property {string|undefined} selectedLevelName - The levelName of the selected level (district, county, ...). The level itself is provided by the getter selectedLevel.
@@ -57,6 +60,9 @@ const state = {
     isVisibleInMenu: true,
     colorScheme: {},
     data: [],
+    showAggregatedView: false,
+    specificsChipLimit: 5,
+    selectedSpecificsTags: {},
     referenceData: {},
     selectedReferenceData: undefined,
     selectedCategories: [],

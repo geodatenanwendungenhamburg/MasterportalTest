@@ -224,6 +224,52 @@ describe("src/modules/statisticDashboard/components/StatisticDashboard.vue", () 
             addHoverInteractionStub.restore();
         });
     });
+    describe("showAggregatedView", () => {
+        let warnStub;
+
+        beforeEach(() => {
+            warnStub = sinon.stub(console, "warn");
+            setLevel({mappingFilter: {statisticsAttributes: {
+                popTotal: {name: "Population", category: "Pop", specifics: {gender: ["popM", "popMissing"]}},
+                popM: {name: "Male", category: "Pop"}
+            }}});
+        });
+
+        afterEach(() => {
+            warnStub.restore();
+        });
+
+        it("should warn about missing specific statistics on creation if showAggregatedView is enabled", () => {
+            store.commit("Modules/StatisticDashboard/setShowAggregatedView", true);
+            wrapper = createWrapper();
+
+            expect(warnStub.calledWithMatch("\"popMissing\"")).to.be.true;
+        });
+
+        it("should not warn about missing specific statistics if showAggregatedView is disabled", () => {
+            wrapper = createWrapper();
+
+            expect(warnStub.calledWithMatch("\"popMissing\"")).to.be.false;
+        });
+
+        it("should reset the selected specifics tags on resetAll", () => {
+            wrapper = createWrapper();
+            store.commit("Modules/StatisticDashboard/setSelectedSpecificsTags", {popTotal: ["gender"]});
+
+            wrapper.vm.resetAll();
+
+            expect(store.state.Modules.StatisticDashboard.selectedSpecificsTags).to.deep.equal({});
+        });
+
+        it("should reset the selected specifics tags on resetLevel", () => {
+            wrapper = createWrapper();
+            store.commit("Modules/StatisticDashboard/setSelectedSpecificsTags", {popTotal: ["gender"]});
+
+            wrapper.vm.resetLevel();
+
+            expect(store.state.Modules.StatisticDashboard.selectedSpecificsTags).to.deep.equal({});
+        });
+    });
 
     describe("Component DOM", () => {
         it("Level name as switch button should not exist", () => {

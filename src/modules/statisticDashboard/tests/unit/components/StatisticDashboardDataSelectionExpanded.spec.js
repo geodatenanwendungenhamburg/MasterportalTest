@@ -6,12 +6,13 @@ import DropdownAutocomplete from "@shared/modules/dropdown/components/DropdownAu
 import indexStatisticDashboard from "@modules/statisticDashboard/store/indexStatisticDashboard.js";
 import StatisticDashboardDataSelectionExpanded from "@modules/statisticDashboard/components/StatisticDashboardDataSelectionExpanded.vue";
 import StatisticDashboardDifference from "@modules/statisticDashboard/components/StatisticDashboardDifference.vue";
+import StatisticDashboardSpecificsSelection from "@modules/statisticDashboard/components/StatisticDashboardSpecificsSelection.vue";
 import FlatButton from "@shared/modules/buttons/components/FlatButton.vue";
 import SwitchInput from "@shared/modules/checkboxes/components/SwitchInput.vue";
 
 describe("src/modules/statisticDashboard/components/StatisticDashboardDataSelectionExpanded.vue", () => {
     const statisticAttributes = {
-            populationTotal: {name: "Total population", category: "Population"},
+            populationTotal: {name: "Total population", category: "Population", specifics: {gender: ["populationFemale"]}},
             populationFemale: {name: "Female population", category: "Population"},
             employmentTotal: {name: "Total employment", category: "Employment"}
         },
@@ -63,7 +64,7 @@ describe("src/modules/statisticDashboard/components/StatisticDashboardDataSelect
     it("filters the statistic options by selected categories", () => {
         const wrapper = createWrapper();
 
-        expect(wrapper.vm.statisticsForSelectedCategories).to.deep.equal([
+        expect(wrapper.findAllComponents(DropdownAutocomplete)[1].props("items")).to.deep.equal([
             {value: "populationTotal", title: "Total population"},
             {value: "populationFemale", title: "Female population"}
         ]);
@@ -73,7 +74,50 @@ describe("src/modules/statisticDashboard/components/StatisticDashboardDataSelect
         store.commit("Modules/StatisticDashboard/setSelectedLevelName", "Missing level");
         const wrapper = createWrapper();
 
-        expect(wrapper.vm.statisticsForSelectedCategories).to.deep.equal([]);
+        expect(wrapper.findAllComponents(DropdownAutocomplete)[1].props("items")).to.deep.equal([]);
+    });
+
+    it("does not render the specifics selection if showAggregatedView is disabled", () => {
+        const wrapper = createWrapper();
+
+        expect(wrapper.findComponent(StatisticDashboardSpecificsSelection).exists()).to.be.false;
+    });
+
+    describe("showAggregatedView enabled", () => {
+        beforeEach(() => {
+            store.commit("Modules/StatisticDashboard/setShowAggregatedView", true);
+            store.commit("Modules/StatisticDashboard/setSelectedSpecificsTags", {populationTotal: ["gender"]});
+        });
+
+        it("offers only aggregated statistics and renders the specifics selection", () => {
+            const wrapper = createWrapper(),
+                statisticDropdown = wrapper.findAllComponents(DropdownAutocomplete)[1];
+
+            expect(statisticDropdown.props("items")).to.deep.equal([
+                {value: "populationTotal", title: "Total population"}
+            ]);
+            expect(statisticDropdown.props("modelValue")).to.deep.equal(["populationTotal"]);
+            expect(wrapper.findComponent(StatisticDashboardSpecificsSelection).exists()).to.be.true;
+        });
+
+        it("keeps covered specific statistics when the aggregated statistics change", async () => {
+            const wrapper = createWrapper(),
+                statisticDropdown = wrapper.findAllComponents(DropdownAutocomplete)[1];
+
+            await statisticDropdown.vm.$emit("update:model-value", ["populationTotal"]);
+
+            expect(store.state.Modules.StatisticDashboard.selectedStatisticsKeys).to.deep.equal(["populationTotal", "populationFemale"]);
+        });
+
+        it("removes specific statistics when their aggregated statistic is deselected", async () => {
+            const wrapper = createWrapper(),
+                statisticDropdown = wrapper.findAllComponents(DropdownAutocomplete)[1];
+
+            await statisticDropdown.vm.$emit("update:model-value", []);
+
+            expect(store.state.Modules.StatisticDashboard.selectedStatisticsKeys).to.deep.equal([]);
+            expect(store.state.Modules.StatisticDashboard.selectedSpecificsTags).to.deep.equal({});
+        });
     });
 
     it("updates the selected categories and removes statistics outside them", async () => {

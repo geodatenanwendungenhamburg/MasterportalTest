@@ -11,6 +11,7 @@ import FlatButton from "@shared/modules/buttons/components/FlatButton.vue";
 import {mapGetters, mapMutations} from "vuex";
 import StatisticDashboardFilterRegions from "./StatisticDashboardFilterRegions.vue";
 import StatisticDashboardDifference from "./StatisticDashboardDifference.vue";
+import StatisticDashboardSpecificsSelection from "./StatisticDashboardSpecificsSelection.vue";
 import SwitchInput from "@shared/modules/checkboxes/components/SwitchInput.vue";
 
 export default {
@@ -22,6 +23,7 @@ export default {
         FlatButton,
         StatisticDashboardFilterRegions,
         StatisticDashboardDifference,
+        StatisticDashboardSpecificsSelection,
         SwitchInput
     },
     emits: ["click:showData"],
@@ -40,6 +42,8 @@ export default {
             "selectedLevel",
             "selectedRegions",
             "selectedStatisticsKeys",
+            "showAggregatedView",
+            "specificStatisticKeys",
             "timeStepsFilter"
         ]),
 
@@ -56,29 +60,57 @@ export default {
         },
 
         /**
-         * Gets the statistics filtered by the selected categories.
-         * @returns {DropdownItem[]} The statistics for the selected categories.
+         * Gets the statistics offered in the statistics dropdown, filtered by the selected categories.
+         * If showAggregatedView is enabled, specific statistics are excluded.
+         * @returns {DropdownItem[]} The selectable statistics.
          */
-        statisticsForSelectedCategories () {
-            if (typeof this.selectedLevel === "undefined") {
+        selectableStatistics () {
+            if (!this.selectedLevel) {
                 return [];
             }
-
             return Object.entries(this.selectedLevel.mappingFilter.statisticsAttributes)
-                .filter(([, attribute]) => this.selectedCategories.includes(attribute.category))
-                .map(([statisticName, attribute]) => ({
-                    value: statisticName,
+                .filter(([key, attribute]) => this.selectedCategories.includes(attribute.category)
+                    && (!this.showAggregatedView || !this.specificStatisticKeys.includes(key)))
+                .map(([key, attribute]) => ({
+                    value: key,
                     title: attribute.name
                 }));
+        },
+
+        /**
+         * Gets the keys selected in the statistics dropdown.
+         * If showAggregatedView is enabled, specific statistics are selected in the specifics selection instead.
+         * @returns {string[]} The selected keys of the statistics dropdown.
+         */
+        statisticsDropdownKeys () {
+            if (!this.showAggregatedView) {
+                return this.selectedStatisticsKeys;
+            }
+            return this.selectedStatisticsKeys.filter(key => !this.specificStatisticKeys.includes(key));
         }
     },
     methods: {
         .../** @type {StatisticDashboardMapMutations} */ (mapMutations)("Modules/StatisticDashboard", [
             "setSelectedDates",
+            "setSelectedAggregatedStatisticsKeys",
             "setSelectedLevelName",
             "setSelectedStatisticsKeys",
             "updateSelectedCategories"
-        ])
+        ]),
+
+        /**
+         * Sets the selected statistics from the statistics dropdown.
+         * @param {string[]} keys The selected keys.
+         * @returns {void}
+         */
+        updateStatisticsDropdownKeys (keys) {
+            if (this.showAggregatedView) {
+                this.setSelectedAggregatedStatisticsKeys(keys);
+            }
+            else {
+                this.setSelectedStatisticsKeys(keys);
+            }
+        }
     }
 };
 
@@ -117,10 +149,14 @@ export default {
         <DropdownAutocomplete
             class="mb-2"
             :label="$t('common:modules.statisticDashboard.dataSelectionExpanded.indicators')"
-            :items="statisticsForSelectedCategories"
-            :model-value="selectedStatisticsKeys"
+            :items="selectableStatistics"
+            :model-value="statisticsDropdownKeys"
             multiple
-            @update:model-value="setSelectedStatisticsKeys"
+            @update:model-value="updateStatisticsDropdownKeys"
+        />
+        <StatisticDashboardSpecificsSelection
+            v-if="showAggregatedView"
+            class="mb-2"
         />
         <span
             v-if="selectedStatisticsKeys.length > 0"
