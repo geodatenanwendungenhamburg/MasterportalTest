@@ -140,7 +140,7 @@ export default {
 
         /**
          * Updates the selected export format when the user changes the dropdown.
-         * Emits "format-changed" with the new format.
+         * @emits "format-changed" with the new format.
          * @param {Event} event - The change event from the format select element.
          * @returns {void}
          */
@@ -152,7 +152,7 @@ export default {
         /**
          * Triggers the download for the currently selected export format.
          * Aborts if no format is selected or if unsupported polygon types are present for GPX.
-         * Emits "file-downloaded" with the format after the download has been triggered.
+         * @emits "file-downloaded" with the new format after the download has been triggered.
          * @returns {void}
          */
         async startDownload () {
