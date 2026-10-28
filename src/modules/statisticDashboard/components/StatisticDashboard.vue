@@ -14,7 +14,6 @@ import dayjs from "dayjs";
 import debounce from "@shared/js/utils/debounce.js";
 import FeaturesHandler from "../js/handleFeatures.js";
 import FetchDataHandler from "../js/fetchData.js";
-import FlatButton from "@shared/modules/buttons/components/FlatButton.vue";
 import {GeoJSON} from "ol/format.js";
 import getFeature from "@shared/js/api/wfs/getFeature.js";
 import getOAFFeature from "@shared/js/api/oaf/getOAFFeature.js";
@@ -55,7 +54,6 @@ export default {
     name: "StatisticDashboard",
     components: {
         Controls,
-        FlatButton,
         GridComponent,
         IconButton,
         LegendComponent,
@@ -91,7 +89,6 @@ export default {
             colorArrayDifference: ["#E28574", "#89C67F"],
             legendValue: [],
             showNoLegendData: false,
-            showLegendView: false,
             showLimitView: false,
             selectedFilteredRegions: [],
             allFilteredRegions: [],
@@ -1953,14 +1950,6 @@ export default {
         },
 
         /**
-         * Toggle the legend view.
-         * @returns {void}
-         */
-        changeLegendView () {
-            this.showLegendView = !this.showLegendView;
-        },
-
-        /**
          * Gets the total prop.
          * @param {Boolean} addTotalCount - if the total count should be added.
          * @returns {Object} the total props for table component.
@@ -2022,7 +2011,188 @@ export default {
             class
             @reset-all="resetAll"
         />
-        <template v-if="showLegendView">
+        <div class="row justify-content-between">
+            <div class="col-md-12 d-flex align-items-center">
+                <IconButton
+                    v-if="getMetadataLink()"
+                    :aria="$t('common:modules.statisticDashboard.headings.mrhstatisticsTooltip')"
+                    :title="$t('common:modules.statisticDashboard.headings.mrhstatisticsTooltip')"
+                    icon="bi-info-circle"
+                    :interaction="() => openMetadata()"
+                    :class-array="['info', 'btn', 'btn-light', 'btn-sm', 'ms-1', 'mt-0']"
+                />
+            </div>
+        </div>
+        <hr class="mt-3 mb-0">
+        <Controls
+            v-if="loadedReferenceData"
+            :descriptions="controlDescription"
+            class="mb-3"
+            @show-chart-table="toggleChartTable"
+            @set-table-subtitle="setTableSubtitle"
+            @show-charts-in-grid="handleGrid"
+        />
+        <div
+            v-else
+            class="statistic-dashboard-loading d-flex flex-column align-items-center my-4"
+        >
+            <SpinnerItem />
+            <span class="mt-2">
+                {{ $t('common:modules.statisticDashboard.loadingData') }}
+            </span>
+        </div>
+
+        <div
+            v-if="!isFeatureLoaded"
+            class="text-center"
+        >
+            <SpinnerItem />
+        </div>
+        <div
+            v-if="!statisticsData && isFeatureLoaded"
+            class="row justify-content-center my-3"
+        >
+            <div
+                class="col col-md-9 d-flex align-items-center justify-content-center mt-2 alert alert-secondary info-text"
+                role="alert"
+            >
+                <i class="bi bi-info-circle me-4" />
+                {{ $t("common:modules.statisticDashboard.infoTextNoData") }}
+            </div>
+        </div>
+        <div v-show="showTable">
+            <div
+                v-if="tableData.length === 1 && referenceSubTitle !== ''"
+                class="statistic-name col col-auto mb-3 text-center"
+            >
+                <span>{{ chosenStatisticName }}</span>
+                <span class="text-center">
+                    <span> - {{ $t('common:modules.statisticDashboard.reference.difference') }}</span>
+                    <br>
+                    <span class="statistic-name-subtitle col col-auto">{{ referenceSubTitle }}</span>
+                </span>
+            </div>
+            <TableComponent
+                v-for="(data, index) in chosenTableData"
+                :key="index"
+                :title="tableData.length <= 1 && referenceSubTitle === '' ? chosenStatisticName : ''"
+                :export-data="exportTableData"
+                :export-file-name="downloadFilename"
+                :downloadable="true"
+                :data="data"
+                :fixed-column-with-order="fixedColumn"
+                :fixed-row="fixedRow"
+                :fixed-bottom-data="testFixedData"
+                :total-prop="getTotalProp(addTotalCount, chosenStatisticName)"
+                :select-mode="selectMode"
+                :show-header="showHeader"
+                :dynamic-column-table="true"
+                :font-size="'small'"
+                :sortable="sortable"
+                :enable-settings="true"
+                :max-decimal-places="maxDecimalPlaces"
+                sort-by-numeric-value
+                @set-sorted-rows="setSortedRows"
+                @column-selected="setSelectedColumn"
+            />
+        </div>
+        <div
+            v-show="showChart"
+            class="position-relative"
+        >
+            <div
+                v-if="showLimitView"
+                class="filtered-areas"
+            >
+                <div class="row justify-content-center my-3">
+                    <div
+                        class="col col-md-9 d-flex align-items-center justify-content-center mt-2 alert alert-secondary info-text"
+                        role="alert"
+                    >
+                        <i class="bi bi-info-circle me-4" />
+                        {{ $t("common:modules.statisticDashboard.infoText") }}
+                    </div>
+                </div>
+                <div class="row justify-content-center mb-4 mx-4">
+                    <label
+                        class="col-form-label-sm"
+                        for="line-limit-search"
+                    >
+                        {{ $t("common:modules.statisticDashboard.label.area") }}
+                    </label>
+                    <Multiselect
+                        id="line-limit-search"
+                        :model-value="selectedFilteredRegions"
+                        :multiple="true"
+                        :options="selectedRegionsValues"
+                        :searchable="true"
+                        :close-on-select="false"
+                        :clear-on-select="true"
+                        class="col col-12"
+                        :show-labels="false"
+                        :limit="3"
+                        :limit-text="count => count + ' ' + $t('common:modules.statisticDashboard.label.more')"
+                        :allow-empty="false"
+                        :placeholder="$t('common:modules.statisticDashboard.reference.placeholder')"
+                        @select="addSelectedFilteredRegions"
+                        @remove="removeRegion"
+                    >
+                        <template #clear>
+                            <div class="multiselect__clear">
+                                <i class="bi bi-search" />
+                            </div>
+                        </template>
+                        <template #tag="{ option, remove }">
+                            <button
+                                class="multiselect__tag"
+                                :class="option"
+                                @click="remove(option)"
+                                @keypress="remove(option)"
+                            >
+                                {{ option }}
+                                <i class="bi bi-x" />
+                            </button>
+                        </template>
+                    </Multiselect>
+                </div>
+            </div>
+            <div
+                v-if="!showGrid"
+                class="position-absolute donwload-icon end-0 mt-2 me-2"
+            >
+                <IconButton
+                    :aria="$t('common:modules.statisticDashboard.downloadDiagram')"
+                    icon="bi bi-download"
+                    :interaction="() => downloadCurrentChart()"
+                    :class-array="['btn-light', 'mb-0']"
+                />
+            </div>
+            <div
+                v-if="!showGrid"
+                ref="chartContainer"
+                class="chart-container"
+            />
+            <GridComponent
+                v-else
+                :charts-count="chartCounts"
+                :titles="selectedStatisticsNames"
+                @show-charts-in-grid="handleGrid"
+            >
+                <template
+                    #chartContainers="props"
+                >
+                    <div
+                        :id="'chart' + props.chartId"
+                        :ref="'chart' + props.chartId"
+                    />
+                </template>
+            </GridComponent>
+        </div>
+        <template v-if="showMap && statisticsData">
+            <StatisticDashboardMapSettings
+                v-model:show-labels="showMapLabels"
+                v-model:show-tooltips="showMapTooltips"
+            />
             <div v-if="classificationMode !== 'custom'">
                 <h5 class="mb-3 mt-3">
                     {{ $t('common:modules.statisticDashboard.legend.previewLegend') + ' - ' + chosenStatisticName }}
@@ -2048,212 +2218,8 @@ export default {
                     </div>
                 </div>
             </div>
-            <LegendComponent
-                class="mt-3"
-                @change-legend-view="changeLegendView"
-            />
+            <LegendComponent class="mt-3" />
         </template>
-        <div v-show="!showLegendView">
-            <div class="row justify-content-between">
-                <div class="col-md-12 d-flex align-items-center">
-                    <IconButton
-                        v-if="getMetadataLink()"
-                        :aria="$t('common:modules.statisticDashboard.headings.mrhstatisticsTooltip')"
-                        :title="$t('common:modules.statisticDashboard.headings.mrhstatisticsTooltip')"
-                        icon="bi-info-circle"
-                        :interaction="() => openMetadata()"
-                        :class-array="['info', 'btn', 'btn-light', 'btn-sm', 'ms-1', 'mt-0']"
-                    />
-                </div>
-            </div>
-            <hr class="mt-3 mb-0">
-            <Controls
-                v-if="loadedReferenceData"
-                :descriptions="controlDescription"
-                :show-grid="showGrid"
-                class="mb-3"
-                @show-chart-table="toggleChartTable"
-                @set-table-subtitle="setTableSubtitle"
-                @show-charts-in-grid="handleGrid"
-            />
-            <div
-                v-else
-                class="statistic-dashboard-loading d-flex flex-column align-items-center my-4"
-            >
-                <SpinnerItem />
-                <span class="mt-2">
-                    {{ $t('common:modules.statisticDashboard.loadingData') }}
-                </span>
-            </div>
-            <div
-                v-if="!isFeatureLoaded"
-                class="text-center"
-            >
-                <SpinnerItem />
-            </div>
-            <div
-                v-if="!statisticsData && isFeatureLoaded"
-                class="row justify-content-center my-3"
-            >
-                <div
-                    class="col col-md-9 d-flex align-items-center justify-content-center mt-2 alert alert-secondary info-text"
-                    role="alert"
-                >
-                    <i class="bi bi-info-circle me-4" />
-                    {{ $t("common:modules.statisticDashboard.infoTextNoData") }}
-                </div>
-            </div>
-            <div v-show="showTable">
-                <div
-                    v-if="tableData.length === 1 && referenceSubTitle !== ''"
-                    class="statistic-name col col-auto mb-3 text-center"
-                >
-                    <span>{{ chosenStatisticName }}</span>
-                    <span class="text-center">
-                        <span> - {{ $t('common:modules.statisticDashboard.reference.difference') }}</span>
-                        <br>
-                        <span class="statistic-name-subtitle col col-auto">{{ referenceSubTitle }}</span>
-                    </span>
-                </div>
-                <TableComponent
-                    v-for="(data, index) in chosenTableData"
-                    :key="index"
-                    :title="tableData.length <= 1 && referenceSubTitle === '' ? chosenStatisticName : ''"
-                    :export-data="exportTableData"
-                    :export-file-name="downloadFilename"
-                    :downloadable="true"
-                    :data="data"
-                    :fixed-column-with-order="fixedColumn"
-                    :fixed-row="fixedRow"
-                    :fixed-bottom-data="testFixedData"
-                    :total-prop="getTotalProp(addTotalCount, chosenStatisticName)"
-                    :select-mode="selectMode"
-                    :show-header="showHeader"
-                    :dynamic-column-table="true"
-                    :font-size="'small'"
-                    :sortable="sortable"
-                    :enable-settings="true"
-                    :max-decimal-places="maxDecimalPlaces"
-                    sort-by-numeric-value
-                    @set-sorted-rows="setSortedRows"
-                    @column-selected="setSelectedColumn"
-                />
-            </div>
-            <div
-                v-show="showChart"
-                class="position-relative"
-            >
-                <div
-                    v-if="showLimitView"
-                    class="filtered-areas"
-                >
-                    <div class="row justify-content-center my-3">
-                        <div
-                            class="col col-md-9 d-flex align-items-center justify-content-center mt-2 alert alert-secondary info-text"
-                            role="alert"
-                        >
-                            <i class="bi bi-info-circle me-4" />
-                            {{ $t("common:modules.statisticDashboard.infoText") }}
-                        </div>
-                    </div>
-                    <div class="row justify-content-center mb-4 mx-4">
-                        <label
-                            class="col-form-label-sm"
-                            for="line-limit-search"
-                        >
-                            {{ $t("common:modules.statisticDashboard.label.area") }}
-                        </label>
-                        <Multiselect
-                            id="line-limit-search"
-                            :model-value="selectedFilteredRegions"
-                            :multiple="true"
-                            :options="selectedRegionsValues"
-                            :searchable="true"
-                            :close-on-select="false"
-                            :clear-on-select="true"
-                            class="col col-12"
-                            :show-labels="false"
-                            :limit="3"
-                            :limit-text="count => count + ' ' + $t('common:modules.statisticDashboard.label.more')"
-                            :allow-empty="false"
-                            :placeholder="$t('common:modules.statisticDashboard.reference.placeholder')"
-                            @select="addSelectedFilteredRegions"
-                            @remove="removeRegion"
-                        >
-                            <template #clear>
-                                <div class="multiselect__clear">
-                                    <i class="bi bi-search" />
-                                </div>
-                            </template>
-                            <template #tag="{ option, remove }">
-                                <button
-                                    class="multiselect__tag"
-                                    :class="option"
-                                    @click="remove(option)"
-                                    @keypress="remove(option)"
-                                >
-                                    {{ option }}
-                                    <i class="bi bi-x" />
-                                </button>
-                            </template>
-                        </Multiselect>
-                    </div>
-                </div>
-                <div
-                    v-if="!showGrid"
-                    class="position-absolute donwload-icon end-0 mt-2 me-2"
-                >
-                    <IconButton
-                        :aria="$t('common:modules.statisticDashboard.downloadDiagram')"
-                        icon="bi bi-download"
-                        :interaction="() => downloadCurrentChart()"
-                        :class-array="['btn-light', 'mb-0']"
-                    />
-                </div>
-                <div
-                    v-if="!showGrid"
-                    ref="chartContainer"
-                    class="chart-container"
-                />
-                <GridComponent
-                    v-else
-                    :charts-count="chartCounts"
-                    :titles="selectedStatisticsNames"
-                    @show-charts-in-grid="handleGrid"
-                >
-                    <template
-                        #chartContainers="props"
-                    >
-                        <div
-                            :id="'chart' + props.chartId"
-                            :ref="'chart' + props.chartId"
-                        />
-                    </template>
-                </GridComponent>
-            </div>
-            <div v-show="showMap">
-                <StatisticDashboardMapSettings
-                    v-model:show-labels="showMapLabels"
-                    v-model:show-tooltips="showMapTooltips"
-                    :statistic-name="chosenStatisticName"
-                    :year="selectedColumn"
-                    :legend-items="noDataInColumn ? [] : legendValue"
-                    :legend-no-data="showNoLegendData"
-                    :class-count="numberOfClasses"
-                    :min-class-count="minNumberOfClasses"
-                    :max-class-count="maxNumberOfClasses"
-                    @update:class-count="setNumberOfClasses"
-                />
-                <FlatButton
-                    id="edit-legend"
-                    :aria-label="$t('common:modules.statisticDashboard.legend.edit')"
-                    :text="$t('common:modules.statisticDashboard.legend.edit')"
-                    icon="bi bi-gear"
-                    class="btn-sm ms-2 mt-3"
-                    :interaction="() => changeLegendView()"
-                />
-            </div>
-        </div>
         <div
             id="tooltip"
             ref="hoverInfoOverlay"

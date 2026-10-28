@@ -7,6 +7,7 @@ import StatisticDashboard from "@modules/statisticDashboard/components/Statistic
 import FeatureHandler from "@modules/statisticDashboard/js/handleFeatures.js";
 import indexStatisticDashboard from "@modules/statisticDashboard/store/indexStatisticDashboard.js";
 import LegendComponent from "@modules/statisticDashboard/components/StatisticDashboardLegend.vue";
+import StatisticDashboardMapSettings from "@modules/statisticDashboard/components/StatisticDashboardMapSettings.vue";
 import sinon from "sinon";
 import fetchData from "@modules/statisticDashboard/js/fetchData.js";
 import ChartProcessor from "@modules/statisticDashboard/js/chartProcessor.js";
@@ -287,10 +288,27 @@ describe("src/modules/statisticDashboard/components/StatisticDashboard.vue", () 
         it("The legend component should exist", async () => {
             wrapper = createWrapper();
 
-            await wrapper.setData({legendValue: ["legend"], showLegendView: true});
+            store.commit("Modules/StatisticDashboard/setChartTableToggle", "map");
+            await wrapper.setData({statisticsData: {"Statistik": {}}});
 
             expect(wrapper.findComponent(LegendComponent).exists()).to.be.true;
         });
+
+        it("The StatisticDashboardMapSettings component should not exist", async () => {
+            wrapper = createWrapper();
+
+            expect(wrapper.findComponent(StatisticDashboardMapSettings).exists()).to.be.false;
+        });
+
+        it("The StatisticDashboardMapSettings component should exist", async () => {
+            wrapper = createWrapper();
+
+            store.commit("Modules/StatisticDashboard/setChartTableToggle", "map");
+            await wrapper.setData({statisticsData: {"Statistik": {}}});
+
+            expect(wrapper.findComponent(StatisticDashboardMapSettings).exists()).to.be.true;
+        });
+
         it("should render filter search field if showLimitView is true", async () => {
             wrapper = createWrapper();
 
@@ -350,20 +368,6 @@ describe("src/modules/statisticDashboard/components/StatisticDashboard.vue", () 
             await wrapper.setData({statisticsData: statData});
 
             expect(wrapper.find(".no-data-content").exists()).to.be.false;
-        });
-        it("should render legend if classification mode is not 'custom' ", async () => {
-            // eslint-disable-next-line no-shadow
-            const wrapper = shallowMount(StatisticDashboard, {
-                global: {
-                    plugins: [store]
-                }
-            });
-
-            await wrapper.setData({legendValue: ["legend"], showLegendView: true});
-            store.commit("Modules/StatisticDashboard/setClassificationMode", "quantiles");
-            await wrapper.vm.$nextTick();
-
-            expect(wrapper.find(".legend-names").exists()).to.be.true;
         });
 
         it("should not find a statistic-name-subtitle element", () => {
