@@ -460,7 +460,7 @@ export default {
         const isLevelAlreadySelected = Boolean(this.selectedLevelName);
 
         if (!isLevelAlreadySelected) {
-            this.setSelectedLevelName(this.data[0].levelName);
+            this.setSelectedLevelName(this.data[0]?.levelName);
         }
         if (this.showAggregatedView) {
             warnMissingSpecifics(this.data);
@@ -757,26 +757,18 @@ export default {
          * @returns {void}
          */
         updateFeatureStyle (date, selectedReferenceData) {
-            const regionNameAttribute = this.getSelectedLevelRegionNameAttributeInDepth(this.selectedLevel?.mappingFilter?.regionNameAttribute).attrName,
-                  styleFunction = FeaturesHandler.getStyleFunction(
-                      this.statisticsData?.[this.chosenStatisticName],
-                      this.colorPalette.map(v => [...v, this.opacity]),
-                      date,
-                      regionNameAttribute,
-                      this.stepValues,
-                      selectedReferenceData?.type === "region" ? selectedReferenceData.value : null,
-                      this.colorScheme.referenceRegion
-                  );
+            const regionNameAttribute = this.getSelectedLevelRegionNameAttributeInDepth(this.selectedLevel?.mappingFilter?.regionNameAttribute).attrName;
 
-            this.layer.setStyle(this.showMapLabels
-                ? FeaturesHandler.getStyleFunctionWithLabels(
-                    styleFunction,
-                    this.statisticsData?.[this.chosenStatisticName],
-                    regionNameAttribute,
-                    date,
-                    this.formatMapValue
-                )
-                : styleFunction);
+            this.layer.setStyle(FeaturesHandler.getStyleFunction(
+                this.statisticsData?.[this.chosenStatisticName],
+                this.colorPalette.map(v => [...v, this.opacity]),
+                date,
+                regionNameAttribute,
+                this.stepValues,
+                selectedReferenceData?.type === "region" ? selectedReferenceData.value : null,
+                this.colorScheme.referenceRegion,
+                {showLabels: this.showMapLabels, formatValue: this.formatMapValue}
+            ));
 
             if (isObject(this.statisticsData?.[this.chosenStatisticName])) {
                 this.featureWithoutValue = Object.values(this.statisticsData[this.chosenStatisticName]).some(

@@ -21,6 +21,40 @@ function filterFeaturesByKeyValue (features, key, value) {
 }
 
 /**
+ * Creates the polygon style used for the statistics layer.
+ * @param {Number[]|String} color - The fill color.
+ * @returns {ol/style/Style} The style.
+ */
+function createStyle (color) {
+    return new Style({
+        fill: new Fill({color}),
+        stroke: new Stroke({color: [166, 166, 166, 1], width: 1})
+    });
+}
+
+/**
+ * Creates the label text style showing region name, date and value.
+ * @param {String} region The name of the region.
+ * @param {String} date The selected date (column).
+ * @param {String} formattedValue The already formatted value.
+ * @returns {ol/style/Text} The label text style.
+ */
+function createLabel (region, date, formattedValue) {
+    const labelFill = new Fill({color: "#000000"}),
+        labelBackgroundFill = new Fill({color: "rgba(255, 255, 255, 0.5)"}),
+        labelBackgroundStroke = new Stroke({color: "#cccccc", width: 1});
+
+    return new Text({
+        text: `${region}\n${date}: ${formattedValue}`,
+        font: "11px sans-serif",
+        fill: labelFill,
+        backgroundFill: labelBackgroundFill,
+        backgroundStroke: labelBackgroundStroke,
+        padding: [4, 8, 4, 8]
+    });
+}
+
+/**
  * Gets a style function to be used for the statistics visualization layer.
  * The number of colors in the scheme indicates the number of classes for the styling.
  * @param {Object} statisticData - The statistic whose values are visualized.
@@ -30,75 +64,39 @@ function filterFeaturesByKeyValue (features, key, value) {
  * @param {Number[]} stepValues - The step values used as thresholds for classification.
  * @param {String} [refRegion=null] - The reference region in difference mode, or null.
  * @param {*} [refColor=null] - The color for the reference region, or null.
+ * @param {Object} [labelOptions={}] - The options for the labels.
+ * @param {Boolean} [labelOptions.showLabels=false] - True if every feature gets a label with region name, date and value.
+ * @param {Function} [labelOptions.formatValue=String] - Formats the value for the label.
  * @returns {Function} An OpenLayers style function for the layer.
  */
-function getStyleFunction (statisticData, colorScheme, date, regionKeys, stepValues, refRegion = null, refColor = null) {
-    const styleCache = {};
+function getStyleFunction (statisticData, colorScheme, date, regionKeys, stepValues, refRegion = null, refColor = null, labelOptions = {}) {
+    const {showLabels = false, formatValue = String} = labelOptions,
+        styleCache = {};
 
     return function (feature) {
         const region = feature.get(regionKeys.find(key => feature.get(key))),
             value = statisticData[region]?.[date],
             index = stepValues.findLastIndex(e => value >= e),
             color = colorScheme[index] || [255, 255, 255, 0.9],
-            colorKey = color.join("-");
+            colorKey = color.join("-"),
+            isReferenceRegion = region === refRegion;
 
-        if (region === refRegion) {
-            return new Style({
-                fill: new Fill({color: refColor}),
-                stroke: new Stroke({color: [166, 166, 166, 1], width: 1})
-            });
-        }
-        if (typeof value === "undefined") {
+        if (!isReferenceRegion && typeof value === "undefined") {
             return null;
         }
-
-        if (!styleCache[colorKey]) {
-            styleCache[colorKey] = new Style({
-                fill: new Fill({color}),
-                stroke: new Stroke({color: [166, 166, 166, 1], width: 1})
-            });
-        }
-        return styleCache[colorKey];
-    };
-}
-
-/**
- * Wraps the given style function so that every feature additionally gets a label with region name, year and value.
- * @param {Function} styleFunction The style function of the layer, returns a single style or null.
- * @param {Object} statisticData The data of the chosen statistic, grouped by region and date.
- * @param {String} regionNameAttribute The attribute holding the region name.
- * @param {String} date The selected date (column).
- * @param {Function} [formatValue=String] Formats a value for the label.
- * @returns {Function} The style function including labels.
- */
-function getStyleFunctionWithLabels (styleFunction, statisticData, regionNameAttribute, date, formatValue = String) {
-    const labelFill = new Fill({color: "#000000"}),
-        labelBackgroundFill = new Fill({color: "rgba(255, 255, 255, 0.5)"}),
-        labelBackgroundStroke = new Stroke({color: "#cccccc", width: 1});
-
-    return (feature, resolution) => {
-        const style = styleFunction(feature, resolution),
-            region = feature.get(regionNameAttribute);
-
-        if (!style) {
-            return null;
+        if (!isReferenceRegion && !styleCache[colorKey]) {
+            styleCache[colorKey] = createStyle(color);
         }
 
-        if (!region) {
+        const style = isReferenceRegion ? createStyle(refColor) : styleCache[colorKey];
+
+        if (!showLabels) {
             return style;
         }
 
         const labelStyle = style.clone();
 
-        labelStyle.setText(new Text({
-            text: `${region}\n${date}: ${formatValue(statisticData?.[region]?.[date])}`,
-            font: "11px sans-serif",
-            fill: labelFill,
-            backgroundFill: labelBackgroundFill,
-            backgroundStroke: labelBackgroundStroke,
-            padding: [4, 8, 4, 8]
-        }));
-
+        labelStyle.setText(createLabel(region, date, formatValue(value)));
         return labelStyle;
     };
 }
@@ -320,9 +318,9 @@ function getLegendValue (val, decimalPlaces = 2, withoutValue = false) {
 }
 
 export default {
+    createLabel,
     filterFeaturesByKeyValue,
     getStyleFunction,
-    getStyleFunctionWithLabels,
     calcStepValues,
     getStatisticValuesByDate,
     getStepValue,
