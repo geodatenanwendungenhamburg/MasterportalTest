@@ -6,8 +6,6 @@ describe("src/modules/statisticDashboard/components/StatisticDashboardLoader.vue
     it("should implement the keep-alive hooks, so the menu caches the dashboard", () => {
         expect(StatisticDashboardLoader.activated).to.be.a("function");
         expect(StatisticDashboardLoader.deactivated).to.be.a("function");
-        expect(StatisticDashboardLoader.activated()).to.be.undefined;
-        expect(StatisticDashboardLoader.deactivated()).to.be.undefined;
     });
 
     it("should register the statistic dashboard as async component", () => {

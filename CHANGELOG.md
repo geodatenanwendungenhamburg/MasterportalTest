@@ -8,6 +8,8 @@
 ### __Breaking Changes__
 
 ### Added
+- Statistic Dashboard: The map view shows the values of the selected statistic on the map.
+  Labels and tooltips can be switched on and off.
 - CustomMenuElement: Added HTML sanitation with DOMPurify to prevent XSS vulnerabilities.
 - Draw: Added new draw module to replace draw_old (type="draw").
 - WMS-Layer: Added additional request parameter `sld` and `gfi_template`.
@@ -18,17 +20,23 @@
     - Accordion: Add sub title and border style into accordion.
     - DropdownSelect: Based on vuetify's VSelect. Similar to DropdownAutocomplete, but without the ability to enter a search text.
     - DropdownAutocomplete: Based on vuetify`s VAutocomplete, it extends the usual select input with the ability to enter a search text and thus filter the shown values. As a consequence, vuetify is imported globally, but configuring custom vuetify instances is still supported.
+- SearchInterfaceTopicTree: Added parameter `foldersFirst` to control the order of the result categories.
+
 
 ### Changed
 - The following packages have been updated:
-    -devDependencies:
-      - vitest: "^4.0.16" to "4.1.11"
-      - @vitest/ui: "^4.0.16" to "4.1.11"
-      - @vitest/web-worker: "^4.0.16" to "4.1.11"
-      - jsdom: "29.1.1" to "^30.1.2"
+    - dependencies:
+        - @masterportal/masterportalapi: 2.64.0 to 2.65.0
+    - devDependencies:
+        - vitest: "^4.0.16" to "4.1.11"
+        - @vitest/ui: "^4.0.16" to "4.1.11"
+        - @vitest/web-worker: "^4.0.16" to "4.1.11"
+        - jsdom: "29.1.1" to "^30.1.2"
+        - dompurify: "^3.4.15" to "^3.4.17"
 - WMS-Time: Changed button name to avoid confusion.
 - LayerTree/LayerSelection: In portals with a configured login, secured layers can no longer be activated without being logged in. Instead, an alert asks the user to log in. The lock icon of secured layers is shown open when logged in and closed otherwise.
-- StatisticDashboard: A loading spinner is shown while the module code and the initial data are loaded. Requests for multiple layers are now sent in parallel to speed up loading.
+- StatisticDashboard: A loading spinner is shown while the module code and the initial data are loaded, and an error message if the module cannot be loaded. Requests for multiple layers are now sent in parallel to speed up loading.
+- Changed Node.js support: Minimum supported versions are now Node.js **22.23.4** (LTS) and **24.22.1** (LTS). This update is required to address known security vulnerabilities in older Node.js versions.
 
 ### Deprecated
 - WMTS: The `services.json` parameter `transparent` is deprecated and has no effect. Use `transparency` instead.
@@ -37,10 +45,12 @@
 ### Removed
 
 ### Fixed
+- Menu: Module caching (keep-alive) now also works for lazy loaded core modules, e.g. the StatisticDashboard is no longer rebuilt and its data reloaded each time it is opened.
 - Issue \#1629: Fetch legendUrl with authorization header where needed.
 - Issue \#1646: Improved WMTS printing with raster reprojection for differing projections, correct opacity handling, more reliable raster fallbacks and rendering, and reduced 3D print payload sizes.
 - StatisticDashboard: Reopening the module from the menu no longer leaves it stuck in the loading state without controls.
 - StatisticDashboard: The module is now cached when switching between menu entries, so it is no longer rebuilt and its data is no longer reloaded each time it is opened. The hover info on the map is removed while the module is closed.
+- Issue \#1655, \#1663: It is now possible to configure modules with the same `type` multiple times. However, there are two restriction: the modules must have different names and they must be configured in the same menu (`mainMenu` or `secondaryMenu`). Only one of the modules configured multiple times can be open at a time; otherwise, the wrong content may be displayed.
 - Draw: Fixed an error when editing imported multi geometries (e.g. from KML files), which prevented the measurement tooltip from being positioned.
 - Legend: Legend images of secured services are now loaded with the auth token of the login module, so that no 401 error occurs.
 - GetFeatureInfo: A gfiTheme addon that is configured at a layer but missing in `Config.addons` of config.js is now loaded on demand instead of falling back to the default theme. This also applies to layers added via search.

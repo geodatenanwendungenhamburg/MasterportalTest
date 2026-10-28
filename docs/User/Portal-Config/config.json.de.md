@@ -1182,6 +1182,11 @@ Konfiguration für die URL-Abfrageparameter `zoomToFeatureId` und `zoomToGeometr
 ### portalConfig.menu {data-toc-label='Menu'}
 Hier können die Menüeinträge jeweils für das MainMenu (in der Desktopansicht links) und SecondaryMenu (in der Desktopansicht rechts) und deren Anordnung konfiguriert werden. Die Reihenfolge der Module ergibt sich aus der Reihenfolge in der *Config.json*.
 
+Wenn ein Modul-`type` mehrfach unterschiedlich konfiguriert wird, dann müssen folgende Kriterien eingehalten werden:
+- Die Namen müssen unique sein.
+- Bei mehrfach vorkommendem gleichem `type` auf einer Menü-Seite, werden die unterschiedlichen Konfigurationen angezeigt.
+- Bei mehrfach vorkommendem gleichem `type` auf *beiden* Menü-Seiten, sind die Menü-Einträge und die Inhalte identisch, wenn beide geöffnet sind. Unabhängig davon, ob sich die Menü-Konfigurationen unterscheiden wird in dem Fall das letzte Modul angezeigt.
+
 |Name|Verpflichtend|Typ|Default|Beschreibung|Expert|
 |----|-------------|---|-------|------------|------|
 |currentComponent|nein|String|""|Definiert ein Modul, das initial geöffnet ist. Bitte beachten Sie, dass in Ordnern geschachtelte Module hiermit nicht geöffnet werden können. Wenn ein Modul mehrfach vorhanden ist, werden alle Instanzen in Reihenfolge des Erscheinens geöffnet, was zu unerwartetem Verhalten führen kann.|false|
@@ -1769,6 +1774,7 @@ Alle Layer, die im Themenbaum des Portals sind, werden durchsucht.
 
 |Name|Verpflichtend|Typ|Default|Beschreibung|Expert|
 |----|-------------|---|-------|------------|------|
+|foldersFirst|nein|Boolean|false|Wenn der Parameter auf true gesetzt wird, werden Ergebnisse der Kategorie Ordner vor Ergebnissen der Kategorie Layer geliefert.|false|
 |hitTemplate|nein|String|"default"|Template in dem die Suchergebnisse (`alle anzeigen`) angezeigt werden. Möglich sind die Werte "default" und "layer".|false|
 |resultEvents|nein|**[resultEvents](#portalconfigmenusearchbarsearchinterfacesresultevents)**|{"onClick": ["activateLayerInTopicTree"], "buttons": ["showInTree", "showLayerInfo"]}|Aktionen, die ausgeführt werden, wenn eine Interaktion, z. B. ein Hover oder ein Klick, mit einem Element der Ergebnisliste erfolgt. Folgende events sind möglich: "activateLayerInTopicTree", "showInTree", "showLayerInfo".|false|
 |searchInterfaceId|nein|String|"topicTree"|Id, die zur Verknüpfung mit der searchbar in der Themensuche dient.|false|

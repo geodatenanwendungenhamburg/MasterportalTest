@@ -101,77 +101,35 @@ export default {
 </script>
 
 <template>
-    <div class="col-md-12">
-        <div class="row">
-            <div class="col-md-12">
-                <h4>{{ $t("common:modules.statisticDashboard.reference.title") }}</h4>
-            </div>
-            <div class="col-md-12">
-                <ButtonGroup
-                    :buttons="buttonGroupReference"
-                    :pre-checked-value="referenceType"
-                    group="referenceGroup"
-                    @set-selected-button="handleReference"
-                />
-            </div>
-            <div
-                v-if="referenceType === buttonGroupReference[0].name"
-                class="col-md-12 mt-2"
-            >
-                <DropdownAutocomplete
-                    v-model="selectedDate"
-                    :label="$t('common:modules.statisticDashboard.reference.optionDate')"
-                    :items="referenceData?.date ?? []"
-                    return-object
-                    clearable
-                    :placeholder="$t('common:modules.statisticDashboard.reference.placeholder')"
-                    @update:model-value="updateSelectedReferenceData('date')"
-                />
-            </div>
-            <div
-                v-else
-                class="col-md-12  mt-2"
-            >
-                <DropdownAutocomplete
-                    v-model="selectedRegion"
-                    :items="regionOptions"
-                    :label="$t('common:modules.statisticDashboard.reference.optionArea')"
-                    :placeholder="$t('common:modules.statisticDashboard.reference.placeholder')"
-                    clearable
-                    @update:model-value="updateSelectedReferenceData('region')"
-                />
-            </div>
-        </div>
+    <div>
+        <ButtonGroup
+            :buttons="buttonGroupReference"
+            :pre-checked-value="referenceType"
+            class="mb-3"
+            group="referenceGroup"
+            full-width
+            @set-selected-button="handleReference"
+        />
+        <DropdownAutocomplete
+            v-if="referenceType === buttonGroupReference[0].name"
+            v-model="selectedDate"
+            class="w-100"
+            :label="$t('common:modules.statisticDashboard.reference.optionDate')"
+            :items="referenceData?.date ?? []"
+            return-object
+            clearable
+            :placeholder="$t('common:modules.statisticDashboard.reference.placeholder')"
+            @update:model-value="updateSelectedReferenceData('date')"
+        />
+        <DropdownAutocomplete
+            v-else
+            v-model="selectedRegion"
+            class="w-100"
+            :items="regionOptions"
+            :label="$t('common:modules.statisticDashboard.reference.optionArea')"
+            :placeholder="$t('common:modules.statisticDashboard.reference.placeholder')"
+            clearable
+            @update:model-value="updateSelectedReferenceData('region')"
+        />
     </div>
 </template>
-
-<style src="vue-multiselect/dist/vue-multiselect.css"></style>
-
-<style lang="scss" scoped>
-.bootstrap-icon {
-    position: absolute;
-    right: 10px;
-    top: 10px;
-    padding: 8px;
-    width: 28px;
-    &:hover {
-        color: $white;
-        background-color: $light_blue;
-    }
-}
-.btn-group {
-    margin-top: 0.5rem;
-    margin-bottom: 0.8rem;
-}
-</style>
-
-<style lang="scss">
-
-
-.multiselect, .multiselect__input, .multiselect__single {
-    font-family: inherit;
-    font-size: 11px;
-}
-
-
-</style>

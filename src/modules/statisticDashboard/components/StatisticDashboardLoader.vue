@@ -1,10 +1,11 @@
 <script>
 import {defineAsyncComponent} from "vue";
 import SpinnerItem from "@shared/modules/spinner/components/SpinnerItem.vue";
+import StatisticDashboardLoadError from "./StatisticDashboardLoadError.vue";
 
 /**
  * Lightweight entry point of the statistic dashboard for the menu.
- * Loads the StatisticDashboard lazily and shows a spinner while loading.
+ * Loads the StatisticDashboard lazily, shows a spinner while loading and an error message if loading fails.
  * Implements the keep-alive hooks, so the menu caches this component and with it the loaded dashboard.
  * See documentation: docs/Dev/vueComponents/ModuleCaching.md
  * @module modules/statisticDashboard/components/StatisticDashboardLoader
@@ -15,6 +16,7 @@ export default {
         StatisticDashboard: defineAsyncComponent({
             loader: () => import("./StatisticDashboard.vue"),
             loadingComponent: SpinnerItem,
+            errorComponent: StatisticDashboardLoadError,
             delay: 200
         })
     },
@@ -24,7 +26,7 @@ export default {
      * @returns {void}
      */
     activated () {
-        return undefined;
+        /* handled by StatisticDashboard */
     },
 
     /**
@@ -32,7 +34,7 @@ export default {
      * @returns {void}
      */
     deactivated () {
-        return undefined;
+        /* handled by StatisticDashboard */
     }
 };
 </script>

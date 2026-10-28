@@ -41,7 +41,7 @@ describe("src/modules/statiscticDashboard/components/StatisticDashboardDifferenc
 
 
     describe("Component DOM", () => {
-        it("The title should exist", () => {
+        it("does not render a separate title", () => {
             const wrapper = shallowMount(StatisticDashboardDifference, {
                 propsData: propsData,
                 global: {
@@ -49,18 +49,7 @@ describe("src/modules/statiscticDashboard/components/StatisticDashboardDifferenc
                 }
             });
 
-            expect(wrapper.find("h4").exists()).to.be.true;
-        });
-
-        it("should find switcher component", () => {
-            const wrapper = shallowMount(StatisticDashboardDifference, {
-                propsData: propsData,
-                global: {
-                    plugins: [store]
-                }
-            });
-
-            expect(wrapper.findComponent({name: "ButtonGroup"}).exists()).to.be.true;
+            expect(wrapper.find("h4").exists()).to.be.false;
         });
 
         it("The date selection dropdown should exist", () => {

@@ -1330,9 +1330,23 @@
         "addArea": "Select areas",
         "addTime": "Select time period"
       },
+      "dataSelectionExpanded": {
+        "level": "Level",
+        "title": "Statistics selection",
+        "categories": "Categories",
+        "indicators": "Indicators",
+        "selectedStatistics_one": "{{count}} statistic selected",
+        "selectedStatistics_other": "{{count}} statistics selected",
+        "area": "Area",
+        "timePeriod": "Time period",
+        "showDifference": "Show differences",
+        "differenceDescription": "Compare values for a selected year or area and show the differences.",
+        "showData": "Show data"
+      },
       "infoText": "Note: For many areas, only a part is initially shown in the diagram. Additional areas can be added using the field at the bottom.",
       "infoTextNoData": "No or not all necessary filters have been added yet. To display statistical data in tables and diagrams, the data must first be filtered.",
       "loadingData": "Loading data ...",
+      "loadingError": "The statistic dashboard could not be loaded. Please try again later.",
       "button": {
         "difference": "Difference",
         "table": "Table",
@@ -1378,18 +1392,26 @@
         "region": "Reference region {{value}}",
         "difference": "Difference"
       },
+      "tabs": {
+          "table": "Table",
+          "diagram": "Diagram",
+          "map": "Map"
+      },
       "legend": {
         "under": "under",
         "between": "between {{minimum}} and {{maximum}}",
         "from": "From",
         "nodata": "Visualization of data from multiple statistics on the map is not available.",
         "legend": "Map legend",
+        "additionalInformation": "Additional map information",
+        "numberOfClasses": "Number of classes: {{count}}",
+        "showTooltips": "Show tooltips on map",
+        "showLabels": "Show region names, year and value",
+        "editClassification": "Edit classification",
         "edit": "Edit",
         "arrowLeft": "Slide to left",
         "arrowRight": "Slide to right",
-        "editClassification": "Edit classification",
         "classification": "Classification",
-        "numberOfClasses": "Number of classes",
         "colorPalette": "Color Palette",
         "betweenValues": "between",
         "opacity": "Opacity",

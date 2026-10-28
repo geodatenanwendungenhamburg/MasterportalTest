@@ -1,12 +1,13 @@
 <script>
 // @ts-check
 /**
- * @import {StatisticDashboardMapGetters, StatisticDashboardMapMutations} from "../types/helpers.js"
  * @import {DropdownItem} from "@shared/modules/dropdown/types/typesDropdown.js"
+ * @import {StatisticDashboardMapGetters, StatisticDashboardMapMutations} from "../types/helpers.js"
  */
-import ButtonGroup from "@shared/modules/buttons/components/ButtonGroup.vue";
 import BaseCard from "@shared/modules/Cards/BaseCard.vue";
+import ButtonGroup from "@shared/modules/buttons/components/ButtonGroup.vue";
 import DropdownAutocomplete from "@shared/modules/dropdown/components/DropdownAutocomplete.vue";
+import FlatButton from "@shared/modules/buttons/components/FlatButton.vue";
 import {mapGetters, mapMutations} from "vuex";
 import StatisticDashboardFilterRegions from "./StatisticDashboardFilterRegions.vue";
 import StatisticDashboardDifference from "./StatisticDashboardDifference.vue";
@@ -18,10 +19,12 @@ export default {
         BaseCard,
         ButtonGroup,
         DropdownAutocomplete,
+        FlatButton,
         StatisticDashboardFilterRegions,
         StatisticDashboardDifference,
         SwitchInput
     },
+    emits: ["click:showData"],
     data () {
         return {
             isExpanded: false,
@@ -35,6 +38,7 @@ export default {
             "selectedCategories",
             "selectedDates",
             "selectedLevel",
+            "selectedRegions",
             "selectedStatisticsKeys",
             "timeStepsFilter"
         ]),
@@ -83,38 +87,72 @@ export default {
 <template lang="html">
     <div
         v-if="buttonGroupRegions.length > 1"
-        class="col-md-auto mt-2"
+        class="mb-4"
     >
+        <h6>{{ $t('common:modules.statisticDashboard.dataSelectionExpanded.level') }}</h6>
         <ButtonGroup
             :buttons="buttonGroupRegions"
-            :pre-checked-value="selectedLevel?.levelName"
+            :selected-value="selectedLevel?.levelName"
+            full-width
             group="regions"
-            class="level-switch"
             @set-selected-button="setSelectedLevelName"
         />
     </div>
-    <BaseCard class="m-2">
+    <BaseCard class="mb-3">
+        <h6 class="mt-2 fs-5 fw-bold text-mp-secondary">
+            <i
+                class="mr-2 fs-4 bi"
+                :class="selectedStatisticsKeys.length > 0 ? 'bi-check-circle-fill text-success' : 'bi-1-circle-fill'"
+            />
+            {{ $t('common:modules.statisticDashboard.dataSelectionExpanded.title') }}
+        </h6>
         <DropdownAutocomplete
-            label="Kategorien"
+            class="mb-2"
+            :label="$t('common:modules.statisticDashboard.dataSelectionExpanded.categories')"
             :items="categories"
             multiple
             :model-value="selectedCategories"
             @update:model-value="updateSelectedCategories"
         />
         <DropdownAutocomplete
-            label="Indikatoren"
+            class="mb-2"
+            :label="$t('common:modules.statisticDashboard.dataSelectionExpanded.indicators')"
             :items="statisticsForSelectedCategories"
             :model-value="selectedStatisticsKeys"
             multiple
             @update:model-value="setSelectedStatisticsKeys"
         />
-        Aufschlüsselung
+        <span
+            v-if="selectedStatisticsKeys.length > 0"
+            class="text-mp-secondary"
+        >
+            {{
+                $t('common:modules.statisticDashboard.dataSelectionExpanded.selectedStatistics', {
+                    count: selectedStatisticsKeys.length
+                })
+            }}
+        </span>
     </BaseCard>
-    <BaseCard class="m-2">
+    <BaseCard class="mb-3">
+        <h6 class="mt-2 fs-5 fw-bold text-mp-secondary">
+            <i
+                class="mr-2 fs-4 bi"
+                :class="selectedRegions.length > 0 ? 'bi-check-circle-fill text-success' : 'bi-2-circle-fill'"
+            />
+            {{ $t('common:modules.statisticDashboard.dataSelectionExpanded.area') }}
+        </h6>
         <StatisticDashboardFilterRegions />
     </BaseCard>
-    <BaseCard class="m-2">
+    <BaseCard class="mb-4">
+        <h6 class="mt-2 fs-5 fw-bold text-mp-secondary">
+            <i
+                class="mr-2 fs-4 bi"
+                :class="selectedDates.length > 0 ? 'bi-check-circle-fill text-success' : 'bi-3-circle-fill'"
+            />
+            {{ $t('common:modules.statisticDashboard.dataSelectionExpanded.timePeriod') }}
+        </h6>
         <DropdownAutocomplete
+            class="my-2"
             :label="$t('common:modules.statisticDashboard.label.year')"
             :items="timeStepsFilter"
             return-object
@@ -124,11 +162,41 @@ export default {
             @update:model-value="setSelectedDates"
         />
     </BaseCard>
-    <SwitchInput
-        id="show-difference"
-        v-model="showDifference"
-        aria="Differenzen anzeigen"
-        label="Differenzen anzeigen"
+    <div class="d-flex mb-3">
+        <i class="mr-3 fs-5bi bi-exclude" />
+        <div class="d-flex flex-column flex-grow-1">
+            <label
+                for="show-difference"
+                class="fw-bold"
+            >
+                {{ $t('common:modules.statisticDashboard.dataSelectionExpanded.showDifference') }}
+            </label>
+            {{ $t('common:modules.statisticDashboard.dataSelectionExpanded.differenceDescription') }}
+        </div>
+        <SwitchInput
+            id="show-difference"
+            v-model="showDifference"
+            omit-label
+            :aria="$t('common:modules.statisticDashboard.dataSelectionExpanded.showDifference')"
+            :label="$t('common:modules.statisticDashboard.dataSelectionExpanded.showDifference')"
+        />
+    </div>
+    <StatisticDashboardDifference
+        v-if="showDifference"
+        class="mb-3"
     />
-    <StatisticDashboardDifference v-if="showDifference" />
+    <div class="mt-3 d-flex justify-content-center">
+        <FlatButton
+            :disabled="selectedDates.length === 0 || selectedStatisticsKeys.length === 0 || selectedRegions.length === 0"
+            :text="$t('common:modules.statisticDashboard.dataSelectionExpanded.showData')"
+            icon="bi bi-plus-circle"
+            :interaction="() => $emit('click:showData')"
+        />
+    </div>
 </template>
+
+<style lang="scss" scoped>
+    .fw-bold {
+        font-weight: $font_family_accent;
+    }
+</style>

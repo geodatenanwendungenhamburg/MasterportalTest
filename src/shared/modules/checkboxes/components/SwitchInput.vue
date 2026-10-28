@@ -5,6 +5,7 @@
  * @module shared/modules/checkboxes/SwitchInput
  * @vue-prop {String} id - is used to set the id of the input-tag.
  * @vue-prop {String} label - sets the label of the toggle.
+ * @vue-prop {Boolean} omitLabel - if true, omits the toggle's built-in label.
  * @vue-prop {String} aria - sets a description of the toggle for assistive technology like screenreaders.
  * @vue-prop {Boolean} disabled - if true, the input is disabled.
  * @vue-prop {Boolean} checked - the current state of the toggle.
@@ -21,6 +22,10 @@ export default {
         label: {
             type: String,
             required: true
+        },
+        omitLabel: {
+            type: Boolean,
+            default: false
         },
         aria: {
             type: String,
@@ -88,6 +93,7 @@ export default {
             @change="updateModelValue"
         >
         <label
+            v-if="!omitLabel"
             class="form-check-label ps-2 pt-1 me-2"
             :for="id"
         >

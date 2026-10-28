@@ -10,7 +10,6 @@ import LegendComponent from "@modules/statisticDashboard/components/StatisticDas
 import sinon from "sinon";
 import fetchData from "@modules/statisticDashboard/js/fetchData.js";
 import ChartProcessor from "@modules/statisticDashboard/js/chartProcessor.js";
-import AccordionItem from "@shared/modules/accordion/components/AccordionItem.vue";
 import Overlay from "ol/Overlay.js";
 import Select from "ol/interaction/Select.js";
 import mapCollection from "@core/maps/js/mapCollection.js";
@@ -245,22 +244,6 @@ describe("src/modules/statisticDashboard/components/StatisticDashboard.vue", () 
             await wrapper.setData({legendValue: ["legend"], showLegendView: true});
 
             expect(wrapper.findComponent(LegendComponent).exists()).to.be.true;
-        });
-        it("should render the legend accordion", async () => {
-            wrapper = createWrapper();
-            const data = {
-                legendValue: [
-                    {
-                        "graphic": "data:image/svg+xml;charset=utf-8,<svg height='35' width='35' version='1.1' xmlns='http://www.w3.org/2000/svg'><polygon points='5,5 30,5 30,30 5,30' style='fill:rgb(158, 202, 225);fill-opacity:0.9;stroke:rgb(158, 202, 225);stroke-opacity:0.9;stroke-width:3;stroke-linecap:round;stroke-dasharray:;'/></svg>",
-                        "name": "90"
-                    }
-                ],
-                showNoticeText: false
-            };
-
-            await wrapper.setData(data);
-
-            expect(wrapper.findAllComponents(AccordionItem).at(0).attributes().id).to.equal("legend-accordion");
         });
         it("should render filter search field if showLimitView is true", async () => {
             wrapper = createWrapper();

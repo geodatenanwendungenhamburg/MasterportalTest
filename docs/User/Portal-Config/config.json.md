@@ -1184,6 +1184,11 @@ Configuration for the URL query parameters `zoomToFeatureId` and `zoomToGeometry
 
 Here you can configure the menu items for the `mainMenu` (in the desktop view on the left) and `secondaryMenu` (in the desktop view on the right) and their arrangement. The order of the modules results from the order in the *Config.json*.
 
+If a module `type` is configured multiple times with different settings, the following criteria must be met:
+- The names must be unique.
+- If the same `type` appears multiple times on a single menu page, the different configurations are displayed.
+- If the same `type` appears on *both* menu pages, the menu entries and content are identical when both are open. Regardless of whether the menu configurations differ, the last module is displayed in this case.
+
 |Name|Required|Type|Default|Description|Expert|
 |----|--------|----|-------|-----------|------|
 |currentComponent|no|String|""|Defines a module that is opened initially. Please mind that modules nested in folders can not be opened this way. If a module is present multiple times, all instances will be opened in order of appearence, which may result in unexpected behaviour.|false|
@@ -1774,6 +1779,7 @@ Searching all topic selection tree layers.
 
 |Name|Required|Type|Default|Description|Expert|
 |----|--------|----|-------|-----------|------|
+|foldersFirst|no|Boolean|false|If set to true the searchresult category folder is listed before the category layer.|false|
 |hitTemplate|no|String|"default"|Template in which the search results (`show all`) are displayed. Possible values are "default" and "layer".|false|
 |resultEvents|no|**[resultEvents](#portalconfigmenusearchbarsearchinterfacesresultevents)**|{"onClick": ["activateLayerInTopicTree"], "buttons": ["showInTree", "showLayerInfo"]}|Actions that are executed when an interaction, such as hover or click, is performed with a result list item. The following events are possible: "activateLayerInTopicTree", "showInTree", "showLayerInfo".|false|
 |searchInterfaceId|no|String|"topicTree"|Id, which is used to link to the searchbar in the topic search.|false|
