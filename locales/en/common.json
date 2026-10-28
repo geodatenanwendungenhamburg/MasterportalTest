@@ -1358,6 +1358,7 @@
       "infoTextNoData": "No or not all necessary filters have been added yet. To display statistical data in tables and diagrams, the data must first be filtered.",
       "loadingData": "Loading data ...",
       "loadingError": "The statistic dashboard could not be loaded. Please try again later.",
+      "infoTextFilter": "Please select all filters to display the statistical data.",
       "button": {
         "difference": "Difference",
         "table": "Table",
@@ -1387,7 +1388,14 @@
         "districts": "Districts",
         "more": "more",
         "time": "Timebased filter",
-        "geographical": "Geographical filter"
+        "geographical": "Geographical filter",
+        "differenceMode": "Difference mode: ",
+        "area_one": "area",
+        "area_other": "areas",
+        "year_one": "year",
+        "year_other": "years",
+        "statistic_one": "statistic",
+        "statistic_other": "statistics"
       },
       "filterInputs": {
         "additional": "Additional"

@@ -1361,6 +1361,7 @@
       "infoTextNoData": "Es wurden noch keine oder nicht alle notwendigen Filter hinzugefügt. Um statistische Daten in Tabellen und Diagrammen anzeigen zu lassen, müssen die Daten erst gefiltert werden.",
       "loadingData": "Daten werden geladen ...",
       "loadingError": "Das Statistik-Dashboard konnte nicht geladen werden. Bitte versuchen Sie es später erneut.",
+      "infoTextFilter": "Bitte wählen Sie alle Filter aus, um die Statistikdaten anzuzeigen.",
       "button": {
         "difference": "Differenz",
         "table": "Tabelle",
@@ -1392,7 +1393,14 @@
         "districts": "Kreise",
         "more": "mehr",
         "time": "Zeitbezogene Filter",
-        "geographical": "Geografische Filter"
+        "geographical": "Geografische Filter",
+        "differenceMode": "Differenzmodus: ",
+        "area_one": "Gebiet",
+        "area_other": "Gebiete",
+        "year_one": "Jahr",
+        "year_other": "Jahre",
+        "statistic_one": "Statistik",
+        "statistic_other": "Statistiken"
       },
       "filterInputs": {
         "additional": "Sonstiges"

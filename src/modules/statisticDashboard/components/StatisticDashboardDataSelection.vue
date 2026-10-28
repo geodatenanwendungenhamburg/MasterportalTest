@@ -2,6 +2,7 @@
 // @ts-check
 import IconButton from "@shared/modules/buttons/components/IconButton.vue";
 import StatisticDashboardDataSelectionExpanded from "./StatisticDashboardDataSelectionExpanded.vue";
+import {mapGetters} from "vuex";
 
 export default {
     name: "StatisticDashboardDataSelection",
@@ -14,6 +15,24 @@ export default {
         return {
             isExpanded: false
         };
+    },
+    computed: {
+        ...mapGetters("Modules/StatisticDashboard", [
+            "selectedCategories",
+            "selectedDates",
+            "selectedRegions",
+            "selectedStatistics",
+            "selectedStatisticsKeys",
+            "selectedRegionsValues",
+            "selectedReferenceData"
+        ]),
+
+        allFiltersSelected () {
+            return this.selectedCategories.length > 0
+                && this.selectedStatisticsKeys.length > 0
+                && this.selectedRegions.length > 0
+                && this.selectedDates.length > 0;
+        }
     }
 };
 
@@ -73,6 +92,52 @@ export default {
                     </button>
                 </div>
             </div>
+            <div class="mt-2">
+                <p
+                    v-if="selectedCategories.length > 0"
+                    class="selected-categories mb-3"
+                >
+                    {{ selectedCategories.join(' · ') }}
+                </p>
+                <p
+                    v-if="!allFiltersSelected"
+                    class="mt-1 mb-2"
+                >
+                    <small class="fst-italic">
+                        {{ $t('common:modules.statisticDashboard.infoTextFilter') }}
+                    </small>
+                </p>
+                <div class="d-flex flex-wrap gap-2">
+                    <span
+                        v-if="selectedStatisticsKeys.length > 0"
+                        class="badge rounded-pill text-dark fw-normal px-3 py-2 filter-count-badge"
+                    >
+                        <i class="bi bi-bar-chart-line me-1" />
+                        {{ selectedStatisticsKeys.length }} {{ $t('common:modules.statisticDashboard.label.statistic', { count: selectedStatisticsKeys.length }) }}
+                    </span>
+                    <span
+                        v-if="selectedRegions.length > 0"
+                        class="badge rounded-pill text-dark fw-normal px-3 py-2 filter-count-badge"
+                    >
+                        <i class="bi bi-pin-map me-1" />
+                        {{ selectedRegionsValues.length }} {{ $t('common:modules.statisticDashboard.label.area', { count: selectedRegionsValues.length }) }}
+                    </span>
+                    <span
+                        v-if="selectedDates.length > 0"
+                        class="badge rounded-pill text-dark fw-normal px-3 py-2 filter-count-badge"
+                    >
+                        <i class="bi bi-calendar-event me-1" />
+                        {{ selectedDates.length }} {{ $t('common:modules.statisticDashboard.label.year', { count: selectedDates.length }) }}
+                    </span>
+                    <span
+                        v-if="selectedReferenceData"
+                        class="badge rounded-pill text-dark fw-normal px-3 py-2 filter-count-badge"
+                    >
+                        <i class="bi bi-exclude me-1" />
+                        {{ $t('common:modules.statisticDashboard.label.differenceMode') }} {{ selectedReferenceData.type === "date" ? $t('common:modules.statisticDashboard.label.year') : $t('common:modules.statisticDashboard.label.area') }}
+                    </span>
+                </div>
+            </div>
         </template>
     </div>
 </template>
@@ -86,6 +151,14 @@ export default {
 
 .btn-wrapper {
     width: 5rem !important;
+}
+
+.filter-count-badge {
+    background-color: $light_blue;
+}
+
+.selected-categories {
+    font-size: $font_size_big;
 }
 
 </style>
