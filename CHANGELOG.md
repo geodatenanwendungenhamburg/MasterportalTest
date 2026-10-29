@@ -45,17 +45,19 @@
 ### Removed
 
 ### Fixed
-- Menu: Module caching (keep-alive) now also works for lazy loaded core modules, e.g. the StatisticDashboard is no longer rebuilt and its data reloaded each time it is opened.
 - Issue \#1629: Fetch legendUrl with authorization header where needed.
 - Issue \#1646: Improved WMTS printing with raster reprojection for differing projections, correct opacity handling, more reliable raster fallbacks and rendering, and reduced 3D print payload sizes.
-- StatisticDashboard: Reopening the module from the menu no longer leaves it stuck in the loading state without controls.
-- StatisticDashboard: The module is now cached when switching between menu entries, so it is no longer rebuilt and its data is no longer reloaded each time it is opened. The hover info on the map is removed while the module is closed.
 - Issue \#1655, \#1663: It is now possible to configure modules with the same `type` multiple times. However, there are two restriction: the modules must have different names and they must be configured in the same menu (`mainMenu` or `secondaryMenu`). Only one of the modules configured multiple times can be open at a time; otherwise, the wrong content may be displayed.
 - Issue \#1664: Transform geometries returned by `wfsSearch` if their CRS differ from the portal CRS. Add new config parameter `dataProjection` for WFS configuration.
+- StatisticDashboard: 
+        - Reopening the module from the menu no longer leaves it stuck in the loading state without controls.
+        - The module is now cached when switching between menu entries, so it is no longer rebuilt and its data is no longer reloaded each time it is opened. The hover info on the map is removed while the module is closed.
+- Menu: Module caching (keep-alive) now also works for lazy loaded core modules, e.g. the StatisticDashboard is no longer rebuilt and its data reloaded each time it is opened.
 - Draw: Fixed an error when editing imported multi geometries (e.g. from KML files), which prevented the measurement tooltip from being positioned.
 - Legend: Legend images of secured services are now loaded with the auth token of the login module, so that no 401 error occurs.
 - GetFeatureInfo: A gfiTheme addon that is configured at a layer but missing in `Config.addons` of config.js is now loaded on demand instead of falling back to the default theme. This also applies to layers added via search.
 - AddWMS: If the root layer of a WMS capabilities has no `BoundingBox`, the bounding box of the first child layer is now used to check whether the service is within the portal extent. If no bounding box is found at all, the WMS is imported without an error.
+- Alerting: Html tags `ul` and `li` in `content` are no longer sanitized via DOMPurify.
 
 ---
 
