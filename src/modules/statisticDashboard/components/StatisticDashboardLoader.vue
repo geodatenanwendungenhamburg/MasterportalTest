@@ -1,5 +1,5 @@
 <script>
-import {defineAsyncComponent} from "vue";
+import {defineAsyncComponent, h} from "vue";
 import SpinnerItem from "@shared/modules/spinner/components/SpinnerItem.vue";
 import StatisticDashboardLoadError from "./StatisticDashboardLoadError.vue";
 
@@ -12,10 +12,19 @@ import StatisticDashboardLoadError from "./StatisticDashboardLoadError.vue";
  */
 export default {
     name: "StatisticDashboardLoader",
+
     components: {
         StatisticDashboard: defineAsyncComponent({
             loader: () => import("./StatisticDashboard.vue"),
-            loadingComponent: SpinnerItem,
+            loadingComponent: {
+                render () {
+                    return h("div", {
+                        class: "p-3 d-flex justify-content-center"
+                    }, [
+                        h(SpinnerItem)
+                    ]);
+                }
+            },
             errorComponent: StatisticDashboardLoadError,
             delay: 200
         })
