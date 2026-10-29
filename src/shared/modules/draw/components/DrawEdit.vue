@@ -193,7 +193,7 @@ export default {
         /**
          * Cleans up interactions when the selected interaction changes.
          * Closes the frame for non-edit interactions, removes select interactions
-         * unless in delete/modify mode, and tears down the modify interaction
+         * unless in delete mode, and tears down the modify interaction
          * (including the text click handler) when leaving modify mode.
          * @param {String} selectedInteraction The new interaction mode.
          * @returns {void}
@@ -202,7 +202,7 @@ export default {
             if (!this.visibleDrawEdits.includes(selectedInteraction)) {
                 this.showFrame = false;
             }
-            if (selectedInteraction !== "delete" && selectedInteraction !== "modify") {
+            if (selectedInteraction !== "delete") {
                 this.currentSelectInteractions.forEach(interaction => this.removeInteraction(interaction));
                 this.currentSelectInteractions = [];
             }
