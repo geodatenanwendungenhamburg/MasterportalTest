@@ -16,12 +16,14 @@ export default {
     },
     data () {
         return {
-            buttonGroupReference: [{
-                                       name: i18next.t("common:modules.statisticDashboard.label.year")
-                                   },
-                                   {
-                                       name: i18next.t("common:modules.statisticDashboard.label.area")
-                                   }],
+            buttonGroupReference: [
+                {
+                    name: i18next.t("common:modules.statisticDashboard.label.year")
+                },
+                {
+                    name: i18next.t("common:modules.statisticDashboard.label.area")
+                }
+            ],
             selectedDate: "",
             selectedRegion: "",
             referenceType: ""

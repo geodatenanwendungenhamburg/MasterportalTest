@@ -1,3 +1,4 @@
+// @ts-check
 /** @import { StatisticDashboardLevel } from "../types/typesStatisticDashboard" */
 /** @import { ReferenceData } from "../types/internalTypes" */
 /** @import {DropdownItem} from "@shared/modules/dropdown/types/typesDropdown.js" */
@@ -10,15 +11,13 @@
  * @property {String} name Displayed as the title. (config-param)
  * @property {String} subtitle Displayed as the subtitle. (config-param)
  * @property {String} icon Icon next to the title. (config-param)
- * @property {Boolean} renderToWindow If true, tool is rendered in a window, else in the sidebar. (config-param)
- * @property {Boolean} resizableWindow If true, window is resizable. (config-param)
  * @property {Boolean} isVisibleInMenu If true, tool is selectable in menu. (config-param)
  * @property {StatisticDashboardLevel[]} data The configured levels with their data sources. (config-param)
  * @property {Boolean} showAggregatedView If true, only aggregated statistics are offered in the statistics dropdown and their specific statistics can be selected in an accordion. (config-param)
  * @property {Number} specificsChipLimit The number of selected specific statistics shown per aggregated statistic before "show all" is offered. Values below 1 show all. (config-param)
  * @property {Record<string, string[]>} selectedSpecificsTags - The selected tags per aggregated statistic key.
  * @property {ReferenceData} referenceData - The reference data used in the statistic dashboard.
- * @property {Object} selectedReferenceData the selected reference data
+ * @property {Object|undefined} selectedReferenceData the selected reference data
  * @property {string|undefined} selectedLevelName - The levelName of the selected level (district, county, ...). The level itself is provided by the getter selectedLevel.
  * @property {string[]} selectedCategories - The selected categories.
  * @property {string[]} selectedStatisticsKeys - The keys of the selected statistics.
@@ -40,8 +39,8 @@
  * @property {Number} opacity - Opacity/alpha-channel of the colors.
  * @property {Object} legendData the legendValues with colors and value
  * @property {Boolean} addTotalCount If true, a row with total count will be inserted in table.
- * @property {Number} lineLimit The number of lines from which the line diagram is limited.
- * @property {Number} barLimit The number of bars from which the line diagram is limited.
+ * @property {Number|null} lineLimit The number of lines from which the line diagram is limited.
+ * @property {Number|null} barLimit The number of bars from which the line diagram is limited.
  * @property {String} downloadFilename the exported file name.
  * @property {String} chosenStatisticName the clicked chosen statistic name.
  * @property {Boolean} isFeatureLoaded If true, the features of layer will be loaded.
@@ -55,8 +54,6 @@ const state = {
     levelTitle: undefined,
     description: "common:modules.statisticDashboard.description",
     icon: "bi-bar-chart-line-fill",
-    renderToWindow: false,
-    resizableWindow: true,
     isVisibleInMenu: true,
     colorScheme: {},
     data: [],

@@ -103,11 +103,24 @@ export default {
             return this.selectedStatisticsKeys.filter(key => !this.specificStatisticKeys.includes(key));
         }
     },
+    watch: {
+        /**
+         * Clear the reference data if the difference section is deactivated.
+         * @param {Boolean} val if to show the difference section
+         * @returns {void}
+         */
+        showDifference (val) {
+            if (!val) {
+                this.setSelectedReferenceData(undefined);
+            }
+        }
+    },
     methods: {
         .../** @type {StatisticDashboardMapMutations} */ (mapMutations)("Modules/StatisticDashboard", [
             "setSelectedDates",
             "setSelectedAggregatedStatisticsKeys",
             "setSelectedLevelName",
+            "setSelectedReferenceData",
             "setSelectedStatisticsKeys",
             "updateSelectedCategories"
         ]),
