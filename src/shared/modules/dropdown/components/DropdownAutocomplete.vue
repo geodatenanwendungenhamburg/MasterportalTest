@@ -1,5 +1,6 @@
 <script>
 import "../css/dropdownMenu.scss";
+import {sortDropdownItems, sortSelectedValues} from "@shared/js/utils/sortDropdownItems.js";
 
 export default {
     name: "DropdownAutocomplete",
@@ -78,6 +79,18 @@ export default {
             default: false,
             required: false
         },
+        /** Places the selected items in front of the not selected items. Only takes effect if sortable is true. */
+        selectedFirst: {
+            type: Boolean,
+            default: false,
+            required: false
+        },
+        /** Sorts the items and the chips alphabetically by their title. Items with "pinned: true" stay in front. Not supported with isGroup. */
+        sortable: {
+            type: Boolean,
+            default: false,
+            required: false
+        },
         /** Original vuetify loading prop */
         vLoading: {
             type: Boolean,
@@ -87,6 +100,28 @@ export default {
     },
     emits: ["update:modelValue"],
     computed: {
+        /**
+         * Gets the items to display, sorted if sortable is true.
+         * @returns {Array} The displayed items.
+         */
+        displayedItems () {
+            if (!this.sortable) {
+                return this.items;
+            }
+            return sortDropdownItems(this.items, {selectedValues: this.modelValue, selectedFirst: this.selectedFirst, itemTitle: this.itemTitle});
+        },
+
+        /**
+         * Gets the model value to display, with the selected values sorted if sortable and multiple are true.
+         * @returns {*} The displayed model value.
+         */
+        displayedModelValue () {
+            if (!this.sortable || !this.multiple || !Array.isArray(this.modelValue)) {
+                return this.modelValue;
+            }
+            return sortSelectedValues(this.items, this.modelValue, this.itemTitle);
+        },
+
         /**
          * Checks whether all items are selected.
          * @returns {boolean} True if all items are selected.
@@ -201,8 +236,8 @@ export default {
     <template v-else>
         <v-autocomplete
             v-bind="$attrs"
-            :model-value="modelValue"
-            :items
+            :model-value="displayedModelValue"
+            :items="displayedItems"
             :item-title="itemTitle"
             :label
             :multiple

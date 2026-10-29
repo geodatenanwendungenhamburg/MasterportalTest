@@ -14,7 +14,6 @@ import {
 } from "ol/format/filter.js";
 import getFeature from "@shared/js/api/wfs/getFeature.js";
 import WFS from "ol/format/WFS.js";
-import sortBy from "@shared/js/utils/sortBy.js";
 import isObject from "@shared/js/utils/isObject.js";
 
 export default {
@@ -43,22 +42,16 @@ export default {
         },
 
         /**
-         * Gets the regions sorted with the selected ones first.
+         * Gets the region items for the dropdown with the pinned "all areas" entry in front.
          * @param {Object[]} regions The regions array.
-         * @param {Object[]} selectedRegions The selected regions.
-         * @returns {Object[]} the regions sorted.
+         * @returns {Object[]} The region items.
          */
-        getRegionsSorted (regions, selectedRegions) {
-            if (!regions?.length || !Array.isArray(selectedRegions)) {
+        getRegionItems (regions) {
+            if (!Array.isArray(regions) || !regions.length) {
                 return [];
             }
-            const notSelectedRegions = sortBy(regions.filter(region => !selectedRegions.some(selectedRegion => selectedRegion.title === region.title)), "title");
 
-            if (this.containsAllTag(selectedRegions)) {
-                return [...selectedRegions, ...notSelectedRegions];
-            }
-
-            return [...selectedRegions, {title: i18next.t("common:modules.statisticDashboard.button.allAreas")}, ...notSelectedRegions];
+            return [{title: i18next.t("common:modules.statisticDashboard.button.allAreas"), pinned: true}, ...regions];
         },
 
         /**
@@ -365,9 +358,11 @@ export default {
                 <DropdownAutocomplete
                     :id="'region-filter' + index"
                     :label="region.name ?? $t('common:modules.statisticDashboard.label.area')"
-                    :items="getRegionsSorted(region.values, region.selectedValues)"
+                    :items="getRegionItems(region.values)"
                     :placeholder="$t('common:modules.statisticDashboard.reference.placeholder')"
                     multiple
+                    sortable
+                    selected-first
                     :model-value="region.selectedValues"
                     :v-loading="region.loadingDataCounter > 0"
                     :disabled="region.loadingDataCounter > 0"

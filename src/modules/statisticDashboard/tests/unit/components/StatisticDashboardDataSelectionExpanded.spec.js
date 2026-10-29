@@ -120,6 +120,46 @@ describe("src/modules/statisticDashboard/components/StatisticDashboardDataSelect
         });
     });
 
+    it("configures the category and statistic dropdowns as sortable with the selected entries first", () => {
+        const wrapper = createWrapper(),
+            [categoryDropdown, statisticDropdown] = wrapper.findAllComponents(DropdownAutocomplete);
+
+        [categoryDropdown, statisticDropdown].forEach(dropdown => {
+            expect(dropdown.props("sortable")).to.be.true;
+            expect(dropdown.props("selectedFirst")).to.be.true;
+        });
+        expect(categoryDropdown.props("items")).to.deep.equal(wrapper.vm.categories);
+        expect(statisticDropdown.props("items")).to.deep.equal(wrapper.vm.selectableStatistics);
+    });
+
+    it("does not sort the items of the date dropdown", () => {
+        const wrapper = createWrapper(),
+            dateDropdown = wrapper.findAllComponents(DropdownAutocomplete)[2];
+
+        expect(dateDropdown.props("sortable")).to.be.false;
+    });
+
+    it("passes the selected dates sorted alphabetically to the dropdown chips", () => {
+        const dates = [
+            {value: "2022", title: "2022"},
+            {value: ["2019", "2020"], title: "Letzte 2 Jahre"},
+            {value: "2018", title: "2018"}
+        ];
+
+        store.commit("Modules/StatisticDashboard/setSelectedDates", dates);
+        const wrapper = createWrapper(),
+            dateDropdown = wrapper.findAllComponents(DropdownAutocomplete)[2];
+
+        expect(dateDropdown.props("modelValue")).to.deep.equal([dates[2], dates[0], dates[1]]);
+        expect(store.state.Modules.StatisticDashboard.selectedDates).to.deep.equal(dates);
+    });
+
+    it("passes no selected dates to the dropdown chips if selected dates are not an array", () => {
+        [undefined, null, "", {}].forEach(value => {
+            expect(StatisticDashboardDataSelectionExpanded.computed.selectedDatesSorted.call({selectedDates: value})).to.deep.equal([]);
+        });
+    });
+
     it("updates the selected categories and removes statistics outside them", async () => {
         const wrapper = createWrapper(),
             categoryDropdown = wrapper.findAllComponents(DropdownAutocomplete)[0];

@@ -6,11 +6,12 @@
  */
 import BaseCard from "@shared/modules/cards/components/BaseCard.vue";
 import ButtonGroup from "@shared/modules/buttons/components/ButtonGroup.vue";
+import {compareDropdownItems} from "@shared/js/utils/sortDropdownItems.js";
 import DropdownAutocomplete from "@shared/modules/dropdown/components/DropdownAutocomplete.vue";
 import FlatButton from "@shared/modules/buttons/components/FlatButton.vue";
 import {mapGetters, mapMutations} from "vuex";
-import StatisticDashboardFilterRegions from "./StatisticDashboardFilterRegions.vue";
 import StatisticDashboardDifference from "./StatisticDashboardDifference.vue";
+import StatisticDashboardFilterRegions from "./StatisticDashboardFilterRegions.vue";
 import StatisticDashboardSpecificsSelection from "./StatisticDashboardSpecificsSelection.vue";
 import SwitchInput from "@shared/modules/checkboxes/components/SwitchInput.vue";
 
@@ -75,6 +76,19 @@ export default {
                     value: key,
                     title: attribute.name
                 }));
+        },
+
+        /**
+         * Gets the selected dates sorted alphabetically by their titles for the chips.
+         * The dates dropdown itself keeps the chronological order of the time steps.
+         * @returns {DropdownItem[]} The sorted selected dates.
+         */
+        selectedDatesSorted () {
+            if (!Array.isArray(this.selectedDates)) {
+                return [];
+            }
+
+            return [.../** @type {DropdownItem[]} */ (this.selectedDates)].sort((a, b) => compareDropdownItems(a, b));
         },
 
         /**
@@ -143,6 +157,8 @@ export default {
             :label="$t('common:modules.statisticDashboard.dataSelectionExpanded.categories')"
             :items="categories"
             multiple
+            sortable
+            selected-first
             :model-value="selectedCategories"
             @update:model-value="updateSelectedCategories"
         />
@@ -152,6 +168,8 @@ export default {
             :items="selectableStatistics"
             :model-value="statisticsDropdownKeys"
             multiple
+            sortable
+            selected-first
             @update:model-value="updateStatisticsDropdownKeys"
         />
         <StatisticDashboardSpecificsSelection
@@ -194,7 +212,7 @@ export default {
             return-object
             multiple
             :placeholder="$t('common:modules.statisticDashboard.reference.placeholder')"
-            :model-value="selectedDates"
+            :model-value="selectedDatesSorted"
             @update:model-value="setSelectedDates"
         />
     </BaseCard>

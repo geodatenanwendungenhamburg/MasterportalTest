@@ -79,6 +79,49 @@ describe("src/shared/modules/dropdown/components/DropdownAutocomplete.vue", () =
         });
     });
 
+    describe("sortable", () => {
+        const objectItems = [
+            {value: "hh", title: "Hamburg"},
+            {value: "all", title: "All", pinned: true},
+            {value: "b", title: "Berlin"},
+            {value: "hb", title: "Bremen"}
+        ];
+
+        it("passes items and model value unchanged if sortable is false", () => {
+            const wrapper = mountComponent({items, multiple: true, modelValue: ["Hamburg", "Berlin"]}),
+                dropdown = wrapper.findComponent({name: "VAutocomplete"});
+
+            expect(dropdown.props("items")).to.deep.equal(items);
+            expect(dropdown.props("modelValue")).to.deep.equal(["Hamburg", "Berlin"]);
+        });
+
+        it("passes the items sorted alphabetically with pinned items first", () => {
+            const wrapper = mountComponent({items: objectItems, sortable: true});
+
+            expect(wrapper.findComponent({name: "VAutocomplete"}).props("items").map(item => item.value)).to.deep.equal(["all", "b", "hb", "hh"]);
+        });
+
+        it("passes the selected items first if selectedFirst is set", () => {
+            const wrapper = mountComponent({items: objectItems, sortable: true, selectedFirst: true, multiple: true, modelValue: ["hh"]});
+
+            expect(wrapper.findComponent({name: "VAutocomplete"}).props("items").map(item => item.value)).to.deep.equal(["hh", "all", "b", "hb"]);
+        });
+
+        it("passes the selected values sorted for the chips in mode multiple", () => {
+            const wrapper = mountComponent({items, sortable: true, multiple: true, modelValue: ["Hamburg", "Berlin"]});
+
+            expect(wrapper.findComponent({name: "VAutocomplete"}).props("modelValue")).to.deep.equal(["Berlin", "Hamburg"]);
+        });
+
+        it("passes the model value unchanged if it is not an array", () => {
+            [undefined, null, "", "Hamburg"].forEach(modelValue => {
+                const wrapper = mountComponent({items, sortable: true, modelValue});
+
+                expect(wrapper.findComponent({name: "VAutocomplete"}).props("modelValue")).to.equal(modelValue);
+            });
+        });
+    });
+
     describe("forwardedSlotNames", () => {
         it("returns the names of slots the component does not render itself", () => {
             const wrapper = mountComponent({items}, {append: "<span>a</span>"});

@@ -162,70 +162,39 @@ describe("src/modules/statiscticDashboard/components/StatisticDashboardFilterReg
                 expect(wrapper.vm.hasRegionChild({})).to.be.false;
             });
         });
-        describe.skip("regionsSorted", () => {
-            it("should return an empty array", () => {
-                const store = factory.createVuexStore(),
-                    wrapper = shallowMount(StatisticDashboardFilterRegions, {
-                        propsData: {
-                            regions: []
-                        },
-                        global: {
-                            plugins: [store]
-                        }
-                    });
+        describe("getRegionItems", () => {
+            const allAreasTitle = i18next.t("common:modules.statisticDashboard.button.allAreas"),
+                regions = [
+                    {value: "Schwerin", title: "Schwerin"},
+                    {value: "Anklam", title: "Anklam"}
+                ];
+            let wrapper;
 
-                expect(wrapper.vm.getRegionsSorted()).to.be.an("array").that.is.empty;
+            beforeEach(() => {
+                wrapper = shallowMount(StatisticDashboardFilterRegions, {
+                    global: {
+                        plugins: [factory.createVuexStore()]
+                    }
+                });
             });
-            it("should return the array with all regions as given", () => {
-                const regions = [
-                        {value: ["Harburg", "Lübeck", "Schwerin"], label: "Alle Gebiete"},
-                        {value: "Harburg", label: "Harburg"},
-                        {value: "Lübeck", label: "Lübeck"},
-                        {value: "Schwerin", label: "Schwerin"}
-                    ],
-                    expectedRegions = [
-                        {label: "modules.statisticDashboard.button.allAreas"},
-                        {value: ["Harburg", "Lübeck", "Schwerin"], label: "Alle Gebiete"},
-                        {value: "Harburg", label: "Harburg"},
-                        {value: "Lübeck", label: "Lübeck"},
-                        {value: "Schwerin", label: "Schwerin"}
-                    ],
-                    store = factory.createVuexStore(),
-                    wrapper = shallowMount(StatisticDashboardFilterRegions, {
-                        propsData: {
-                            regions: []
-                        },
-                        global: {
-                            plugins: [store]
-                        }
-                    });
 
-                expect(wrapper.vm.getRegionsSorted(regions, [])).to.deep.equal(expectedRegions);
+            it("should return an empty array for invalid regions", () => {
+                [undefined, null, "", [], {}].forEach(value => {
+                    expect(wrapper.vm.getRegionItems(value)).to.be.an("array").that.is.empty;
+                });
             });
-            it("should return the array with the selected entries at first", () => {
-                const regions = [
-                        {value: "Harburg", label: "Harburg"},
-                        {value: "Lübeck", label: "Lübeck"},
-                        {value: "Schwerin", label: "Schwerin"},
-                        {value: ["Harburg", "Lübeck", "Schwerin"], label: "Alle Gebiete"}
-                    ],
-                    store = factory.createVuexStore(),
-                    wrapper = shallowMount(StatisticDashboardFilterRegions, {
-                        propsData: {
-                            regions: []
-                        },
-                        global: {
-                            plugins: [store]
-                        }
-                    });
 
-                expect(wrapper.vm.getRegionsSorted(regions, [{value: ["Harburg", "Lübeck", "Schwerin"], label: "Alle Gebiete"}])).to.deep.equal([
-                    {value: ["Harburg", "Lübeck", "Schwerin"], label: "Alle Gebiete"},
-                    {label: "modules.statisticDashboard.button.allAreas"},
-                    {value: "Harburg", label: "Harburg"},
-                    {value: "Lübeck", label: "Lübeck"},
-                    {value: "Schwerin", label: "Schwerin"}
+            it("should place the pinned all areas entry in front of the regions", () => {
+                expect(wrapper.vm.getRegionItems(regions)).to.deep.equal([
+                    {title: allAreasTitle, pinned: true},
+                    ...regions
                 ]);
+            });
+
+            it("should not mutate the given regions", () => {
+                wrapper.vm.getRegionItems(regions);
+
+                expect(regions).to.have.lengthOf(2);
             });
         });
         describe.skip("setSelectedValuesToRegion", () => {

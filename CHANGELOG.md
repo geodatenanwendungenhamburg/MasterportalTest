@@ -20,6 +20,9 @@
     - Accordion: Add sub title and border style into accordion.
     - DropdownSelect: Based on vuetify's VSelect. Similar to DropdownAutocomplete, but without the ability to enter a search text.
     - DropdownAutocomplete: Based on vuetify`s VAutocomplete, it extends the usual select input with the ability to enter a search text and thus filter the shown values. As a consequence, vuetify is imported globally, but configuring custom vuetify instances is still supported.
+    - DropdownSelect/DropdownAutocomplete:
+        - Added the prop `sortable` to sort the entries and chips alphabetically in the current language. Items with `pinned: true` stay in front.
+        - Added the prop `selectedFirst` to additionally show the selected entries first.
 - SearchInterfaceTopicTree: Added parameter `foldersFirst` to control the order of the result categories.
 
 
@@ -35,7 +38,9 @@
         - dompurify: "^3.4.15" to "^3.4.17"
 - WMS-Time: Changed button name to avoid confusion.
 - LayerTree/LayerSelection: In portals with a configured login, secured layers can no longer be activated without being logged in. Instead, an alert asks the user to log in. The lock icon of secured layers is shown open when logged in and closed otherwise.
-- StatisticDashboard: A loading spinner is shown while the module code and the initial data are loaded, and an error message if the module cannot be loaded. Requests for multiple layers are now sent in parallel to speed up loading.
+- StatisticDashboard:
+    - The categories, statistics and region dropdowns are sorted alphabetically and show the selected entries first, which are sorted alphabetically as well. The chips of the selected entries, including the year dropdown, are shown in alphabetical order.
+    - A loading spinner is shown while the module code and the initial data are loaded, and an error message if the module cannot be loaded. Requests for multiple layers are now sent in parallel to speed up loading.
 - Changed Node.js support: Minimum supported versions are now Node.js **22.23.4** (LTS) and **24.22.1** (LTS). This update is required to address known security vulnerabilities in older Node.js versions.
 
 ### Deprecated
