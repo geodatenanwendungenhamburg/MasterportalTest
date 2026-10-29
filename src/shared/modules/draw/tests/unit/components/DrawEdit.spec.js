@@ -372,7 +372,7 @@ describe("src/shared/modules/draw/components/DrawEdit.vue", () => {
             expect(wrapper.vm.showFrame).to.be.false;
         });
 
-        it("should clear currentSelectInteractions if selectedInteraction is not 'delete' or 'modify'", async () => {
+        it("should clear currentSelectInteractions if selectedInteraction is not 'delete'", async () => {
             wrapper = shallowMount(DrawEditComponent, {
                 propsData: {layer, selectedInteraction: "delete"},
                 global: {plugins: [store]}
@@ -382,6 +382,36 @@ describe("src/shared/modules/draw/components/DrawEdit.vue", () => {
             await wrapper.setProps({selectedInteraction: "draw"});
 
             expect(wrapper.vm.currentSelectInteractions).to.deep.equals([]);
+        });
+
+        it("should remove and clear currentSelectInteractions when switching from 'delete' to 'modify'", async () => {
+            const fakeInteraction = {fake: true};
+
+            wrapper = shallowMount(DrawEditComponent, {
+                propsData: {layer, selectedInteraction: "delete"},
+                global: {plugins: [store]}
+            });
+
+            wrapper.vm.currentSelectInteractions = [fakeInteraction];
+            await wrapper.setProps({selectedInteraction: "modify"});
+
+            expect(removeInteractionSpy.calledWith(sinon.match.any, fakeInteraction)).to.be.true;
+            expect(wrapper.vm.currentSelectInteractions).to.deep.equals([]);
+        });
+
+        it("should keep currentSelectInteractions when switching to 'delete'", async () => {
+            const fakeInteraction = {fake: true};
+
+            wrapper = shallowMount(DrawEditComponent, {
+                propsData: {layer, selectedInteraction: "modify"},
+                global: {plugins: [store]}
+            });
+
+            wrapper.vm.currentSelectInteractions = [fakeInteraction];
+            await wrapper.setProps({selectedInteraction: "delete"});
+
+            expect(removeInteractionSpy.calledWith(sinon.match.any, fakeInteraction)).to.be.false;
+            expect(wrapper.vm.currentSelectInteractions).to.deep.equals([fakeInteraction]);
         });
 
         it("should set currentModifyInteraction to null if selectedInteraction is not 'modify'", async () => {
