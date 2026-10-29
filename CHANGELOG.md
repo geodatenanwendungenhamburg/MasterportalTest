@@ -29,7 +29,7 @@
 ### Changed
 - The following packages have been updated:
     - dependencies:
-        - @masterportal/masterportalapi: 2.64.0 to 2.65.0
+        - @masterportal/masterportalapi: 2.64.0 to 2.66.0
     - devDependencies:
         - vitest: "^4.0.16" to "4.1.11"
         - @vitest/ui: "^4.0.16" to "4.1.11"
