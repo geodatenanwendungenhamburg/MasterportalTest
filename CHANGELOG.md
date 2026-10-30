@@ -23,6 +23,7 @@
     - DropdownSelect/DropdownAutocomplete:
         - Added the prop `sortable` to sort the entries and chips alphabetically in the current language. Items with `pinned: true` stay in front.
         - Added the prop `selectedFirst` to additionally show the selected entries first.
+        - DropdownAutocomplete: Added the prop `selectAllTitle` to set the title of the "Select all" option.
 - SearchInterfaceTopicTree: Added parameter `foldersFirst` to control the order of the result categories.
 
 
@@ -57,6 +58,7 @@
 - StatisticDashboard: 
         - Reopening the module from the menu no longer leaves it stuck in the loading state without controls.
         - The module is now cached when switching between menu entries, so it is no longer rebuilt and its data is no longer reloaded each time it is opened. The hover info on the map is removed while the module is closed.
+        - The "All areas" option of the region dropdowns is now a "Select all" entry above the list: selecting it checks all areas, and selecting all areas manually checks it as well.
 - Menu: Module caching (keep-alive) now also works for lazy loaded core modules, e.g. the StatisticDashboard is no longer rebuilt and its data reloaded each time it is opened.
 - Draw: Fixed an error when editing imported multi geometries (e.g. from KML files), which prevented the measurement tooltip from being positioned.
 - Legend: Legend images of secured services are now loaded with the auth token of the login module, so that no 401 error occurs.

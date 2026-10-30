@@ -162,12 +162,11 @@ describe("src/modules/statiscticDashboard/components/StatisticDashboardFilterReg
                 expect(wrapper.vm.hasRegionChild({})).to.be.false;
             });
         });
-        describe("getRegionItems", () => {
-            const allAreasTitle = i18next.t("common:modules.statisticDashboard.button.allAreas"),
-                regions = [
-                    {value: "Schwerin", title: "Schwerin"},
-                    {value: "Anklam", title: "Anklam"}
-                ];
+        describe("isAllSelected", () => {
+            const values = [
+                {value: "Schwerin", title: "Schwerin"},
+                {value: "Anklam", title: "Anklam"}
+            ];
             let wrapper;
 
             beforeEach(() => {
@@ -178,23 +177,22 @@ describe("src/modules/statiscticDashboard/components/StatisticDashboardFilterReg
                 });
             });
 
-            it("should return an empty array for invalid regions", () => {
+            it("should return false for invalid regions", () => {
                 [undefined, null, "", [], {}].forEach(value => {
-                    expect(wrapper.vm.getRegionItems(value)).to.be.an("array").that.is.empty;
+                    expect(wrapper.vm.isAllSelected(value)).to.be.false;
                 });
             });
 
-            it("should place the pinned all areas entry in front of the regions", () => {
-                expect(wrapper.vm.getRegionItems(regions)).to.deep.equal([
-                    {title: allAreasTitle, pinned: true},
-                    ...regions
-                ]);
+            it("should return false if the region has no values", () => {
+                expect(wrapper.vm.isAllSelected({values: [], selectedValues: []})).to.be.false;
             });
 
-            it("should not mutate the given regions", () => {
-                wrapper.vm.getRegionItems(regions);
+            it("should return false if not all values are selected", () => {
+                expect(wrapper.vm.isAllSelected({values, selectedValues: [values[0]]})).to.be.false;
+            });
 
-                expect(regions).to.have.lengthOf(2);
+            it("should return true if all values are selected", () => {
+                expect(wrapper.vm.isAllSelected({values, selectedValues: [...values]})).to.be.true;
             });
         });
         describe.skip("setSelectedValuesToRegion", () => {

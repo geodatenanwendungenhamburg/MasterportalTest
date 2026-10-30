@@ -16,7 +16,7 @@ describe("src/shared/modules/dropdown/components/DropdownAutocomplete.vue", () =
                     Object.keys(this.$slots).map(name => h(
                         "div",
                         {"data-slot": name},
-                        this.$slots[name]({props: {}, foo: "bar"})
+                        this.$slots[name](name === "prepend-item" ? undefined : {props: {}, foo: "bar"})
                     ))
                 );
             }
@@ -166,6 +166,18 @@ describe("src/shared/modules/dropdown/components/DropdownAutocomplete.vue", () =
                 slotNames = wrapper.findAll("[data-slot]").map(el => el.attributes("data-slot"));
 
             expect(slotNames).to.deep.equal(["subheader", "prepend-item", "chip"]);
+        });
+
+        it("renders the given selectAllTitle in the select all option", () => {
+            const wrapper = mountComponent({items, multiple: true, selectAll: true, selectAllTitle: "All areas"});
+
+            expect(wrapper.find("[data-slot='prepend-item'] v-list-item-stub").attributes("title")).to.equal("All areas");
+        });
+
+        it("renders the default title in the select all option if no selectAllTitle is given", () => {
+            const wrapper = mountComponent({items, multiple: true, selectAll: true});
+
+            expect(wrapper.find("[data-slot='prepend-item'] v-list-item-stub").attributes("title")).to.equal("common:shared.modules.dropdown.selectAll");
         });
 
         it("renders the default subheader slot for single select with no custom slots", () => {

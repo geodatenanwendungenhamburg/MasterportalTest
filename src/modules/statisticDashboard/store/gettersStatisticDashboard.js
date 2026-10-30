@@ -94,12 +94,11 @@ const getters = {
             return [];
         }
 
+        const allValues = state?.flattenedRegions?.find(region => !Object.prototype.hasOwnProperty.call(region, "child"))?.values;
         let regions = selectedRegions;
 
-        if (selectedRegions.some(val => val.title === i18next.t("common:modules.statisticDashboard.button.allAreas")) && typeof state?.flattenedRegions !== "undefined") {
-            regions = sortBy(state?.flattenedRegions.find(region => {
-                return !Object.prototype.hasOwnProperty.call(region, "child");
-            })?.values, "title");
+        if (Array.isArray(allValues) && allValues.length > 0 && selectedRegions.length === allValues.length) {
+            regions = sortBy(allValues, "title");
         }
 
         const mappedRegionsValues = regions.map(region => region.value),

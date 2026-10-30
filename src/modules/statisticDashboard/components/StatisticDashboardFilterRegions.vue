@@ -42,16 +42,16 @@ export default {
         },
 
         /**
-         * Gets the region items for the dropdown with the pinned "all areas" entry in front.
-         * @param {Object[]} regions The regions array.
-         * @returns {Object[]} The region items.
+         * Checks whether all values of the region are selected.
+         * @param {Object} region - The region to be checked.
+         * @returns {Boolean} True if the region has values and all of them are selected, otherwise false.
          */
-        getRegionItems (regions) {
-            if (!Array.isArray(regions) || !regions.length) {
-                return [];
+        isAllSelected (region) {
+            if (!Array.isArray(region?.values) || !Array.isArray(region?.selectedValues) || !region.values.length) {
+                return false;
             }
 
-            return [{title: i18next.t("common:modules.statisticDashboard.button.allAreas"), pinned: true}, ...regions];
+            return region.selectedValues.length === region.values.length;
         },
 
         /**
@@ -72,7 +72,8 @@ export default {
                 this.setSelectedValuesToRegion([], region.child);
             }
             else {
-                const uniqueValues = await this.getValuesFromLayer(this.selectedLevel.layerId, region, schemeRequest || this.requestScheme(region, this.containsAllTag(value)));
+                const childWasAllSelected = this.isAllSelected(region.child),
+                      uniqueValues = await this.getValuesFromLayer(this.selectedLevel.layerId, region, schemeRequest || this.requestScheme(region, this.isAllSelected(region)));
 
                 const childAttributeNames = Array.isArray(region.child.attrName) ? region.child.attrName : [region.child.attrName],
                       childValues = [...new Set(childAttributeNames.flatMap(attributeName => Object.keys(uniqueValues[attributeName] || {})))];
@@ -81,7 +82,10 @@ export default {
                     return {title: key, value: key};
                 });
 
-                if (region.child.selectedValues.length) {
+                if (childWasAllSelected) {
+                    this.setSelectedValuesToRegion(region.child.values.slice(), region.child);
+                }
+                else if (region.child.selectedValues.length) {
                     const udpatedSelectedValues = this.updatesRegionSelectedValues(region.child.selectedValues, region.child.values);
 
                     this.setSelectedValuesToRegion(udpatedSelectedValues, region.child);
@@ -114,7 +118,7 @@ export default {
                             layerUniqueValues = await getOAFFeature.getUniqueValuesByScheme(url, collection, [childAttributeName]);
                         }
                         else {
-                            const filter = this.getFilterOAF(regionAttributeName, this.containsAllTag(region.selectedValues) ? region.values : region.selectedValues),
+                            const filter = this.getFilterOAF(regionAttributeName, region.selectedValues),
                                   features = await getOAFFeature.getOAFFeatureGet(url, collection, {
                                       filter,
                                       filterCrs: this.selectedLevel.oafRequestCRS,
@@ -293,21 +297,11 @@ export default {
             for (let i = position; i < tmpRegions.length; i++) {
                 const nextRegion = tmpRegions[i];
 
-                if (nextRegion.selectedValues.length !== nextRegion.values.length
-                    && !this.containsAllTag(nextRegion.selectedValues)) {
+                if (nextRegion.selectedValues.length !== nextRegion.values.length) {
                     return false;
                 }
             }
             return true;
-        },
-
-        /**
-         * Checks if the given list contains the "all" tag.
-         * @param {Object[]} values The list.
-         * @returns {Boolean} true if all tag was found, false otherwise.
-         */
-        containsAllTag (values) {
-            return values.some(val => val.title === i18next.t("common:modules.statisticDashboard.button.allAreas"));
         }
     }
 };
@@ -358,9 +352,11 @@ export default {
                 <DropdownAutocomplete
                     :id="'region-filter' + index"
                     :label="region.name ?? $t('common:modules.statisticDashboard.label.area')"
-                    :items="getRegionItems(region.values)"
+                    :items="region.values"
                     :placeholder="$t('common:modules.statisticDashboard.reference.placeholder')"
                     multiple
+                    select-all
+                    :select-all-title="$t('common:modules.statisticDashboard.button.allAreas')"
                     sortable
                     selected-first
                     :model-value="region.selectedValues"

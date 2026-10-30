@@ -810,7 +810,7 @@ describe("src/modules/statisticDashboard/components/StatisticDashboard.vue", () 
                 wrapper.vm.setFlattenedRegions([
                     {attrName: ["foo"], selectedValues: ["foo"], values: ["foo"], child: "foo"},
                     {attrName: ["bar"], selectedValues: [{label: "bar"}], values: ["bar", "baz"], child: "foo"},
-                    {attrName: ["baz"], selectedValues: [{label: "modules.statisticDashboard.button.allAreas"}], values: ["bar", "baz"]}
+                    {attrName: ["baz"], selectedValues: ["bar", "baz"], values: ["bar", "baz"]}
                 ]);
                 wrapper.vm.getFilter(regions, dates);
 

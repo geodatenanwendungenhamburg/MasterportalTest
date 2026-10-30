@@ -1404,7 +1404,7 @@ export default {
                 for (let i = 0; i < tmpFlattenedRegions.length; i++) {
                     const nextRegion = tmpFlattenedRegions[i];
 
-                    if (!nextRegion.selectedValues.some(selectedValue => selectedValue.title === i18next.t("common:modules.statisticDashboard.button.allAreas"))) {
+                    if (nextRegion.selectedValues.length !== nextRegion.values.length) {
                         return andFilter(this.getFilterForList(dates, dateAttrName), this.getFilterForList(nextRegion.selectedValues.map(selectedValue => selectedValue.title), nextRegion.attrName[0]));
                     }
                 }

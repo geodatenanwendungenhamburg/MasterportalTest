@@ -134,11 +134,11 @@ describe("src/modules/statisticDashboard/store/gettersStatisticDashboard.js", ()
             expect(getters.selectedRegionsValues(null, {selectedRegions})).to.deep.equals(["Harburg", "Lübeck", "Schwerin"]);
         });
 
-        it("should get sorted region values from flattened regions when all areas is selected", () => {
-            const selectedRegions = [{
-                    value: "All areas",
-                    title: i18next.t("common:modules.statisticDashboard.button.allAreas")
-                }],
+        it("should get sorted region values from flattened regions when all areas are selected", () => {
+            const selectedRegions = [
+                    {value: "Z", title: "Zehlendorf"},
+                    {value: "A", title: "Altona"}
+                ],
                 state = {
                     flattenedRegions: [{
                         values: [

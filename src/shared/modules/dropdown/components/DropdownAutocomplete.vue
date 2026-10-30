@@ -79,6 +79,12 @@ export default {
             default: false,
             required: false
         },
+        /** Title of the "Select all" option. Defaults to the generic "Select all" translation. */
+        selectAllTitle: {
+            type: String,
+            default: undefined,
+            required: false
+        },
         /** Places the selected items in front of the not selected items. Only takes effect if sortable is true. */
         selectedFirst: {
             type: Boolean,
@@ -261,14 +267,13 @@ export default {
             </template>
             <template
                 v-if="$slots['prepend-item'] || multiple && selectAll"
-                #prepend-item="slotProps"
+                #prepend-item
             >
                 <slot
                     name="prepend-item"
-                    v-bind="slotProps"
                 >
                     <v-list-item
-                        :title="$t('common:shared.modules.dropdown.selectAll')"
+                        :title="selectAllTitle ?? $t('common:shared.modules.dropdown.selectAll')"
                         @click="toggleSelectAll"
                     >
                         <template #prepend>
