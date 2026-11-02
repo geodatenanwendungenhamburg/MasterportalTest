@@ -2,6 +2,7 @@ import {expect} from "chai";
 import sinon from "sinon";
 import addons from "@plugins/addons";
 import store from "@appstore/index.js";
+import piniaModuleStores from "@modules/modules-store/piniaModules.js";
 
 
 describe("src/plugins/addons.js", () => {
@@ -234,6 +235,23 @@ describe("src/plugins/addons.js", () => {
             expect(store.registerModule.firstCall.args[1]).to.be.deep.equals(store);
             expect(Object.keys(moduleCollection).length).to.be.equals(1);
             expect(moduleCollection.component).to.be.deep.equals(loadAddonRet.component);
+        });
+
+        it("registers a pinia store instead of a vuex module, if the addon provides a piniaStore", async () => {
+            const piniaStore = {id: "ToolAddon"};
+
+            loadAddonRet.piniaStore = piniaStore;
+
+            try {
+                await addons.loadToolAddons("ToolAddon");
+
+                expect(store.registerModule.notCalled).to.be.true;
+                expect(piniaModuleStores.component).to.be.equals(piniaStore);
+                expect(moduleCollection.component).to.be.deep.equals(loadAddonRet.component);
+            }
+            finally {
+                delete piniaModuleStores.component;
+            }
         });
     });
 

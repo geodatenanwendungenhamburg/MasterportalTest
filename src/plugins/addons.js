@@ -3,6 +3,7 @@ import store from "@appstore/index.js";
 import {defineComponent} from "vue";
 import {upperFirst} from "@shared/js/utils/changeCase.js";
 import addonModules from "virtual:addon-modules";
+import piniaModuleStores from "@modules/modules-store/piniaModules.js";
 
 const allAddons = typeof VUE_ADDONS !== "undefined" ? VUE_ADDONS : {};
 
@@ -170,7 +171,12 @@ export default {
         const addon = await this.loadAddon(addonKey),
             addonName = addon.component.name.charAt(0).toLowerCase() + addon.component.name.slice(1);
 
-        store.registerModule(["Modules", addon.component.name], addon.store);
+        if (addon.piniaStore) {
+            piniaModuleStores[addonName] = addon.piniaStore;
+        }
+        else {
+            store.registerModule(["Modules", addon.component.name], addon.store);
+        }
         moduleCollection[addonName] = addon.component;
     },
 

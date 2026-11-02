@@ -39,6 +39,7 @@
         - Added the prop `selectedFirst` to additionally show the selected entries first.
         - DropdownAutocomplete: Added the prop `selectAllTitle` to set the title of the "Select all" option.
 - SearchInterfaceTopicTree: Added parameter `foldersFirst` to control the order of the result categories.
+- Make Pinia store available in addons
 
 ### Changed
 - The following packages have been updated:
