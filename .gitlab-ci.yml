@@ -168,13 +168,6 @@ create_github_release:
         --arg body "$(cat release-description.md)" \
         '{tag_name: $tag, name: $name, body: $body, draft: false, prerelease: false}' \
         > release-payload.json
-    # Download examples.zip from the GitLab Generic Package Registry
-    - |
-      curl --fail --show-error --location \
-        --output examples.zip \
-        "https://gitlab.opencode.de/api/v4/projects/13269/packages/generic/examples/${CI_COMMIT_TAG}/examples.zip"
-
-    # Create the GitHub release and save its response to get the upload URL
     - |
       curl --fail --show-error --location \
         --request POST \
@@ -183,21 +176,8 @@ create_github_release:
         --header "X-GitHub-Api-Version: 2022-11-28" \
         --header "Content-Type: application/json" \
         --data @release-payload.json \
-        --output github-release.json \
         "https://api.github.com/repos/geodatenanwendungenhamburg/MasterportalTest/releases"
 
-    # Upload examples.zip as a GitHub release asset
-    - |
-      UPLOAD_URL="$(jq -r '.upload_url | split("{")[0]' github-release.json)"
-      curl --fail --show-error --location \
-        --request POST \
-        --header "Authorization: Bearer ${GITHUB_TOKEN}" \
-        --header "Accept: application/vnd.github+json" \
-        --header "X-GitHub-Api-Version: 2022-11-28" \
-        --header "Content-Type: application/zip" \
-        --data-binary @examples.zip \
-        "${UPLOAD_URL}?name=examples.zip"
-        
 create_deploy_mkdocs:
   stage: docs
   image: python:3.8
