@@ -1,4 +1,4 @@
-#!/usr/bin/env bash
+#!/bin/sh
 set -eu
 
 if [ -z "${CI_COMMIT_TAG:-}" ]; then
