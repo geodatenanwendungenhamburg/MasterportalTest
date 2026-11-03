@@ -116,6 +116,10 @@ mirror_tag_to_github:
       else
         echo "No local latest tag found; skipping GitHub mirror for latest"
       fi
+    - |
+      git fetch origin dev
+      git checkout dev
+      git push --force github HEAD:refs/heads/dev
 
 create_github_release:
   stage: release
