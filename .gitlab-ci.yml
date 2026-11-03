@@ -94,7 +94,7 @@ mirror_tag_to_github:
   stage: release
   image: alpine:3.20
   rules:
-    - if: '$CI_COMMIT_TAG =~ /^v3\.\d+\.\d+$/'
+    - if: '$CI_COMMIT_TAG =~ /^(v3\.\d+\.\d+|latest)$/'
   script:
     - apk add --no-cache git
     - git config --global user.name "$GIT_USER_NAME"
@@ -104,7 +104,9 @@ mirror_tag_to_github:
     - git remote add github https://x-access-token:${GITHUB_TOKEN}@github.com/geodatenanwendungenhamburg/MasterportalTest.git
     - git push github "refs/tags/$CI_COMMIT_TAG:refs/tags/$CI_COMMIT_TAG"
     - |
-      if git rev-parse --verify latest >/dev/null 2>&1; then
+      if [ "$CI_COMMIT_TAG" = "latest" ]; then
+        echo "latest tag mirror triggered by push to latest"
+      elif git rev-parse --verify latest >/dev/null 2>&1; then
         git push github "refs/tags/latest:refs/tags/latest"
       else
         echo "No local latest tag found; skipping GitHub mirror for latest"
