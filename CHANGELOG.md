@@ -4,8 +4,7 @@
 
 [Semantic versioning](https://semver.org/spec/v2.0.0.html) is used.
 
-## Unreleased - in development
-### __Breaking Changes__
+## 2026-11-04 v3.28.0
 
 ### Added
 - Statistic Dashboard: The map view shows the values of the selected statistic on the map.
@@ -25,7 +24,6 @@
         - Added the prop `selectedFirst` to additionally show the selected entries first.
         - DropdownAutocomplete: Added the prop `selectAllTitle` to set the title of the "Select all" option.
 - SearchInterfaceTopicTree: Added parameter `foldersFirst` to control the order of the result categories.
-
 
 ### Changed
 - The following packages have been updated:
@@ -47,8 +45,6 @@
 ### Deprecated
 - WMTS: The `services.json` parameter `transparent` is deprecated and has no effect. Use `transparency` instead.
 - Draw: All functions and files of draw_old have been marked deprecated and are to be removed in November 2027.
-
-### Removed
 
 ### Fixed
 - Issue \#1629: Fetch legendUrl with authorization header where needed.
