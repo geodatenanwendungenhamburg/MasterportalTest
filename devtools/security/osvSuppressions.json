@@ -222,16 +222,6 @@
       "reviewBy": "2027-10-19"
     },
     {
-      "id": "GHSA-vfj7-8cjw-p6xm",
-      "package": "braces",
-      "ecosystem": "npm",
-      "status": "wont-fix",
-      "reason": "Build tooling only; glob patterns are repository-controlled, never user input.",
-      "addedBy": "geodatenanwendungen@gv.hamburg.de",
-      "addedOn": "2026-10-19",
-      "reviewBy": "2027-10-19"
-    },
-    {
       "id": "GHSA-hrr3-gc8f-f4qj",
       "package": "fast-uri",
       "ecosystem": "npm",
@@ -300,6 +290,261 @@
       "addedBy": "geodatenanwendungen@gv.hamburg.de",
       "addedOn": "2026-10-19",
       "reviewBy": "2027-10-19"
+    },
+    {
+      "id": "GHSA-8r9p-f939-6h3c",
+      "package": "follow-redirects",
+      "ecosystem": "npm",
+      "status": "wont-fix",
+      "reason": "Axios uses follow-redirects only through its Node.js HTTP adapter. The shipped portal is browser-built, where Axios maps that adapter to a no-op and uses XHR or Fetch instead; no Node.js product runtime using this adapter was identified. Reassess if a Node.js consumer is added.",
+      "addedBy": "geodatenanwendungen@gv.hamburg.de",
+      "addedOn": "2026-11-05",
+      "reviewBy": "2027-11-05"
+    },
+    {
+      "id": "GHSA-mrwp-f3q8-3g9p",
+      "package": "follow-redirects",
+      "ecosystem": "npm",
+      "status": "wont-fix",
+      "reason": "Axios uses follow-redirects only through its Node.js HTTP adapter. The shipped portal is browser-built, where Axios maps that adapter to a no-op and uses XHR or Fetch instead; no Node.js product runtime using this adapter was identified. Reassess if a Node.js consumer is added.",
+      "addedBy": "geodatenanwendungen@gv.hamburg.de",
+      "addedOn": "2026-11-05",
+      "reviewBy": "2027-11-05"
+    },
+    {
+      "id": "GHSA-q3jh-wrc6-jgq8",
+      "package": "follow-redirects",
+      "ecosystem": "npm",
+      "status": "wont-fix",
+      "reason": "Axios uses follow-redirects only through its Node.js HTTP adapter. The shipped portal is browser-built, where Axios maps that adapter to a no-op and uses XHR or Fetch instead; no Node.js product runtime using this adapter was identified. Reassess if a Node.js consumer is added.",
+      "addedBy": "geodatenanwendungen@gv.hamburg.de",
+      "addedOn": "2026-11-05",
+      "reviewBy": "2027-11-05"
+    },
+    {
+      "id": "GHSA-587h-7wmj-h5pm",
+      "package": "vite",
+      "ecosystem": "npm",
+      "status": "in-progress",
+      "reason": "A Vite 8.2 update is in progress under BG-7567 and is expected to address this advisory, including the affected bundled launch-editor version. Reassess at the one-month review date.",
+      "ticket": "BG-7567",
+      "addedBy": "geodatenanwendungen@gv.hamburg.de",
+      "addedOn": "2026-11-05",
+      "reviewBy": "2026-12-05"
+    },
+    {
+      "id": "GHSA-698v-4r3x-3vcv",
+      "package": "vite",
+      "ecosystem": "npm",
+      "status": "in-progress",
+      "reason": "A Vite 8.2 update is in progress under BG-7567 and is expected to address this advisory, including the affected bundled launch-editor version. Reassess at the one-month review date.",
+      "ticket": "BG-7567",
+      "addedBy": "geodatenanwendungen@gv.hamburg.de",
+      "addedOn": "2026-11-05",
+      "reviewBy": "2026-12-05"
+    },
+    {
+      "id": "GHSA-r825-w8mm-5pxw",
+      "package": "vite",
+      "ecosystem": "npm",
+      "status": "in-progress",
+      "reason": "A Vite 8.2 update is in progress under BG-7567 and is expected to address this advisory, including the affected bundled launch-editor version. Reassess at the one-month review date.",
+      "ticket": "BG-7567",
+      "addedBy": "geodatenanwendungen@gv.hamburg.de",
+      "addedOn": "2026-11-05",
+      "reviewBy": "2026-12-05"
+    },
+    {
+      "id": "GHSA-rq7h-c2jc-7f22",
+      "package": "vite",
+      "ecosystem": "npm",
+      "status": "in-progress",
+      "reason": "A Vite 8.2 update is in progress under BG-7567 and is expected to address this advisory. Reassess at the one-month review date.",
+      "ticket": "BG-7567",
+      "addedBy": "geodatenanwendungen@gv.hamburg.de",
+      "addedOn": "2026-11-05",
+      "reviewBy": "2026-12-05"
+    },
+    {
+      "id": "GHSA-qxg6-89mg-rqv8",
+      "package": "@vitest/mocker",
+      "ecosystem": "npm",
+      "status": "in-progress",
+      "reason": "A Vitest 5.x upgrade is planned under BG-7649 and will resolve this advisory when it reaches 5.0.3 or later. Reassess at the one-month review date.",
+      "ticket": "BG-7649",
+      "addedBy": "geodatenanwendungen@gv.hamburg.de",
+      "addedOn": "2026-11-05",
+      "reviewBy": "2026-12-05"
+    },
+    {
+      "id": "GHSA-xp26-3454-mjgp",
+      "package": "@vitest/mocker",
+      "ecosystem": "npm",
+      "status": "in-progress",
+      "reason": "A Vitest 5.x upgrade is planned under BG-7649 and will resolve this advisory when it reaches 5.0.3 or later. Reassess at the one-month review date.",
+      "ticket": "BG-7649",
+      "addedBy": "geodatenanwendungen@gv.hamburg.de",
+      "addedOn": "2026-11-05",
+      "reviewBy": "2026-12-05"
+    },
+    {
+      "id": "GHSA-2m5v-pch6-74hx",
+      "package": "undici",
+      "ecosystem": "npm",
+      "status": "in-progress",
+      "reason": "Testing an npm override to a patched Undici version used transitively by jsdom; the override and test compatibility are tracked in BG-7713. Reassess at the one-month review date.",
+      "ticket": "BG-7713",
+      "addedBy": "geodatenanwendungen@gv.hamburg.de",
+      "addedOn": "2026-11-05",
+      "reviewBy": "2026-12-05"
+    },
+    {
+      "id": "GHSA-4qv8-2p9j-2685",
+      "package": "undici",
+      "ecosystem": "npm",
+      "status": "in-progress",
+      "reason": "Testing an npm override to a patched Undici version used transitively by jsdom; the override and test compatibility are tracked in BG-7713. Reassess at the one-month review date.",
+      "ticket": "BG-7713",
+      "addedBy": "geodatenanwendungen@gv.hamburg.de",
+      "addedOn": "2026-11-05",
+      "reviewBy": "2026-12-05"
+    },
+    {
+      "id": "GHSA-4w7w-5xrc-9h26",
+      "package": "undici",
+      "ecosystem": "npm",
+      "status": "in-progress",
+      "reason": "Testing an npm override to a patched Undici version used transitively by jsdom; the override and test compatibility are tracked in BG-7713. Reassess at the one-month review date.",
+      "ticket": "BG-7713",
+      "addedBy": "geodatenanwendungen@gv.hamburg.de",
+      "addedOn": "2026-11-05",
+      "reviewBy": "2026-12-05"
+    },
+    {
+      "id": "GHSA-55wc-3pg8-jfw6",
+      "package": "undici",
+      "ecosystem": "npm",
+      "status": "in-progress",
+      "reason": "Testing an npm override to a patched Undici version used transitively by jsdom; the override and test compatibility are tracked in BG-7713. Reassess at the one-month review date.",
+      "ticket": "BG-7713",
+      "addedBy": "geodatenanwendungen@gv.hamburg.de",
+      "addedOn": "2026-11-05",
+      "reviewBy": "2026-12-05"
+    },
+    {
+      "id": "GHSA-9fm3-97px-rjf6",
+      "package": "undici",
+      "ecosystem": "npm",
+      "status": "in-progress",
+      "reason": "Testing an npm override to a patched Undici version used transitively by jsdom; the override and test compatibility are tracked in BG-7713. Reassess at the one-month review date.",
+      "ticket": "BG-7713",
+      "addedBy": "geodatenanwendungen@gv.hamburg.de",
+      "addedOn": "2026-11-05",
+      "reviewBy": "2026-12-05"
+    },
+    {
+      "id": "GHSA-f72v-6w45-q472",
+      "package": "undici",
+      "ecosystem": "npm",
+      "status": "in-progress",
+      "reason": "Testing an npm override to a patched Undici version used transitively by jsdom; the override and test compatibility are tracked in BG-7713. Reassess at the one-month review date.",
+      "ticket": "BG-7713",
+      "addedBy": "geodatenanwendungen@gv.hamburg.de",
+      "addedOn": "2026-11-05",
+      "reviewBy": "2026-12-05"
+    },
+    {
+      "id": "GHSA-qrxm-fqhp-jwvm",
+      "package": "undici",
+      "ecosystem": "npm",
+      "status": "in-progress",
+      "reason": "Testing an npm override to a patched Undici version used transitively by jsdom; the override and test compatibility are tracked in BG-7713. Reassess at the one-month review date.",
+      "ticket": "BG-7713",
+      "addedBy": "geodatenanwendungen@gv.hamburg.de",
+      "addedOn": "2026-11-05",
+      "reviewBy": "2026-12-05"
+    },
+    {
+      "id": "GHSA-xjj6-f33q-929c",
+      "package": "undici",
+      "ecosystem": "npm",
+      "status": "in-progress",
+      "reason": "Testing an npm override to a patched Undici version used transitively by jsdom; the override and test compatibility are tracked in BG-7713. Reassess at the one-month review date.",
+      "ticket": "BG-7713",
+      "addedBy": "geodatenanwendungen@gv.hamburg.de",
+      "addedOn": "2026-11-05",
+      "reviewBy": "2026-12-05"
+    },
+    {
+      "id": "GHSA-w74x-v6f9-j3xg",
+      "package": "fast-uri",
+      "ecosystem": "npm",
+      "status": "wont-fix",
+      "reason": "Reached through build/schema-validation dependencies. The checked usage resolves repository-provided schemas and does not use normalized attacker-controlled URIs as navigable or executable URLs.",
+      "addedBy": "geodatenanwendungen@gv.hamburg.de",
+      "addedOn": "2026-11-05",
+      "reviewBy": "2027-11-05"
+    },
+    {
+      "id": "GHSA-3g3m-2fjr-6pw4",
+      "package": "glob",
+      "ecosystem": "npm",
+      "status": "wont-fix",
+      "reason": "Used by build and maintenance tooling with repository-controlled glob patterns. No untrusted pattern input or security reliance on AbortSignal cancellation was identified.",
+      "addedBy": "geodatenanwendungen@gv.hamburg.de",
+      "addedOn": "2026-11-05",
+      "reviewBy": "2027-11-05"
+    },
+    {
+      "id": "GHSA-r7fv-28h4-cvq7",
+      "package": "markdown-it",
+      "ecosystem": "npm",
+      "status": "wont-fix",
+      "reason": "The smartquotes denial-of-service requires typographer mode, which is not enabled in the checked JSDoc/config-parser settings. No application runtime Markdown rendering path was identified.",
+      "addedBy": "geodatenanwendungen@gv.hamburg.de",
+      "addedOn": "2026-11-05",
+      "reviewBy": "2027-11-05"
+    },
+    {
+      "id": "GHSA-gfr2-rv44-r23c",
+      "package": "markdown-it",
+      "ecosystem": "npm",
+      "status": "wont-fix",
+      "reason": "Used by documentation/config parsing on repository-controlled content. The additional story-creator copy is not imported for Markdown parsing by the editor; no untrusted runtime Markdown rendering path was identified.",
+      "addedBy": "geodatenanwendungen@gv.hamburg.de",
+      "addedOn": "2026-11-05",
+      "reviewBy": "2027-11-05"
+    },
+    {
+      "id": "GHSA-g3hv-75wg-m249",
+      "package": "minimatch",
+      "ecosystem": "npm",
+      "status": "wont-fix",
+      "reason": "Used by lint, build, and file-management tooling with repository-controlled patterns. No attacker-controlled glob pattern is passed to the affected processing path.",
+      "addedBy": "geodatenanwendungen@gv.hamburg.de",
+      "addedOn": "2026-11-05",
+      "reviewBy": "2027-11-05"
+    },
+    {
+      "id": "GHSA-6pq8-jhm2-2vcw",
+      "package": "qs",
+      "ecosystem": "npm",
+      "status": "wont-fix",
+      "reason": "Reached through the Node URL polyfill. Its stringify call uses arrayFormat repeat, not the vulnerable comma format; no application call using arrayFormat comma was identified.",
+      "addedBy": "geodatenanwendungen@gv.hamburg.de",
+      "addedOn": "2026-11-05",
+      "reviewBy": "2027-11-05"
+    },
+    {
+      "id": "GHSA-rxp7-6hxx-x8q5",
+      "package": "ip-address",
+      "ecosystem": "npm",
+      "status": "in-progress",
+      "reason": "Updating the existing ip-address npm override to a patched release and checking compatibility under BG-7638. Reassess at the one-month review date.",
+      "ticket": "BG-7638",
+      "addedBy": "geodatenanwendungen@gv.hamburg.de",
+      "addedOn": "2026-11-05",
+      "reviewBy": "2026-12-05"
     }
   ]
 }
