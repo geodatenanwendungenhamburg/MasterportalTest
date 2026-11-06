@@ -19,7 +19,7 @@ spec:
       default: ""
 
 ---
-image: node:24.15.0
+image: node:24.22.1
 
 stages:
   - build
