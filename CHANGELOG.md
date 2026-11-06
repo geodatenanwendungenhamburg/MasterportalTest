@@ -17,6 +17,7 @@
 
 ### Fixed
 - Issue \#1667: Respect map rotation when displaying user moving direction.
+- Draw: Fixed an issue where the drawn features would not appear on prints from the print module.
 
 ---
 
