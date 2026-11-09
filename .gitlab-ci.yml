@@ -162,6 +162,10 @@ create_deploy_mkdocs:
 
     - pip install -r devtools/docsValidation/python-dependencies.txt
 
+    # mike commits to a local gh-pages branch and needs a git identity
+    - git config --global user.name "$GIT_USER_NAME"
+    - git config --global user.email "$GIT_USER_EMAIL"
+
     # Create documentation snippet
     - mkdir -p docs/_snippets
     - RELEASE_VERSION="${CI_COMMIT_TAG#v}" && if grep -q "^## .* v${RELEASE_VERSION}.*LTS.*$" CHANGELOG.md 2>/dev/null; then printf '# Welcome to the Masterportal Documentation (%s (lts))\n' "$RELEASE_VERSION" > docs/_snippets/index_title.md; else printf '# Welcome to the Masterportal Documentation (%s)\n' "$CI_COMMIT_TAG" > docs/_snippets/index_title.md; fi
