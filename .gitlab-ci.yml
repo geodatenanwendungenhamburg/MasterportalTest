@@ -160,11 +160,11 @@ create_deploy_mkdocs:
     - apt-get update
     - apt-get install -y curl lftp zip
 
-    - pip install -r devtools/docsValidation/python-dependencies.txt
-
     # mike commits to a local gh-pages branch and needs a git identity
     - git config --global user.name "$GIT_USER_NAME"
     - git config --global user.email "$GIT_USER_EMAIL"
+
+    - pip install -r devtools/docsValidation/python-dependencies.txt
 
     # Create documentation snippet
     - mkdir -p docs/_snippets
