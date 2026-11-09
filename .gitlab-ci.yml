@@ -19,7 +19,7 @@ spec:
       default: ""
 
 ---
-image: node:24.15.0
+image: node:24.22.1
 
 stages:
   - build
@@ -62,7 +62,7 @@ build_examples_zip:
 
       echo "Package uploaded successfully: ${PACKAGE_URL}"
   rules:
-    - if: '$CI_COMMIT_TAG && $CI_COMMIT_TAG !~ /^(lts|latest)$/'
+    - if: '$CI_COMMIT_TAG =~ /^v3\.\d+\.\d+$/'
 
 
 create_release:
@@ -88,7 +88,7 @@ create_release:
           link_type: package
 
   rules:
-    - if: '$CI_COMMIT_TAG && $CI_COMMIT_TAG !~ /^(lts|latest)$/'
+    - if: '$CI_COMMIT_TAG =~ /^v3\.\d+\.\d+$/'
 
 mirror_tag_to_github:
   stage: release
@@ -154,7 +154,7 @@ create_deploy_mkdocs:
   image: python:3.8
 
   rules:
-    - if: '$CI_COMMIT_TAG'
+    - if: '$CI_COMMIT_TAG =~ /^v3\.\d+\.\d+$/'
 
   script:
     - apt-get update
