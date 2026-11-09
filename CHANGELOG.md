@@ -4,7 +4,7 @@
 
 [Semantic versioning](https://semver.org/spec/v2.0.0.html) is used.
 
-## 2026-11-09 v3.30.0
+## 2026-11-09 v3.32.0
 
 ### Fixed
 - Issue \#1667: Respect map rotation when displaying user moving direction.
