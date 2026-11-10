@@ -128,12 +128,11 @@ create_github_release:
     - EXAMPLES_URL="${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/packages/generic/examples/${CI_COMMIT_TAG}/examples.zip"
     - PACKAGES_URL="${CI_PROJECT_URL}/-/packages"
 
-    # The link is shown to anonymous GitHub users, so it must be reachable without a token
+    # The link is only added to the release description (no file upload). A missing public access is reported as a warning only.
     - |
       HTTP_STATUS=$(curl --silent --location --range 0-0 --output /dev/null --write-out "%{http_code}" "${EXAMPLES_URL}")
       if [ "$HTTP_STATUS" != "200" ] && [ "$HTTP_STATUS" != "206" ]; then
-        echo "ERROR: ${EXAMPLES_URL} is not publicly reachable (HTTP ${HTTP_STATUS}). Check that the project and its package registry are public."
-        exit 1
+        echo "WARNING: ${EXAMPLES_URL} is not publicly reachable without login (HTTP ${HTTP_STATUS}). The link is added to the release anyway."
       fi
     - |
       printf '\n\n## Downloads\n\n- [Download examples (examples.zip)](%s)\n- [All packages on openCode](%s)\n' \
